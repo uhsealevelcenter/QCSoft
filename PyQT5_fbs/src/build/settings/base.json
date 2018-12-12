@@ -1,0 +1,5 @@
+{
+    "app_name": "UHSLC-QC",
+    "main_module": "src/main/python/main.py",
+    "author": "Nemo K."
+}
