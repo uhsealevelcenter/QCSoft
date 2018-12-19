@@ -100,6 +100,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fileMenu.addAction(closeApp)
         helpMenu.addAction(openHelpMenu)
 
+        
+
     def file_open(self):
         filters = "s*.dat;; ts*.dat"
         path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"

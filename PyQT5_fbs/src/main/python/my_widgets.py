@@ -36,6 +36,11 @@ class HelpScreen(QtWidgets.QWidget):
 
     def __init__(self, parent=None):
         super(HelpScreen, self).__init__(parent)
+
+        # Object for data persistence
+        self.settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
+        # self.settings.remove("savepath")
+
         self.layout = QtWidgets.QVBoxLayout()
 
         l1 = QtWidgets.QLabel()
@@ -76,6 +81,25 @@ class HelpScreen(QtWidgets.QWidget):
         self.layout.addStretch()
         self.layout.addWidget(l2)
 
+
+        self.lineEditPath = QtWidgets.QLineEdit()
+        self.lineEditPath.setObjectName(_fromUtf8("lineEditPath"))
+        self.lineEditPath.setFixedWidth(280)
+
+        # If a save path hasn't been defined, give it a home directory
+        if(self.settings.value("savepath")):
+            self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
+        else:
+            self.settings.setValue("savepath",os.path.expanduser('~'))
+            elf.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
+
+        self.layout.addWidget(self.lineEditPath)
+
+        saveButton = QtWidgets.QPushButton("Save Path")
+        saveButton.setFixedWidth(100)
+        self.layout.addWidget(saveButton)
+
+
         button = QtWidgets.QPushButton("Back to main")
         self.layout.addWidget(button)
 
@@ -88,6 +112,18 @@ class HelpScreen(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
         button.clicked.connect(self.clicked.emit)
+        saveButton.clicked.connect(self.savePath)
+
+    def savePath(self):
+        folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
+        self.settings.setValue("savepath", folder_name)
+        self.settings.sync()
+        self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
+        self.lineEditPath.setText("")
+
+    def getSavePath():
+        settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
+        return settings.value("savepath")
 
 class Start(QtWidgets.QWidget):
 
@@ -491,13 +527,16 @@ class Start(QtWidgets.QWidget):
                 month_str = "{:02}".format(month_int)
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
-                with open(os.path.expanduser('~')+'/tsTEST'+station_num+year_str+month_str+'.dat', 'w') as the_file:
-                    for lin in prd_list[m]:
-                        the_file.write(lin+"\n")
-                    for line in assem_data[m]:
-                        the_file.write(line+"\n")
-                    # Each file ends with two lines of 80 9s that's why adding an additional one
-                    the_file.write('9'*80)
+                try:
+                    with open(HelpScreen.getSavePath()+'/tsTEST'+station_num+year_str+month_str+'.dat', 'w') as the_file:
+                        for lin in prd_list[m]:
+                            the_file.write(lin+"\n")
+                        for line in assem_data[m]:
+                            the_file.write(line+"\n")
+                        # Each file ends with two lines of 80 9s that's why adding an additional one
+                        the_file.write('9'*80)
+                except IOError as e:
+                    self.show_custom_message("Error", "Cannot Save to "+ HelpScreen.getSavePath() +"\n"+str(e)+"\n Please select a different path to save to")
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
         else:
