@@ -41,12 +41,30 @@ class HelpScreen(QtWidgets.QWidget):
         l1 = QtWidgets.QLabel()
         l2 = QtWidgets.QLabel()
 
+        fontTitle = QtGui.QFont()
+        fontTitle.setPointSize(16)
+        fontTitle.setBold(True)
+        fontTitle.setWeight(75)
+
+        fontTitlePara = QtGui.QFont()
+        fontTitlePara.setPointSize(12)
+        fontTitlePara.setBold(False)
+        fontTitlePara.setWeight(50)
+
+        l1.setFont(fontTitle)
+        l2.setFont(fontTitlePara)
         l1.setText("Program manual")
         l2.setText(
         '''
-        Some text will go here
-        explaining how to use this program.
-        Every shortcut should be explained.
+        Click Ctrl (Cmd) + O to load data
+        To delete a data point press "D"
+        Use left and right arrow to pan through the data
+        Press "b" to scroll backwards through the individual data points
+        Press "n" to scroll forward through the individual data points
+        Click on any particular data point to zoom in on that data section
+        Press "0" to reset the view back to the entire data set
+
+        Click the "SAVE" button to save changes to a "TS" file
         '''
         )
         l1.setAlignment(QtCore.Qt.AlignCenter)
