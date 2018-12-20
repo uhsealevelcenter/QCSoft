@@ -7,12 +7,15 @@ import time
 
 import numpy as np
 import interactive_plot as dp
+import settings as st
 from sensor import Sensor, Station
 from extractor2 import DataExtractor
 
 from my_widgets import *
 
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
+
+
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -100,11 +103,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         fileMenu.addAction(closeApp)
         helpMenu.addAction(openHelpMenu)
 
-        
+
 
     def file_open(self):
         filters = "s*.dat;; ts*.dat"
-        path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
+        if(st.getPath(st.LOAD_KEY)):
+            path = st.getPath(st.LOAD_KEY)
+        else:
+            # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
+            path = os.path.expanduser('~')
         file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
         #file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 

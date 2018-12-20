@@ -7,6 +7,7 @@ import interactive_plot as dp
 from sensor import Sensor, Station
 from extractor2 import DataExtractor
 from dialogs import DateDialog
+import settings as st
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -38,8 +39,8 @@ class HelpScreen(QtWidgets.QWidget):
         super(HelpScreen, self).__init__(parent)
 
         # Object for data persistence
-        self.settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
-        # self.settings.remove("savepath")
+        # self.settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
+        # st.SETTINGS.remove("savepath")
 
         self.layout = QtWidgets.QVBoxLayout()
 
@@ -87,10 +88,10 @@ class HelpScreen(QtWidgets.QWidget):
         self.lineEditPath.setFixedWidth(280)
 
         # If a save path hasn't been defined, give it a home directory
-        if(self.settings.value("savepath")):
-            self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
+        if(st.getPath(st.SAVE_KEY)):
+            self.lineEditPath.setPlaceholderText(st.getPath(st.SAVE_KEY))
         else:
-            self.settings.setValue("savepath",os.path.expanduser('~'))
+            st.SETTINGS.setValue(st.SAVE_KEY,os.path.expanduser('~'))
             self.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
 
         self.layout.addWidget(self.lineEditPath)
@@ -100,8 +101,23 @@ class HelpScreen(QtWidgets.QWidget):
         self.layout.addWidget(saveButton)
 
 
+
+        self.lineEditLoadPath = QtWidgets.QLineEdit()
+        self.lineEditLoadPath.setObjectName(_fromUtf8("lineEditLoadPath"))
+        self.lineEditLoadPath.setPlaceholderText(st.getPath(st.LOAD_KEY))
+        self.lineEditLoadPath.setFixedWidth(280)
+
+
+        self.layout.addWidget(self.lineEditLoadPath)
+
+        loadButton = QtWidgets.QPushButton("Change Load Folder")
+        loadButton.setFixedWidth(110)
+        self.layout.addWidget(loadButton)
+
+
         button = QtWidgets.QPushButton("Back to main")
         self.layout.addWidget(button)
+
 
         self.layout.addStretch()
         # self.button1 = QtWidgets.QPushButton("Button 1")
@@ -112,21 +128,19 @@ class HelpScreen(QtWidgets.QWidget):
 
         self.setLayout(self.layout)
         button.clicked.connect(self.clicked.emit)
-        saveButton.clicked.connect(self.savePath)
+        saveButton.clicked.connect(lambda: self.savePath(self.lineEditPath,st.SAVE_KEY))
+        loadButton.clicked.connect(lambda: self.savePath(self.lineEditLoadPath,st.LOAD_KEY))
 
-    def savePath(self):
+    def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
         if(folder_name):
-            self.settings.setValue("savepath", folder_name)
-            self.settings.sync()
-            self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
-            self.lineEditPath.setText("")
+            st.SETTINGS.setValue(setStr, folder_name)
+            st.SETTINGS.sync()
+            lineEditObj.setPlaceholderText(st.getPath(setStr))
+            lineEditObj.setText("")
         else:
             pass
 
-    def getSavePath():
-        settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
-        return settings.value("savepath")
 
 class Start(QtWidgets.QWidget):
 
@@ -537,7 +551,7 @@ class Start(QtWidgets.QWidget):
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
                 try:
-                    with open(HelpScreen.getSavePath()+'/tsTEST'+station_num+year_str+month_str+'.dat', 'w') as the_file:
+                    with open(st.getPath(st.SAVE_KEY)+'/tsTEST'+station_num+year_str+month_str+'.dat', 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin+"\n")
                         for line in assem_data[m]:
@@ -545,7 +559,7 @@ class Start(QtWidgets.QWidget):
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9'*80)
                 except IOError as e:
-                    self.show_custom_message("Error", "Cannot Save to "+ HelpScreen.getSavePath() +"\n"+str(e)+"\n Please select a different path to save to")
+                    self.show_custom_message("Error", "Cannot Save to "+ st.getPath(st.SAVE_KEY) +"\n"+str(e)+"\n Please select a different path to save to")
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
         else:
