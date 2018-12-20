@@ -95,8 +95,8 @@ class HelpScreen(QtWidgets.QWidget):
 
         self.layout.addWidget(self.lineEditPath)
 
-        saveButton = QtWidgets.QPushButton("Save Path")
-        saveButton.setFixedWidth(100)
+        saveButton = QtWidgets.QPushButton("Change Save Folder")
+        saveButton.setFixedWidth(110)
         self.layout.addWidget(saveButton)
 
 
@@ -116,10 +116,13 @@ class HelpScreen(QtWidgets.QWidget):
 
     def savePath(self):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
-        self.settings.setValue("savepath", folder_name)
-        self.settings.sync()
-        self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
-        self.lineEditPath.setText("")
+        if(folder_name):
+            self.settings.setValue("savepath", folder_name)
+            self.settings.sync()
+            self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
+            self.lineEditPath.setText("")
+        else:
+            pass
 
     def getSavePath():
         settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
@@ -380,12 +383,10 @@ class Start(QtWidgets.QWidget):
     def _update_top_canvas(self, sens):
         data_flat = self.sens_objects[sens].get_flat_data()
         nines_ind = np.where(data_flat == 9999)
-        data_flat[nines_ind] = float('nan')
-        nancount = np.argwhere(np.isnan(data_flat)).size
-        if(nancount==data_flat.size):
-            # return (np.ndarray(0),)
+        if(len(nines_ind[0])<data_flat.size):
+            data_flat[nines_ind] = float('nan')
+        else:
             self.show_custom_message("Warning", "The following sensor has no data")
-            return
         self._static_ax.clear()
         self.browser.onDataEnd -= self.show_message
 
