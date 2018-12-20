@@ -91,7 +91,7 @@ class HelpScreen(QtWidgets.QWidget):
             self.lineEditPath.setPlaceholderText(self.settings.value("savepath"))
         else:
             self.settings.setValue("savepath",os.path.expanduser('~'))
-            elf.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
+            self.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
 
         self.layout.addWidget(self.lineEditPath)
 
@@ -378,14 +378,21 @@ class Start(QtWidgets.QWidget):
 
 
     def _update_top_canvas(self, sens):
-        self._static_ax.clear()
-        self.browser.onDataEnd -= self.show_message
         data_flat = self.sens_objects[sens].get_flat_data()
         nines_ind = np.where(data_flat == 9999)
         data_flat[nines_ind] = float('nan')
+        nancount = np.argwhere(np.isnan(data_flat)).size
+        if(nancount==data_flat.size):
+            # return (np.ndarray(0),)
+            self.show_custom_message("Warning", "The following sensor has no data")
+            return
+        self._static_ax.clear()
+        self.browser.onDataEnd -= self.show_message
+
         # time = np.arange(data_flat.size)
         time =self.sens_objects[sens].get_time_vector()
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
+
 
         self.browser = dp.PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(data_flat) )
         self.browser.onDataEnd += self.show_message
@@ -409,6 +416,7 @@ class Start(QtWidgets.QWidget):
     #     diff_np_abs =abs( np.array(diff) )
 
         # my_mad=robust.mad(data_flat,axis=0) #Median absolute deviation
+
         my_mad=np.nanmedian(np.abs(data-np.nanmedian(data)))
         my_mean=np.nanmean(data)
 
@@ -436,7 +444,7 @@ class Start(QtWidgets.QWidget):
         return np.asarray(min_data)
 
     def show_message(self):
-        choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  '', QtWidgets.QMessageBox.Ok)
+        choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
 
     def show_ref_dialog(self):
         try:
