@@ -135,14 +135,14 @@ class DataExtractor:
                 year = init_date_lst[0][:-2]
                 day = init_date_lst[1]
                 init_date_lst[1] = init_date_lst[0][4:]
-                
+
             if len(day) == 1:
                 day = "0" + day
             if len(month) == 1:
                 month = "0" + month
             if len(year) < 4:
                 year = "20" + year
-                
+
             init_date = np.datetime64("-".join([year, month, day]) + 'T00:00:00.000000')
             self.init_dates.append(init_date)
 
@@ -150,7 +150,7 @@ class DataExtractor:
                 # Read each row of data into a list of floats
                 # and also save the non-sensor data part (0:21) for the output file
                 info_time_col.append(line[:20])
-                if float(self.frequencies[sensor]) >= 6.0:
+                if float(self.frequencies[sensor]) >= 5.0:
                     fields = self.split_by_n(5, line[20:].rstrip('\n'))  # for 5 digit data format
                 else:
                     fields = self.split_by_n(4, line[20:].rstrip('\n'))  # for 4 digit data format
@@ -162,7 +162,7 @@ class DataExtractor:
                 # And add this row to the
                 # entire data set.
                 data.append(row_data)
-                
+
             # # Finally, convert the "list of
             # # lists" into a 2D array.
             # self.infos_time_col.append(info_time_col)
