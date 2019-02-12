@@ -85,6 +85,7 @@ class HelpScreen(QtWidgets.QWidget):
 
         self.lineEditPath = QtWidgets.QLineEdit()
         self.lineEditPath.setObjectName(_fromUtf8("lineEditPath"))
+        self.lineEditPath.setDisabled(True)
         self.lineEditPath.setFixedWidth(280)
 
         # If a save path hasn't been defined, give it a home directory
@@ -97,7 +98,7 @@ class HelpScreen(QtWidgets.QWidget):
         self.layout.addWidget(self.lineEditPath)
 
         saveButton = QtWidgets.QPushButton("Change Save Folder")
-        saveButton.setFixedWidth(110)
+        saveButton.setFixedWidth(130)
         self.layout.addWidget(saveButton)
 
 
@@ -105,13 +106,14 @@ class HelpScreen(QtWidgets.QWidget):
         self.lineEditLoadPath = QtWidgets.QLineEdit()
         self.lineEditLoadPath.setObjectName(_fromUtf8("lineEditLoadPath"))
         self.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
+        self.lineEditLoadPath.setDisabled(True)
         self.lineEditLoadPath.setFixedWidth(280)
 
 
         self.layout.addWidget(self.lineEditLoadPath)
 
         loadButton = QtWidgets.QPushButton("Change Load Folder")
-        loadButton.setFixedWidth(110)
+        loadButton.setFixedWidth(130)
         self.layout.addWidget(loadButton)
 
 
