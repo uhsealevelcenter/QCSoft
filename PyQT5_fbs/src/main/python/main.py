@@ -1,29 +1,14 @@
-from fbs_runtime.application_context import ApplicationContext, cached_property
-from PyQt5.QtWidgets import QMainWindow
-
 import sys
 
-import time
-
-import numpy as np
-import interactive_plot as dp
-import settings as st
-from sensor import Sensor, Station
-from extractor2 import DataExtractor
+from fbs_runtime.application_context import ApplicationContext, cached_property
+from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
 
 from my_widgets import *
 
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
-
-
-
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-            FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
+    pass
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -33,16 +18,20 @@ except AttributeError:
 
 try:
     _encoding = QtWidgets.QApplication.UnicodeUTF8
+
+
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
+
 class AppContext(ApplicationContext):
     def run(self):
         self.window.show()
         return self.app.exec_()
+
     @cached_property
     def window(self):
         return ApplicationWindow()
@@ -58,7 +47,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QtGui.QIcon('uhslclogotext72_pfL_icon.ico'))
         self.resize(1837, 1200)
 
-        #Create Screen objects
+        # Create Screen objects
         self.start_screen = Start(self)
         self.second_screen = HelpScreen(self)
         self._main.addWidget(self.start_screen)
@@ -69,54 +58,51 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.start_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.second_screen))
         self.second_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.start_screen))
 
-
         self.setStatusTip("Permanent status bar")
         # Create an action in the menu bar that is later on assigned to one of
         # the options (e.g. File, Edit, View etc) in the menu bar
-        closeApp = QtWidgets.QAction("&Exit", self)
-        closeApp.setShortcut("Ctrl+Q")
+        close_app = QtWidgets.QAction("&Exit", self)
+        close_app.setShortcut("Ctrl+Q")
         # Show the tip in the status bar on hover
-        closeApp.setStatusTip('Leave the app')
-        closeApp.triggered.connect(self.close_application)
+        close_app.setStatusTip('Leave the app')
+        close_app.triggered.connect(self.close_application)
 
-        openHelpMenu =  QtWidgets.QAction("&Instructions", self)
-        openHelpMenu.setShortcut("F1")
-        openHelpMenu.triggered.connect(self.start_screen.clicked.emit)
-        # openHelpMenu.triggered.connect(self.open_help_menu)
+        open_help_menu = QtWidgets.QAction("&Instructions", self)
+        open_help_menu.setShortcut("F1")
+        open_help_menu.triggered.connect(self.start_screen.clicked.emit)
+        # open_help_menu.triggered.connect(self.open_help_menu)
 
-        openFile = QtWidgets.QAction("&Open", self)
-        openFile.setShortcut("Ctrl+O")
-        openFile.setStatusTip('Load a File')
-        openFile.triggered.connect(self.file_open)
-
+        open_file = QtWidgets.QAction("&Open", self)
+        open_file.setShortcut("Ctrl+O")
+        open_file.setStatusTip('Load a File')
+        open_file.triggered.connect(self.file_open)
 
         self.statusBar()
 
         # Create dropwon menu
-        mainMenu = self.menuBar()
+        main_menu = self.menuBar()
 
         # Add options to the menuBar
-        fileMenu = mainMenu.addMenu('&File')
-        helpMenu = mainMenu.addMenu('&Help')
+        file_menu = main_menu.addMenu('&File')
+        help_menu = main_menu.addMenu('&Help')
+
         # Connect action with the option
-        fileMenu.addAction(openFile)
-        fileMenu.addAction(closeApp)
-        helpMenu.addAction(openHelpMenu)
-
-
+        file_menu.addAction(open_file)
+        file_menu.addAction(close_app)
+        help_menu.addAction(open_help_menu)
 
     def file_open(self):
         filters = "s*.dat;; ts*.dat"
-        if(st.getPath(st.LOAD_KEY)):
-            path = st.getPath(st.LOAD_KEY)
+        if st.get_path(st.LOAD_KEY):
+            path = st.get_path(st.LOAD_KEY)
         else:
             # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
             path = os.path.expanduser('~')
         file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
-        #file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
+        # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
         # Validating files selected, put this into a function
-        if (self.is_valid_files(file_name)):
+        if self.is_valid_files(file_name):
             pass
         else:
             self.warning_dialog()
@@ -126,11 +112,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # in_file = open(name[0],'r')
             self.month_count = len(file_name[0])
             print('FILENAME', file_name[0])
-            self.start_screen.sens_objects = {} ## Collection of Sensor objects for station for one month
-            comb_data = np.ndarray(0) # ndarray of concatonated data for all the months that were loaded for a particular station
-            comb_time_col = []  #combined rows of all time columns for all the months that were loaded for a particular station
+            self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
+
+            comb_data = np.ndarray(
+                0)  # ndarray of concatonated data for all the months that were loaded for a particular station
+            comb_time_col = []  # combined rows of all time columns for all the months that were loaded for a
+            # particular station
             de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
-            line_count = [] # array for the number of lines (excluding headers and 9999s)for each month that were loaded for a particular station. Added as an attribute to respective sensor objects
+            line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
+            # loaded for a particular station. Added as an attribute to respective sensor objects
 
             # clear residual figure on new file load
             self.start_screen.residual_canvas.figure.clf()
@@ -142,7 +132,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station name will be the same
             station_name = de[0].headers[0][:6]
-            myStation = Station(station_name,[0,1])
+            my_station = Station(station_name, [0, 1])
 
             # Cycle through all the Sensors
             # The reason de[0] is used is because the program only allows to load
@@ -152,16 +142,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 # cycle through all the months loaded (ie. DataExtractor objects)
                 for d in de:
                     comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
-                    comb_time_col = comb_time_col+d.infos_time_col[de[0].sensor_ids[i][-3:]]
+                    comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
                     line_count.append(len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
-                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(myStation,de[0].frequencies[i], de[-1].refs[i], de[0].sensor_ids[i],de[0].init_dates[i], comb_data, comb_time_col,de[0].headers[i])
-                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]].line_num = line_count # adding a line_num attribute for each sensor
+                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
+                                                                                  de[-1].refs[i], de[0].sensor_ids[i],
+                                                                                  de[0].init_dates[i], comb_data,
+                                                                                  comb_time_col, de[0].headers[i])
+                self.start_screen.sens_objects[
+                    de[0].sensor_ids[i][-3:]].line_num = line_count  # adding a line_num attribute for each sensor
                 # Empty the combined data
                 comb_time_col = []
                 comb_data = np.ndarray(0)
                 line_count = []
 
             self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
+
 
             self.sens_str = "PRD"
             self.data_flat = self.start_screen.sens_objects[self.sens_str].get_flat_data()
@@ -179,34 +174,34 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)
 
-
     def warning_dialog(self):
-        # choice = QtWidgets.QMessageBox.critical(self, 'Warning, wrong files selected',  "The data files selected do not belong to the adjacent months and/or do not belong the same station. Please select valid files to continue\nTST", QtWidgets.QMessageBox.Ok)
-        msgBox = QtWidgets.QMessageBox(self)
-        msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-        msgBox.setWindowTitle("ERROR!")
-        msgBox.setText("Warning, wrong files selected")
-        msgBox.setInformativeText("The files need to belong to the adjacent months and the same station. Please select valid files to continue.")
-        # msgBox.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard | QtWidgets.QMessageBox.Cancel)
-        msgBox.setDetailedText('''MAC:
+        # choice = QtWidgets.QMessageBox.critical(self, 'Warning, wrong files selected',  "The data files selected do
+        # not belong to the adjacent months and/or do not belong the same station. Please select valid files to
+        # continue\nTST", QtWidgets.QMessageBox.Ok)
+        msg_box = QtWidgets.QMessageBox(self)
+        msg_box.setIcon(QtWidgets.QMessageBox.Critical)
+        msg_box.setWindowTitle("ERROR!")
+        msg_box.setText("Warning, wrong files selected")
+        msg_box.setInformativeText(
+            "The files need to belong to the adjacent months and the same station. Please select valid files to "
+            "continue.")
+        # msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard |
+        # QtWidgets.QMessageBox.Cancel)
+        msg_box.setDetailedText('''MAC:
         The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
         The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
         ''')
-        msgBox.setDefaultButton(QtWidgets.QMessageBox.Ok)
-        msgBox.exec_()
+        msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
+        msg_box.exec_()
         # if(choice == QtWidgets.QMessageBox.Yes):
         #     sys.exit()
         # else:
         #     pass
 
-
-
-
-
-    def pairwiseDiff(self, lst):
-        diff = 0;
+    def pairwise_diff(self, lst):
+        diff = 0
         result = []
-        for i in range(len(lst)-1):
+        for i in range(len(lst) - 1):
             # subtracting the alternate numbers
             diff = lst[i] - lst[i + 1]
             result.append(diff)
@@ -218,29 +213,31 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         result = []
         # extract dates and station 4 letter codes for every file that was loaded
         for file in files[0]:
-            if(file[-8:-4].isdigit()):
+            if file[-8:-4].isdigit():
                 dates.append(int(file[-8:-4]))
                 # check if monp file or a TS file
-                if(file.split("/")[-1][0]=="s"):
+                if file.split("/")[-1][0] == "s":
                     names.append(file.split("/")[-1][1:5])
                 else:
                     names.append(file.split("/")[-1][0:4])
         # check the difference between all dates
-        for val in self.pairwiseDiff(dates):
-            if (val != -1 and val != -89):
+        for val in self.pairwise_diff(dates):
+            if val != -1 and val != -89:
                 result.append(val)
         # check if the files selected are all from the same station
-        if (names[1:] != names[:-1]):
+        if names[1:] != names[:-1]:
             return False
 
         return len(result) == 0
 
     def close_application(self):
-        choice = QtWidgets.QMessageBox.question(self, 'Warning',  "Are you sure you want to quit?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if(choice == QtWidgets.QMessageBox.Yes):
+        choice = QtWidgets.QMessageBox.question(self, 'Warning', "Are you sure you want to quit?",
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if choice == QtWidgets.QMessageBox.Yes:
             sys.exit()
         else:
             pass
+
 
 if __name__ == '__main__':
     appctxt = AppContext()

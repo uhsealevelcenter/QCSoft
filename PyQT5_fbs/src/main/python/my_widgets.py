@@ -88,8 +88,8 @@ class HelpScreen(QtWidgets.QWidget):
         self.lineEditPath.setFixedWidth(280)
 
         # If a save path hasn't been defined, give it a home directory
-        if(st.getPath(st.SAVE_KEY)):
-            self.lineEditPath.setPlaceholderText(st.getPath(st.SAVE_KEY))
+        if(st.get_path(st.SAVE_KEY)):
+            self.lineEditPath.setPlaceholderText(st.get_path(st.SAVE_KEY))
         else:
             st.SETTINGS.setValue(st.SAVE_KEY,os.path.expanduser('~'))
             self.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
@@ -104,7 +104,7 @@ class HelpScreen(QtWidgets.QWidget):
 
         self.lineEditLoadPath = QtWidgets.QLineEdit()
         self.lineEditLoadPath.setObjectName(_fromUtf8("lineEditLoadPath"))
-        self.lineEditLoadPath.setPlaceholderText(st.getPath(st.LOAD_KEY))
+        self.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
         self.lineEditLoadPath.setFixedWidth(280)
 
 
@@ -136,7 +136,7 @@ class HelpScreen(QtWidgets.QWidget):
         if(folder_name):
             st.SETTINGS.setValue(setStr, folder_name)
             st.SETTINGS.sync()
-            lineEditObj.setPlaceholderText(st.getPath(setStr))
+            lineEditObj.setPlaceholderText(st.get_path(setStr))
             lineEditObj.setText("")
         else:
             pass
@@ -322,10 +322,11 @@ class Start(QtWidgets.QWidget):
         print("ref height:",self.sens_objects[self.sens_str].height)
 
     def update_graph_values(self):
-        ## convert 'nans' back to 9999s
+        # convert 'nans' back to 9999s
         nan_ind = np.argwhere(np.isnan(self.browser.data))
         self.browser.data[nan_ind] = 9999
-        self.sens_objects[self.sens_str].data = self.browser.data;
+        self.sens_objects[self.sens_str].data = self.browser.data
+
 
     def on_residual_sensor_changed(self, btn):
         print (btn.text())
@@ -492,9 +493,13 @@ class Start(QtWidgets.QWidget):
 
     def save_to_ts_files(self):
         if(self.sens_objects):
-            months = len(self.sens_objects["PRD"].line_num) # amount of months loaded. Need to be a dynamic variable later
+            months = len(self.sens_objects["PRD"].line_num)  # amount of months loaded
             # print("Amount of months loaded", months)
-            assem_data=[[] for j in range(months)] #initial an empty list of lists with the number of months
+            assem_data=[[] for j in range(months)]  # initial an empty list of lists with the number of months
+            nan_ind = np.argwhere(np.isnan(self.browser.data))
+            # print("NAN INDICES",nan_ind)
+            self.browser.data[nan_ind] = 9999
+            self.sens_objects[self.sens_str].data = self.browser.data;
             # separate PRD from the rest because it has to be saved on the top file
             # Because dictionaries are unordered
             prd_list = [[] for j in range(months)]
@@ -551,7 +556,7 @@ class Start(QtWidgets.QWidget):
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
                 try:
-                    with open(st.getPath(st.SAVE_KEY)+'/tsTEST'+station_num+year_str+month_str+'.dat', 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/tsTEST' + station_num + year_str + month_str + '.dat', 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin+"\n")
                         for line in assem_data[m]:
@@ -559,7 +564,7 @@ class Start(QtWidgets.QWidget):
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9'*80)
                 except IOError as e:
-                    self.show_custom_message("Error", "Cannot Save to "+ st.getPath(st.SAVE_KEY) +"\n"+str(e)+"\n Please select a different path to save to")
+                    self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
         else:

@@ -1,5 +1,6 @@
 import numpy as np
-## sensor
+# sensor
+
 
 class Station:
     """
@@ -10,6 +11,7 @@ class Station:
     def __init__(self, name, location):
         self.name = name
         self.location = location
+
 
 class Sensor(Station):
     """
@@ -22,7 +24,7 @@ class Sensor(Station):
     data   : sea level measurements
     """
 
-    def __init__(self, Station, rate, height,typ,date0, data, info, header):
+    def __init__(self, Station, rate, height, typ, date0, data, info, header):
         # Station.__init__(self, Station.name, Station.location)
         self.name = Station.name
         self.location = Station.location
@@ -34,9 +36,8 @@ class Sensor(Station):
         self.time_info = info
         self.header = header
 
-
     def get_flat_data(self):
         return self.data.flatten()
 
     def get_time_vector(self):
-        return np.array([self.date + np.timedelta64(i*int(self.rate),'m') for i in range(self.get_flat_data().size)])
+        return np.array([self.date + np.timedelta64(i*int(self.rate), 'm') for i in range(self.get_flat_data().size)])
