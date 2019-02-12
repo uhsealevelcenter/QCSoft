@@ -558,7 +558,7 @@ class Start(QtWidgets.QWidget):
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/tsTEST' + station_num + year_str + month_str + '.dat', 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/ts' + station_num + year_str + month_str + '.dat', 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin+"\n")
                         for line in assem_data[m]:
