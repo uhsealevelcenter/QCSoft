@@ -447,7 +447,7 @@ class Start(QtWidgets.QWidget):
         return itemindex
 
     def resample2(self, sens_str):
-        data = self.sens_objects[sens_str].data
+        data = self.sens_objects[sens_str].data.copy()
         nines_ind = np.where(data == 9999)
         data[nines_ind] = float('nan')
         ave = np.nanmean(data)
@@ -459,6 +459,8 @@ class Start(QtWidgets.QWidget):
         for j in range(0,len(datas)):
             for i in range(0,int(self.sens_objects[sens_str].rate)):
                 min_data.append(float(datas[j]+yc[j]))
+        # nan_ind = np.argwhere(np.isnan(min_data))
+        # min_data[nan_ind] = 9999
         return np.asarray(min_data)
 
     def show_message(self):
@@ -500,8 +502,8 @@ class Start(QtWidgets.QWidget):
             assem_data=[[] for j in range(months)]  # initial an empty list of lists with the number of months
             nan_ind = np.argwhere(np.isnan(self.browser.data))
             # print("NAN INDICES",nan_ind)
-            self.browser.data[nan_ind] = 9999
-            self.sens_objects[self.sens_str].data = self.browser.data
+            # self.browser.data[nan_ind] = 9999
+            # self.sens_objects[self.sens_str].data = self.browser.data
             # separate PRD from the rest because it has to be saved on the top file
             # Because dictionaries are unordered
             prd_list = [[] for j in range(months)]
