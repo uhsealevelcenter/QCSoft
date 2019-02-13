@@ -501,7 +501,7 @@ class Start(QtWidgets.QWidget):
             nan_ind = np.argwhere(np.isnan(self.browser.data))
             # print("NAN INDICES",nan_ind)
             self.browser.data[nan_ind] = 9999
-            self.sens_objects[self.sens_str].data = self.browser.data;
+            self.sens_objects[self.sens_str].data = self.browser.data
             # separate PRD from the rest because it has to be saved on the top file
             # Because dictionaries are unordered
             prd_list = [[] for j in range(months)]
@@ -521,7 +521,7 @@ class Start(QtWidgets.QWidget):
                     # so that the data can be saved to separate, monthly files
                     for i in range(sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:]), sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:])+self.sens_objects[key].line_num[m]):
                         # File formatting is differs based on the sampling rate of a sensor
-                        if(int(self.sens_objects[key].rate)>=6):
+                        if(int(self.sens_objects[key].rate)>=5):
                             # ys_str_list.append(' '.join(str(e) for e in ys[i*12:12+i*12].tolist()))
                             # Get only sealevel reading, without anything else (no time/date etc)
                             data = ''.join('{:5.0f}'.format(e) for e in self.sens_objects[key].data.flatten()[i*12:12+i*12].tolist())

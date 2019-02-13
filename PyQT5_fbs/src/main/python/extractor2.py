@@ -73,14 +73,14 @@ class DataExtractor:
             data = []  # only sea level measurements (no time)
             info_time_col = []
 
-            if float(self.frequencies[sensor]) >= 6.0:
+            if float(self.frequencies[sensor]) >= 5.0:
                 lines_per_day = int(1440 / 12 / int((self.frequencies[sensor])))
             else:
                 lines_per_day = int(1440 / 15 / int((self.frequencies[sensor])))
 
             pre_text = list_of_lists[sensor][1][1:][0][0:15]
 
-            # 1) Figure out the missing date (HARD CODING FOR NOW)
+            # 1) Figure out the missing date
             m_length = int(list_of_lists[sensor][1][0:][0][77:79])
 
             # print(m_length)
@@ -112,7 +112,7 @@ class DataExtractor:
                 bad_data_ar = []
                 # 2) Add lines_per_day lines with 9999 values and increase the line counter
                 for l in range(lines_per_day):
-                    if float(self.frequencies[sensor]) >= 6.0:
+                    if float(self.frequencies[sensor]) >= 5.0:
                         # print(pre_text+str(missing_date_str)+" "+'{:>2}'.format(str(l))+" 9999"*12)
                         bad_data_ar.append(
                             pre_text + str(missing_date_str) + " " + '{:>2}'.format(str(l)) + " 9999" * 12 + "\n")
