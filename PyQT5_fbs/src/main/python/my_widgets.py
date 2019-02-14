@@ -346,7 +346,9 @@ class Start(QtWidgets.QWidget):
         self.line, = self._static_ax.plot(t, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
         self._static_fig = self.static_canvas.figure
         self._static_ax.set_title('click on point you would like to remove and press "D"')
+
         self._static_ax.autoscale(enable=True, axis='both', tight=True)
+        self._static_ax.set_xlim([t[0], t[-1]])
 
         self.browser = dp.PointBrowser(t,y,self._static_ax,self.line,self._static_fig, self.find_outliers(data))
         self.browser.onDataEnd += self.show_message
@@ -380,6 +382,7 @@ class Start(QtWidgets.QWidget):
         self._residual_fig = canvas.figure
         self._residual_ax.set_title('Residual: '+sens1+" - "+sens2)
         self._residual_ax.autoscale(enable=True, axis='both', tight=True)
+        self._residual_ax.set_xlim([x[0], x[-1]])
 
         if(is_interactive):
             self.browser = dp.PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(y))
@@ -421,6 +424,7 @@ class Start(QtWidgets.QWidget):
         self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
         self.static_canvas.setFocus()
         self._static_ax.autoscale(enable=True, axis='both', tight=True)
+        self._static_ax.set_xlim([time[0], time[-1]])
         self._static_ax.figure.canvas.flush_events()
         self._static_ax.figure.canvas.draw()
 

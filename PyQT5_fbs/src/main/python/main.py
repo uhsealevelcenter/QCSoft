@@ -1,4 +1,6 @@
 import sys
+import logging
+import traceback
 
 from fbs_runtime.application_context import ApplicationContext, cached_property
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
@@ -28,9 +30,17 @@ except AttributeError:
 
 
 class AppContext(ApplicationContext):
+    logging.basicConfig(filename='/tmp/qcsoft.log')
     def run(self):
         self.window.show()
         return self.app.exec_()
+
+    def exception_hook(self, exc_type, exc_value, exc_traceback):
+        self.window.critical_dialog(title="ERROR!", text="Uncaught exception", info_text="log file saved at '/tmp/qcsoft.log'", details=traceback.format_tb(exc_traceback))
+        logging.error(
+            {"Uncaught exception, filename", self.window.file_name[0][0]},
+            exc_info=(exc_type, exc_value, exc_traceback)
+        )
 
     @cached_property
     def window(self):
@@ -41,6 +51,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
         self._main = QtWidgets.QStackedWidget()
+        self.file_name = "NO NAME"
         # self._main = QtWidgets.QWidget()
         self.setCentralWidget(self._main)
         self.setWindowTitle("UHSLC QC Software")
@@ -98,20 +109,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
             path = os.path.expanduser('~')
-        file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
+        self.file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
         # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
         # Validating files selected, put this into a function
-        if self.is_valid_files(file_name):
+        if self.is_valid_files(self.file_name):
             pass
         else:
-            self.warning_dialog()
+            self.critical_dialog(title="ERROR",
+            text="Warning, wrong files selected",
+            info_text="The files need to belong to the adjacent months and the same station. Please select valid files to continue",
+            details=''''MAC:
+            The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
+            The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
+            ''')
             return
 
         try:
             # in_file = open(name[0],'r')
-            self.month_count = len(file_name[0])
-            print('FILENAME', file_name[0])
+            self.month_count = len(self.file_name[0])
+            print('FILENAME', self.file_name[0][0])
             self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
 
             comb_data = np.ndarray(
@@ -128,7 +145,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             # Create DataExtractor for each month that was loaded into program
             for j in range(self.month_count):
-                de.append(DataExtractor(file_name[0][j]))
+                de.append(DataExtractor(self.file_name[0][j]))
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station name will be the same
             station_name = de[0].headers[0][:6]
@@ -174,29 +191,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)
 
-    def warning_dialog(self):
-        # choice = QtWidgets.QMessageBox.critical(self, 'Warning, wrong files selected',  "The data files selected do
-        # not belong to the adjacent months and/or do not belong the same station. Please select valid files to
-        # continue\nTST", QtWidgets.QMessageBox.Ok)
+    def critical_dialog(self, title, text, info_text, details):
         msg_box = QtWidgets.QMessageBox(self)
         msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-        msg_box.setWindowTitle("ERROR!")
-        msg_box.setText("Warning, wrong files selected")
-        msg_box.setInformativeText(
-            "The files need to belong to the adjacent months and the same station. Please select valid files to "
-            "continue.")
-        # msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Discard |
-        # QtWidgets.QMessageBox.Cancel)
-        msg_box.setDetailedText('''MAC:
-        The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
-        The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
-        ''')
+        msg_box.setWindowTitle(title)
+        msg_box.setText(text)
+        msg_box.setInformativeText(info_text)
+        msg_box.setDetailedText(str(details))
         msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
         msg_box.exec_()
-        # if(choice == QtWidgets.QMessageBox.Yes):
-        #     sys.exit()
-        # else:
-        #     pass
 
     def pairwise_diff(self, lst):
         diff = 0
@@ -238,8 +241,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         else:
             pass
 
-
 if __name__ == '__main__':
     appctxt = AppContext()
+    sys.excepthook = appctxt.exception_hook
     exit_code = appctxt.run()
     sys.exit(exit_code)
