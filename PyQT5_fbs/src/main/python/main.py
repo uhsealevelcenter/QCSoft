@@ -150,7 +150,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # multiple months for the same station, so the station name will be the same
             station_name = de[0].headers[0][:6]
             my_station = Station(station_name, [0, 1])
-
+            comb_headers = []
             # Cycle through all the Sensors
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station sensors should be the same
@@ -161,16 +161,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
                     comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
                     line_count.append(len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
+                    comb_headers.append(d.headers[i])
                 self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
                                                                                   de[-1].refs[i], de[0].sensor_ids[i],
                                                                                   de[0].init_dates[i], comb_data,
-                                                                                  comb_time_col, de[0].headers[i])
+                                                                                  comb_time_col, comb_headers)
                 self.start_screen.sens_objects[
                     de[0].sensor_ids[i][-3:]].line_num = line_count  # adding a line_num attribute for each sensor
                 # Empty the combined data
                 comb_time_col = []
                 comb_data = np.ndarray(0)
                 line_count = []
+                comb_headers = []
 
             self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
 
@@ -178,11 +180,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.sens_str = "PRD"
             self.data_flat = self.start_screen.sens_objects[self.sens_str].get_flat_data()
             self.time = self.start_screen.sens_objects[self.sens_str].get_time_vector()
+            # self.time = self.start_screen.sens_objects[self.sens_str].get_time_vector()
 
             ## Set 9999s to NaN so they don't show up on the graph
             ## when initially plotted
             ## nans are converted back to 9999s when file is saved
-            self.start_screen.lineEdit.setText(self.start_screen.sens_objects[self.sens_str].header)
+            self.start_screen.lineEdit.setText(self.start_screen.sens_objects[self.sens_str].header[0])
             nines_ind = np.where(self.data_flat == 9999)
             self.data_flat[nines_ind] = float('nan')
 

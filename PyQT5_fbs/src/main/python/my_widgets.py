@@ -319,7 +319,7 @@ class Start(QtWidgets.QWidget):
         print (btn.text())
         self.sens_str = btn.text()
         self._update_top_canvas(btn.text())
-        self.lineEdit.setText(self.sens_objects[self.sens_str].header)
+        self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
         self.update_graph_values()
         print("ref height:",self.sens_objects[self.sens_str].height)
 
@@ -371,8 +371,10 @@ class Start(QtWidgets.QWidget):
             resid = newd2 - newd1[:newd2.size]
         else:
             resid = newd1 - newd2[:newd1.size]
-        t = np.arange(resid.size)
-        self.generic_plot(self.residual_canvas, t, resid,sens_str1,sens_str2, False)
+        # t = np.arange(resid.size)
+        time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
+
+        self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, False)
 
     def generic_plot(self, canvas, x, y,sens1, sens2, is_interactive):
         canvas.figure.clf()
@@ -411,7 +413,7 @@ class Start(QtWidgets.QWidget):
         self.browser.onDataEnd -= self.show_message
 
         # time = np.arange(data_flat.size)
-        time =self.sens_objects[sens].get_time_vector()
+        time = self.sens_objects[sens].get_time_vector()
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
 
 
@@ -488,9 +490,9 @@ class Start(QtWidgets.QWidget):
 
                     # format the new reference to a 4 character string (i.e add leading zeros if necessary)
                     # update the header
-                    new_header = self.sens_objects[self.sens_str].header[:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[64:]
-                    self.sens_objects[self.sens_str].header = new_header
-                    self.lineEdit.setText(self.sens_objects[self.sens_str].header)
+                    new_header = self.sens_objects[self.sens_str].header[0][:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[0][64:]
+                    self.sens_objects[self.sens_str].header[0] = new_header
+                    self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
                     #offset the data
                     self.browser.offset_data(ISOstring, REF_diff)
             else:
@@ -520,9 +522,9 @@ class Start(QtWidgets.QWidget):
                     # Add header
                     # separate PRD from the rest because it has to be saved on the top file
                     if(key == "PRD"):
-                        prd_list[m].append(self.sens_objects[key].header.strip("\n"))
+                        prd_list[m].append(self.sens_objects[key].header[m].strip("\n"))
                     else:
-                        assem_data[m].append(self.sens_objects[key].header.strip("\n"))
+                        assem_data[m].append(self.sens_objects[key].header[m].strip("\n"))
                     # The ugly range is calculating start and end line numbers for each month that was Loaded
                     # so that the data can be saved to separate, monthly files
                     for i in range(sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:]), sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:])+self.sens_objects[key].line_num[m]):
