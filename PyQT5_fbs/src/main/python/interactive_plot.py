@@ -45,13 +45,14 @@ class PointBrowser:
             self.ys[index] = data[1]
             # update UNDONE marker index
             self.lastind = index
-            self.update()
+            self.update(event = event)
             # return
-
-        if event.key not in ('n', 'b', 'd', 'right', 'left', '0'):
+        if event.key not in ('n', 'b', 'd', 'right', 'left', '0', 'ctrl+z'):
             return
         if event.key == '0':
             self.ax.autoscale(enable=True, axis='both', tight=True)
+            self.ax.set_xlim([self.xs[0], self.xs[-1]])
+            self.ax.margins(0.05, 0.05)
             self.pan_index = -1
         if event.key == 'right' or event.key == 'left':
             if event.key == 'right':
@@ -102,10 +103,14 @@ class PointBrowser:
 
         self.lastind = self.np.clip(self.lastind, 0, len(self.xs) - 1)
 
+        # if event.key != '0':
+        #     self.pan_index = self.lastind // self.jump_step
+        #     self.onpan(self.pan_index)
+
         # print("NK ", self.lastind, self.outl)
         # print("outl_indl ", self.outl_ind)
         # self.lastind = self.np.clip(self.lastind, 0, len(self.xs) - 1)
-        self.update()
+        self.update(event = event)
 
     def onpick(self, event):
         # print(event.artist)
@@ -138,9 +143,9 @@ class PointBrowser:
         self.onpan(self.pan_index)
 
         self.lastind = dataind
-        self.update()
+        self.update(event = None)
 
-    def update(self):
+    def update(self, event = None):
         if self.lastind is None:
             return
 
@@ -157,6 +162,10 @@ class PointBrowser:
         #                  transform=ax2.transAxes, va='top')
         #         ax2.set_ylim(-0.5, 1.5)
         # ax2.cla()
+        if event:
+            if(event.key != '0' and event.key != 'left' and event.key != 'right'):
+                self.pan_index = self.lastind // self.jump_step
+                self.onpan(self.pan_index)
 
         self.selected.set_visible(True)
         self.selected.set_data(self.xs[dataind], self.ys[dataind])
@@ -180,8 +189,8 @@ class PointBrowser:
     def onpan(self, p_index):
         left = self.jump_step * p_index
         right = self.jump_step * p_index + self.jump_step
-        if (right > len(self.xs)):
-            self.onDataEnd.fire()
+        if (right > len(self.xs)+self.jump_step):
+
             return
         # limiting left and right range to the size of the data
         if (right > len(self.xs) - 1):
@@ -194,6 +203,7 @@ class PointBrowser:
                 pan_lim = pan_lim - 1
             self.pan_index = pan_lim  # Limit pan index from growing larger than needed
             # self.pan_index = -1
+            self.onDataEnd.fire()
             print("End of the data reached")
         if (left < 0):
             left = 0
@@ -214,10 +224,12 @@ class PointBrowser:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
+                self.onDataEnd.fire()
         while data_ar[outl_ar[pointer]] == 9999:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
+                self.onDataEnd.fire()
                 break
         return pointer
 

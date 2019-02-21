@@ -8,6 +8,7 @@ from sensor import Sensor, Station
 from extractor2 import DataExtractor
 from dialogs import DateDialog
 import settings as st
+from pandas import *
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -62,13 +63,14 @@ class HelpScreen(QtWidgets.QWidget):
         l1.setText("Program manual")
         l2.setText(
         '''
-        Click Ctrl (Cmd) + O to load data
+        Press Ctrl (Cmd) + O to load data
         To delete a data point press "D"
         Use left and right arrow to pan through the data
         Press "b" to scroll backwards through the individual data points
         Press "n" to scroll forward through the individual data points
         Click on any particular data point to zoom in on that data section
         Press "0" to reset the view back to the entire data set
+        Press Ctrl (Cmd) + Z to undo data deletion
 
         Click the "SAVE" button to save changes to a "TS" file
         '''
@@ -98,7 +100,7 @@ class HelpScreen(QtWidgets.QWidget):
         self.layout.addWidget(self.lineEditPath)
 
         saveButton = QtWidgets.QPushButton("Change Save Folder")
-        saveButton.setFixedWidth(130)
+        saveButton.setFixedWidth(180)
         self.layout.addWidget(saveButton)
 
 
@@ -113,7 +115,7 @@ class HelpScreen(QtWidgets.QWidget):
         self.layout.addWidget(self.lineEditLoadPath)
 
         loadButton = QtWidgets.QPushButton("Change Load Folder")
-        loadButton.setFixedWidth(130)
+        loadButton.setFixedWidth(180)
         self.layout.addWidget(loadButton)
 
 
@@ -349,8 +351,9 @@ class Start(QtWidgets.QWidget):
 
         self._static_ax.autoscale(enable=True, axis='both', tight=True)
         self._static_ax.set_xlim([t[0], t[-1]])
+        self._static_ax.margins(0.05, 0.05)
 
-        self.browser = dp.PointBrowser(t,y,self._static_ax,self.line,self._static_fig, self.find_outliers(data))
+        self.browser = dp.PointBrowser(t,y,self._static_ax,self.line,self._static_fig, self.find_outliers(t, data, "PRD"))
         self.browser.onDataEnd += self.show_message
         self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
         self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
@@ -385,9 +388,10 @@ class Start(QtWidgets.QWidget):
         self._residual_ax.set_title('Residual: '+sens1+" - "+sens2)
         self._residual_ax.autoscale(enable=True, axis='both', tight=True)
         self._residual_ax.set_xlim([x[0], x[-1]])
+        self._residual_ax.margins(0.05, 0.05)
 
         if(is_interactive):
-            self.browser = dp.PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(y))
+            self.browser = dp.PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(x, y, sens1))
             self.browser.onDataEnd += self.show_message
             canvas.mpl_connect('pick_event', self.browser.onpick)
             canvas.mpl_connect('key_press_event', self.browser.onpress)
@@ -417,7 +421,7 @@ class Start(QtWidgets.QWidget):
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
 
 
-        self.browser = dp.PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(data_flat) )
+        self.browser = dp.PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(time, data_flat, sens) )
         self.browser.onDataEnd += self.show_message
         self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
         self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
@@ -427,10 +431,11 @@ class Start(QtWidgets.QWidget):
         self.static_canvas.setFocus()
         self._static_ax.autoscale(enable=True, axis='both', tight=True)
         self._static_ax.set_xlim([time[0], time[-1]])
+        self._static_ax.margins(0.05, 0.05)
         self._static_ax.figure.canvas.flush_events()
         self._static_ax.figure.canvas.draw()
 
-    def find_outliers(self, data):
+    def find_outliers(self, t, data, sens):
     #     diff=[]
     #     for i in range(data.size):
     #         if i==0:
@@ -441,16 +446,84 @@ class Start(QtWidgets.QWidget):
 
         # my_mad=robust.mad(data_flat,axis=0) #Median absolute deviation
 
-        my_mad=np.nanmedian(np.abs(data-np.nanmedian(data)))
-        my_mean=np.nanmean(data)
-
-        ## won't work where there is adjacent bad data
-        # itemindex = np.where(diff_np_abs>my_mad)
-
-        # nan_ind = np.argwhere(np.isnan(data))
-        itemindex = np.where(((data>my_mean+4*my_mad )  | (data<my_mean-4*my_mad)))
+        # my_mad=np.nanmedian(np.abs(data-np.nanmedian(data)))
+        # my_mean=np.nanmean(data)
+        # my_std = np.nanstd(data)*3
+        #
+        # ## won't work where there is adjacent bad data
+        # # itemindex = np.where(diff_np_abs>my_mad)
+        #
+        # # nan_ind = np.argwhere(np.isnan(data))
+        # # itemindex = np.where(((data>my_mean+4*my_mad )  | (data<my_mean-4*my_mad)))
+        # itemindex = np.where(((data>my_mean+my_std)  | (data<my_mean-my_std)))
         # itemindex = np.where(((data_flat[~np.isnan(data_flat)]>my_mean+4*my_mad )  | (data_flat[~np.isnan(data_flat)]<my_mean-4*my_mad)))
+
+        channel_freq = self.sens_objects[sens].rate
+        _freq = channel_freq+'min'
+
+        # Get a date range to create pandas time Series
+        # using the sampling frequency of the sensor
+        rng = date_range(t[0], t[-1], freq=_freq)
+        ts = Series(data, rng)
+        # resample the data and linearly interpolate the missing values
+        upsampled = ts.resample(_freq)
+        interp = upsampled.interpolate()
+
+        # calculate a window size for moving average routine so the window
+        # size is always 60 minutes long
+        window_size = 60//int(channel_freq)
+
+        # calculate moving average including the interolated data
+        # moving_average removes big outliers before calculating moving average
+        y_av = self.moving_average(np.asarray(interp.tolist()), window_size)
+        # y_av = self.moving_average(data, 30)
+        # missing=np.argwhere(np.isnan(y_av))
+        # y_av[missing] = np.nanmean(y_av)
+
+        # calculate the residual between the actual data and the moving average
+        # and then find the data lies outside of sigma*std
+        residual = data - y_av
+        std = np.nanstd(residual)
+        sigma = 3.0
+
+        itemindex =np.where( (data > y_av + (sigma*std)) | (data < y_av - (sigma*std)) )
+
+
         return itemindex
+    def moving_average(self, data, window_size):
+        """ Computes moving average using discrete linear convolution of two one dimensional sequences.
+        Args:
+        -----
+                data (pandas.Series): independent variable
+                window_size (int): rolling window size
+
+        Returns:
+        --------
+                ndarray of linear convolution
+
+        References:
+        ------------
+        [1] Wikipedia, "Convolution", http://en.wikipedia.org/wiki/Convolution.
+        [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
+
+        """
+        # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
+        filtered_data = data.copy()
+        # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
+        # my_mean=np.nanmean(filtered_data)
+
+        my_mean=np.nanmean(filtered_data)
+        my_std = np.nanstd(filtered_data)
+
+        # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
+        itemindex = np.where(((filtered_data>my_mean+3*my_std )  | (filtered_data<my_mean-3*my_std)))
+        filtered_data[itemindex]=np.nanmean(filtered_data)
+        # Fix boundary effects by adding prepending and appending values to the data
+        filtered_data = np.insert(filtered_data,0,np.ones(window_size)*np.nanmean(filtered_data[:window_size//2]))
+        filtered_data = np.insert(filtered_data,filtered_data.size,np.ones(window_size)*np.nanmean(filtered_data[-window_size//2:]))
+        window = np.ones(int(window_size))/float(window_size)
+        # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
+        return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
 
     def resample2(self, sens_str):
         data = self.sens_objects[sens_str].data.copy()
