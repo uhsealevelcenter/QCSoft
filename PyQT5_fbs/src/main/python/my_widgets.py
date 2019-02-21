@@ -8,7 +8,11 @@ from sensor import Sensor, Station
 from extractor2 import DataExtractor
 from dialogs import DateDialog
 import settings as st
-from pandas import *
+import pandas._libs.tslibs.np_datetime
+import pandas._libs.tslibs.nattype
+import pandas._libs.skiplist
+from pandas import Series, date_range
+
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -542,8 +546,10 @@ class Start(QtWidgets.QWidget):
         # min_data[nan_ind] = 9999
         return np.asarray(min_data)
 
-    def show_message(self):
-        choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
+    def show_message(self, *args):
+        print("SHOW MESSAGE",*args)
+        # choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
+        self.show_custom_message(*args, *args)
 
     def show_ref_dialog(self):
         try:

@@ -155,18 +155,13 @@ class PointBrowser:
         if (dataind in self.outl):
             self.outl_ind = self.np.argwhere(self.outl == dataind)[0][0]
 
-        #         ax2.cla()
-        #         ax2.plot(X[dataind])
-        #
-        #         ax2.text(0.05, 0.9, 'mu=%1.3f\nsigma=%1.3f' % (xs[dataind], ys[dataind]),
-        #                  transform=ax2.transAxes, va='top')
-        #         ax2.set_ylim(-0.5, 1.5)
-        # ax2.cla()
+        # pan the view to the highlighted point
         if event:
             if(event.key != '0' and event.key != 'left' and event.key != 'right'):
                 self.pan_index = self.lastind // self.jump_step
                 self.onpan(self.pan_index)
-
+        print("outlier index", self.outl_ind)
+        print("LAST index", self.lastind)
         self.selected.set_visible(True)
         self.selected.set_data(self.xs[dataind], self.ys[dataind])
         # self.text.set_text('selected: %d' % dataind + 'Value: %d' % self.ys[dataind] )
@@ -187,6 +182,16 @@ class PointBrowser:
             self.deleted.append({ind: [self.xs[ind], self.ys[ind]]})
 
     def onpan(self, p_index):
+        pan_lim = len(self.xs) // self.jump_step
+        # check for the edge case when the remainder of the division is 0
+        # i.e. the number of data points divided by the jump step is a whole number
+        if (len(self.xs) % self.jump_step == 0):
+            pan_lim = pan_lim - 1
+        if(self.pan_index>pan_lim):
+            self.onDataEnd.fire("You've panned through all of the data")
+        self.pan_index = self.np.clip(self.pan_index, 0, pan_lim)  # Limit pan index from growing larger than needed
+        p_index = self.pan_index
+
         left = self.jump_step * p_index
         right = self.jump_step * p_index + self.jump_step
         if (right > len(self.xs)+self.jump_step):
@@ -196,15 +201,7 @@ class PointBrowser:
         if (right > len(self.xs) - 1):
             right = len(self.xs) - 1
             left = right - self.jump_step
-            pan_lim = len(self.ys) // self.jump_step
-            # check for the edge case when the remainder of the division is 0
-            # i.e. the number of data points divided by the jump step is a whole number
-            if (len(self.ys) % self.jump_step == 0):
-                pan_lim = pan_lim - 1
-            self.pan_index = pan_lim  # Limit pan index from growing larger than needed
-            # self.pan_index = -1
-            self.onDataEnd.fire()
-            print("End of the data reached")
+
         if (left < 0):
             left = 0
             right = left + self.jump_step
@@ -224,12 +221,13 @@ class PointBrowser:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire()
+                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
+        # skip over deleted values
         while data_ar[outl_ar[pointer]] == 9999:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire()
+                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
                 break
         return pointer
 
@@ -238,10 +236,12 @@ class PointBrowser:
             pointer += inc
             if pointer > len(data_ar) - 1:
                 pointer = len(data_ar) - 1
+                self.onDataEnd.fire("This was the last data point")
         while (data_ar[pointer] == 9999 or self.np.isnan(data_ar[pointer])):
             pointer += inc
             if pointer > len(data_ar) - 1:
                 pointer = len(data_ar) - 1
+                self.onDataEnd.fire("This was the last data point")
                 break
         return pointer
 
