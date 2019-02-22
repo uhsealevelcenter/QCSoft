@@ -63,7 +63,7 @@ class DataExtractor:
             # safeguarding against the case a station number ever becomes a 4 digit
             # search for digits in the first element of the header and put the together
             station_num = ''.join(map(str, [int(s) for s in header.split()[0][0:4] if s.isdigit()]))
-            self.sensor_ids.append(station_num + header.split()[0][-3:])
+            self.sensor_ids.append(station_num + header[6:9])
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted

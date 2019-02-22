@@ -652,6 +652,7 @@ class Start(QtWidgets.QWidget):
                             the_file.write(line+"\n")
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9'*80)
+                    self.show_custom_message("Success", "Success \n File Saved to " + st.get_path(st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")
             # if result == True:

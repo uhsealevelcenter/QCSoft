@@ -50,6 +50,7 @@ class AppContext(ApplicationContext):
 class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
+        # self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self._main = QtWidgets.QStackedWidget()
         self.file_name = "NO NAME"
         # self._main = QtWidgets.QWidget()
@@ -83,10 +84,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         open_help_menu.triggered.connect(self.start_screen.clicked.emit)
         # open_help_menu.triggered.connect(self.open_help_menu)
 
-        open_file = QtWidgets.QAction("&Open", self)
+        open_file = QtWidgets.QAction("&Open monp", self)
         open_file.setShortcut("Ctrl+O")
         open_file.setStatusTip('Load a File')
         open_file.triggered.connect(self.file_open)
+
+        reload_file = QtWidgets.QAction("&Reload", self)
+        reload_file.setShortcut("Ctrl+R")
+        reload_file.setStatusTip('Reload all file(s) that were loaded')
+        reload_file.triggered.connect(self.get_loaded_files)
+
+        opents_file = QtWidgets.QAction("&Open ts", self)
+        opents_file.setShortcut("Ctrl+T")
+        opents_file.setStatusTip('Opens ts folder')
+        opents_file.triggered.connect(self.open_ts)
 
         self.statusBar()
 
@@ -99,20 +110,35 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         # Connect action with the option
         file_menu.addAction(open_file)
+        file_menu.addAction(reload_file)
+        file_menu.addAction(opents_file)
         file_menu.addAction(close_app)
         help_menu.addAction(open_help_menu)
 
-    def file_open(self):
-        filters = "s*.dat;; ts*.dat"
-        if st.get_path(st.LOAD_KEY):
-            path = st.get_path(st.LOAD_KEY)
-        else:
-            # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
-            path = os.path.expanduser('~')
-        self.file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
+    def file_open(self, reload = False, ts = False):
+
+        if not reload:
+            # filters = "s*.dat;; ts*.dat"
+            if ts:
+                filters = "ts*.dat"
+            else:
+                filters = "s*.dat"
+            if ts:
+                if st.get_path(st.SAVE_KEY):
+                    path = st.get_path(st.SAVE_KEY)
+                else:
+                    # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
+                    path = os.path.expanduser('~')
+            else:
+                if st.get_path(st.LOAD_KEY):
+                    path = st.get_path(st.LOAD_KEY)
+                else:
+                    # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
+                    path = os.path.expanduser('~')
+            self.file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
         # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
-        # Validating files selected, put this into a function
+        # Validating files selected
         if self.is_valid_files(self.file_name):
             pass
         else:
@@ -243,6 +269,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             sys.exit()
         else:
             pass
+    def get_loaded_files(self):
+        self.file_open(reload=True)
+    def open_ts(self):
+        self.file_open(reload=False, ts = True)
+        # return self.file_name;
 
 if __name__ == '__main__':
     appctxt = AppContext()
