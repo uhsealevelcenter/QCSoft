@@ -169,6 +169,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.start_screen.residual_canvas.figure.clf()
             self.start_screen.residual_canvas.draw()
 
+            self.start_screen.lineEdit2.setText("Loaded: " + str(self.month_count) + " months")
+
             # Create DataExtractor for each month that was loaded into program
             for j in range(self.month_count):
                 de.append(DataExtractor(self.file_name[0][j]))

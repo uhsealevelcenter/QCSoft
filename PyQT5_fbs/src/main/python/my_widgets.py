@@ -193,6 +193,16 @@ class Start(QtWidgets.QWidget):
         # self.lineEdit.setFixedWidth(300)
         self.horizontalLayout.addWidget(self.lineEdit)
 
+        self.label2 = QtWidgets.QLabel()
+        self.label2.setObjectName(_fromUtf8("label"))
+        self.label2.setText(_translate("MainWindow", "Monhts:", None))
+        self.horizontalLayout.addWidget(self.label2)
+
+        self.lineEdit2 = QtWidgets.QLineEdit()
+        self.lineEdit2.setObjectName(_fromUtf8("lineEdit"))
+        self.lineEdit2.setDisabled(True)
+        self.lineEdit2.setFixedWidth(200)
+        self.horizontalLayout.addWidget(self.lineEdit2)
 
         self.refLevelEdit = QtWidgets.QLineEdit()
         self.refLevelEdit.setObjectName(_fromUtf8("refLevelEdit"))
@@ -558,7 +568,7 @@ class Start(QtWidgets.QWidget):
             self.show_custom_message("Error!", "Data needs to be loaded first.")
             return
         else:
-            if(str(self.refLevelEdit.text()).isdigit()):
+            if(self.is_digit(str(self.refLevelEdit.text()))):
                 # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date.toString('yyyy-MM-dd')+'T'+time.toString("HH:mm")
@@ -577,6 +587,13 @@ class Start(QtWidgets.QWidget):
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")
                 return
+
+    def is_digit(self, n):
+        try:
+            int(n)
+            return True
+        except ValueError:
+            return  False
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title,  descrip, QtWidgets.QMessageBox.Ok)
 
