@@ -28,7 +28,7 @@ class PointBrowser:
             self.lastind = self.outl[self.outl_ind]
         else:
             self.lastind = 0
-        self.text = self.ax.text(0.05, 0.5, 'selected: none',
+        self.text = self.ax.text(0.7, 0.95, 'selected: none', bbox=dict(facecolor='red', alpha=0.5),
                                  transform=self.ax.transAxes, va='top')
         self.selected, = self.ax.plot([self.xs[self.lastind]], [self.ys[self.lastind]], 'o', ms=12, alpha=0.4,
                                       color='red', visible=True)
