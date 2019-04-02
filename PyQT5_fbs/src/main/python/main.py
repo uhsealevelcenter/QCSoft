@@ -120,7 +120,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if not reload:
             # filters = "s*.dat;; ts*.dat"
             if ts:
-                filters = "ts*.dat"
+                filters = "t*.dat"
             else:
                 filters = "s*.dat"
             if ts:
@@ -165,9 +165,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
             # loaded for a particular station. Added as an attribute to respective sensor objects
 
-            # clear residual figure on new file load
-            self.start_screen.residual_canvas.figure.clf()
-            self.start_screen.residual_canvas.draw()
+
 
             self.start_screen.lineEdit2.setText("Loaded: " + str(self.month_count) + " months")
 
@@ -218,6 +216,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.data_flat[nines_ind] = float('nan')
 
             self.start_screen.plot(self.time, self.data_flat)
+
+            # clear residual figure on new file load
+            self.start_screen._residual_ax.cla()
+            self.start_screen._residual_ax.figure.canvas.draw_idle()
+            # self.start_screen.residual_canvas.figure.clf()
+            # self.start_screen.residual_canvas.draw()
 
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)

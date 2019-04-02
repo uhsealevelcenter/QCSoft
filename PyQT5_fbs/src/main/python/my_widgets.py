@@ -227,6 +227,7 @@ class Start(QtWidgets.QWidget):
         self.residual_canvas = FigureCanvas(Figure(figsize=(20, 4)))
         self.verticalLayout_right.addWidget(NavigationToolbar(self.residual_canvas, self))
         self.verticalLayout_right.addWidget(self.residual_canvas)
+        self._residual_ax = self.residual_canvas.figure.subplots()
         # self.addToolBar(QtCore.Qt.BottomToolBarArea,
         #                 NavigationToolbar(self.residual_canvas, self)
         # test = NavigationToolbar(self.residual_canvas, self)
@@ -259,21 +260,21 @@ class Start(QtWidgets.QWidget):
         self.setLayout(self.gridLayout)
         btn.clicked.connect(self.save_to_ts_files)
 
-        # pushButton_2.clicked.connect(self.plot_residuals)
+        # pushButton_2.clicked.connect(self.calculate_and_plot_residuals)
 
-    def _update_canvas(self):
-        self._residual_ax.clear()
-        t = np.linspace(0, 10, 101)
-        # Shift the sinusoid as a function of time.
-        self._residual_ax.plot(t, np.sin(t + time.time()))
-        self._residual_ax.figure.canvas.draw()
+    # def _update_canvas(self):
+    #     self._residual_ax.clear()
+    #     t = np.linspace(0, 10, 101)
+    #     # Shift the sinusoid as a function of time.
+    #     self._residual_ax.plot(t, np.sin(t + time.time()))
+    #     self._residual_ax.figure.canvas.draw()
 
     def make_sensor_buttons(self, sensors):
         self.radio_button_group = QtWidgets.QButtonGroup()
         self.radio_button_group.setExclusive(True)
 
         self.check_button_group = QtWidgets.QButtonGroup()
-        self.check_button_group.setExclusive(True)
+        self.check_button_group.setExclusive(False)
         # self.verticalLayout_left_top.setParent(None)
         # for button in self.radio_button_group.buttons():
         print("NK", self.radio_button_group.buttons())
@@ -297,9 +298,9 @@ class Start(QtWidgets.QWidget):
                 widget.deleteLater()
 
         # sensors' keys are names of all sensors which carry
-        # all of the date associated with it
+        # all of the data associated with it
         # Make copy of it so we can use its keys and assign radio buttons to it
-        # If do not make a copy then the  sensors values would get
+        # If we do not make a copy then the  sensors values would get
         # overwritten by radio button objects
         self.sensor_dict = dict(sensors)
         self.sensor_dict2 = dict(sensors)
@@ -310,7 +311,7 @@ class Start(QtWidgets.QWidget):
         for key,value in sensors.items():
             counter -= 1
             self.sensor_radio_btns = QtWidgets.QRadioButton(key, self)
-            self.sensor_check_btns = QtWidgets.QRadioButton(key, self)
+            self.sensor_check_btns = QtWidgets.QCheckBox(key, self)
             self.sensor_dict[key] = self.sensor_radio_btns
             self.sensor_dict2[key] = self.sensor_check_btns
             self.radio_button_group.addButton(self.sensor_dict[key])
@@ -337,7 +338,15 @@ class Start(QtWidgets.QWidget):
         self._update_top_canvas(btn.text())
         self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
         self.update_graph_values()
-        print("ref height:",self.sens_objects[self.sens_str].height)
+
+        # Update residual buttons and graph when the top sensor is changed
+        # self.on_residual_sensor_changed(None)
+        # Clear residual buttons and graph when the top sensor is changed
+        for button in self.check_button_group.buttons():
+            button.setChecked(False)
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+        # print("ref height:",self.sens_objects[self.sens_str].height)
 
     def update_graph_values(self):
         # convert 'nans' back to 9999s
@@ -345,10 +354,28 @@ class Start(QtWidgets.QWidget):
         self.browser.data[nan_ind] = 9999
         self.sens_objects[self.sens_str].data = self.browser.data
 
-
     def on_residual_sensor_changed(self, btn):
-        print (btn.text())
-        self.plot_residuals(self.sens_str, btn.text())
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+
+        checkedItems = [button for button in self.check_button_group.buttons() if button.isChecked()]
+        if(checkedItems):
+            for button in checkedItems:
+                self.calculate_and_plot_residuals(self.sens_str, button.text())
+        else:
+            self._residual_ax.cla()
+            self._residual_ax.figure.canvas.draw()
+
+        # if(btn.isChecked()):
+        #     self.calculate_and_plot_residuals(self.sens_str, btn.text())
+        # else:
+        #     # remove artist from the plot
+        #     for line in self._residual_ax.lines:
+        #         if(line.get_gid() == btn.text()):
+        #             line.set_label('_nolegend_')
+        #             line.remove()
+        #             # self._residual_ax.get_legend().remove()
+        #             self._residual_ax.figure.canvas.draw_idle()
 
     def plot(self, time, data):
         self.static_canvas.figure.clf()
@@ -380,29 +407,49 @@ class Start(QtWidgets.QWidget):
 
         self.static_canvas.draw()
 
-    def plot_residuals(self, sens_str1, sens_str2):
+    def calculate_and_plot_residuals(self, sens_str1, sens_str2):
+        # resample_freq = min(int(self.sens_objects[sens_str1].rate), int(self.sens_objects[sens_str2].rate))
+        # _freq = str(resample_freq)+'min'
+        #
+        # # Get a date range to create pandas time Series
+        # # using the sampling frequency of the sensor
+        # rng1 = date_range(self.sens_objects[sens_str1].date, periods = self.sens_objects[sens_str1].data.size, freq=_freq)
+        # ts1 = Series(self.sens_objects[sens_str1].data, rng1)
+        #
+        # rng2 = date_range(self.sens_objects[sens_str2].date, periods = self.sens_objects[sens_str2].data.size, freq=_freq)
+        # ts2 = Series(self.sens_objects[sens_str2].data, rng2)
+
+        # resample the data and linearly interpolate the missing values
+        # upsampled = ts.resample(_freq)
+        # interp = upsampled.interpolate()
 
         newd1 = self.resample2(sens_str1)
         newd2 = self.resample2(sens_str2)
+        # newd1 = ts1.resample(_freq).interpolate()
+        # newd2 = ts2.resample(_freq).interpolate()
         if(newd1.size>newd2.size):
             resid = newd2 - newd1[:newd2.size]
         else:
             resid = newd1 - newd2[:newd1.size]
-        # t = np.arange(resid.size)
-        time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
 
-        self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, False)
+        # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
+        # time = np.arange(resid.size)
+        time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
+        self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, is_interactive = False)
 
     def generic_plot(self, canvas, x, y,sens1, sens2, is_interactive):
-        canvas.figure.clf()
-        self._residual_ax = canvas.figure.subplots()
+
+        # self._residual_ax = canvas.figure.subplots()
 
         line, = self._residual_ax.plot(x, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
+        line.set_gid(sens2)
         self._residual_fig = canvas.figure
         self._residual_ax.set_title('Residual: '+sens1+" - "+sens2)
+        line.set_label('Residual: '+sens1+" - "+sens2)
         self._residual_ax.autoscale(enable=True, axis='both', tight=True)
         self._residual_ax.set_xlim([x[0], x[-1]])
         self._residual_ax.margins(0.05, 0.05)
+        self._residual_ax.legend()
 
         if(is_interactive):
             self.browser = dp.PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(x, y, sens1))
@@ -413,11 +460,11 @@ class Start(QtWidgets.QWidget):
             canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
             canvas.setFocus()
 
-        canvas.figure.tight_layout()
+        self._residual_ax.figure.tight_layout()
         self.toolbar2 = self._residual_fig.canvas.toolbar #Get the toolbar handler
         self.toolbar2.update() #Update the toolbar memory
 
-        canvas.draw()
+        self._residual_ax.figure.canvas.draw()
 
 
     def _update_top_canvas(self, sens):
@@ -450,27 +497,6 @@ class Start(QtWidgets.QWidget):
         self._static_ax.figure.canvas.draw()
 
     def find_outliers(self, t, data, sens):
-    #     diff=[]
-    #     for i in range(data.size):
-    #         if i==0:
-    #             continue
-    #         diff.append(data[i]-data[i-1])
-    #
-    #     diff_np_abs =abs( np.array(diff) )
-
-        # my_mad=robust.mad(data_flat,axis=0) #Median absolute deviation
-
-        # my_mad=np.nanmedian(np.abs(data-np.nanmedian(data)))
-        # my_mean=np.nanmean(data)
-        # my_std = np.nanstd(data)*3
-        #
-        # ## won't work where there is adjacent bad data
-        # # itemindex = np.where(diff_np_abs>my_mad)
-        #
-        # # nan_ind = np.argwhere(np.isnan(data))
-        # # itemindex = np.where(((data>my_mean+4*my_mad )  | (data<my_mean-4*my_mad)))
-        # itemindex = np.where(((data>my_mean+my_std)  | (data<my_mean-my_std)))
-        # itemindex = np.where(((data_flat[~np.isnan(data_flat)]>my_mean+4*my_mad )  | (data_flat[~np.isnan(data_flat)]<my_mean-4*my_mad)))
 
         channel_freq = self.sens_objects[sens].rate
         _freq = channel_freq+'min'
@@ -479,6 +505,7 @@ class Start(QtWidgets.QWidget):
         # using the sampling frequency of the sensor
         rng = date_range(t[0], t[-1], freq=_freq)
         ts = Series(data, rng)
+
         # resample the data and linearly interpolate the missing values
         upsampled = ts.resample(_freq)
         interp = upsampled.interpolate()
@@ -495,15 +522,14 @@ class Start(QtWidgets.QWidget):
         # y_av[missing] = np.nanmean(y_av)
 
         # calculate the residual between the actual data and the moving average
-        # and then find the data lies outside of sigma*std
+        # and then find the data that lies outside of sigma*std
         residual = data - y_av
         std = np.nanstd(residual)
         sigma = 3.0
 
         itemindex =np.where( (data > y_av + (sigma*std)) | (data < y_av - (sigma*std)) )
-
-
         return itemindex
+
     def moving_average(self, data, window_size):
         """ Computes moving average using discrete linear convolution of two one dimensional sequences.
         Args:
@@ -661,15 +687,16 @@ class Start(QtWidgets.QWidget):
                 month_str = "{:02}".format(month_int)
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
+                file_name ='t' + station_num + year_str + month_str + '.dat'
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/ts' + station_num + year_str + month_str + '.dat', 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name, 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin+"\n")
                         for line in assem_data[m]:
                             the_file.write(line+"\n")
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9'*80)
-                    self.show_custom_message("Success", "Success \n File Saved to " + st.get_path(st.SAVE_KEY) + "\n")
+                    self.show_custom_message("Success", "Success \n" + file_name + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")
             # if result == True:
