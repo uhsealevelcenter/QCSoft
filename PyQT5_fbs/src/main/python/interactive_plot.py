@@ -1,5 +1,6 @@
 # interactive_plot
-
+from matplotlib.widgets import LassoSelector
+from matplotlib.path import Path
 
 class PointBrowser:
     """
@@ -23,6 +24,7 @@ class PointBrowser:
         self.jump_step = 600
         self.outl = outl[0]
         self.deleted = []
+        self.bulk_deleted = []
         self.onDataEnd = EventHook()
         if self.outl.any():
             self.lastind = self.outl[self.outl_ind]
@@ -32,6 +34,11 @@ class PointBrowser:
                                  transform=self.ax.transAxes, va='top')
         self.selected, = self.ax.plot([self.xs[self.lastind]], [self.ys[self.lastind]], 'o', ms=12, alpha=0.4,
                                       color='red', visible=True)
+
+        # pts = self.ax.scatter(self.xs, self.ys, s=30, facecolors='none')
+        self.collection = self.ax.scatter(self.xs, self.ys, s=30, facecolors='none')
+        self.xys = self.collection.get_offsets()
+        self.lasso = LassoSelector(self.ax, onselect=self.onselect, button=3)
 
     def onpress(self, event):
         if self.lastind is None:
@@ -46,14 +53,21 @@ class PointBrowser:
             # update UNDONE marker index
             self.lastind = index
             self.update(event = event)
+        if event.key == 'ctrl+b' and self.bulk_deleted:
+            for data in self.bulk_deleted:
+                for key,value in data.items():
+                    self.xs[key] = value[0]
+                    self.ys[key] = value[1]
+            self.bulk_deleted = []
+            # update UNDONE marker index
+            # self.lastind = index
+            self.on_bulk_delete()
+            self.show_home_view()
             # return
-        if event.key not in ('n', 'b', 'd', 'right', 'left', '0', 'ctrl+z'):
+        if event.key not in ('n', 'b', 'd', 'right', 'left', '0', 'ctrl+z', 'ctrl+b'):
             return
         if event.key == '0':
-            self.ax.autoscale(enable=True, axis='both', tight=True)
-            self.ax.set_xlim([self.xs[0], self.xs[-1]])
-            self.ax.margins(0.05, 0.05)
-            self.pan_index = -1
+            self.show_home_view()
         if event.key == 'right' or event.key == 'left':
             if event.key == 'right':
                 self.pan_index = self.pan_index + 1
@@ -113,8 +127,9 @@ class PointBrowser:
         self.update(event = event)
 
     def onpick(self, event):
+        print("ON PICK CALLED")
         # print(event.artist)
-        if event.artist != self.line:
+        if event.artist != self.line or event.mouseevent.button != 1:
             return True
 
         N = len(event.ind)
@@ -146,6 +161,7 @@ class PointBrowser:
         self.update(event = None)
 
     def update(self, event = None):
+        print("UPDATE IS CALLED")
         if self.lastind is None:
             return
 
@@ -160,8 +176,8 @@ class PointBrowser:
             if(event.key != '0' and event.key != 'left' and event.key != 'right'):
                 self.pan_index = self.lastind // self.jump_step
                 self.onpan(self.pan_index)
-        print("outlier index", self.outl_ind)
-        print("LAST index", self.lastind)
+        # print("outlier index", self.outl_ind)
+        # print("LAST index", self.lastind)
         self.selected.set_visible(True)
         self.selected.set_data(self.xs[dataind], self.ys[dataind])
         # self.text.set_text('selected: %d' % dataind + 'Value: %d' % self.ys[dataind] )
@@ -174,6 +190,24 @@ class PointBrowser:
         self.line.set_ydata(nonines_data)
         self.fig.canvas.draw()
         # print('UPDATE CALLED')
+
+    def on_sensor_change_update(self):
+        print("MY_UPDATE IS CALLED")
+        nines_ind = self.np.where(self.ys == 9999)
+        nonines_data = self.ys.copy()
+        nonines_data[nines_ind] = float('nan')
+        self.line.set_ydata(nonines_data)
+        self.show_home_view()
+        self.ax.figure.canvas.flush_events()
+        self.fig.canvas.draw()
+
+    def show_home_view(self):
+        self.ax.autoscale(enable=True, axis='x', tight=True)
+        self.ax.set_xlim([self.xs[0], self.xs[-1]])
+        self.ax.set_ylim(self.np.nanmin(self.ys) - 50,
+                         self.np.nanmax(self.np.ma.masked_equal(self.ys, 9999, copy=False)) + 50)
+        self.ax.margins(0.05, 0.05)
+        self.pan_index = -1
 
     def ondelete(self, ind):
         # do not append if item already deleted
@@ -212,6 +246,28 @@ class PointBrowser:
         # 50 for padding
         self.ax.set_ylim(self.np.nanmin(self.ys[left:right]) - 50,
                          self.np.nanmax(self.np.ma.masked_equal(self.ys[left:right], 9999, copy=False)) + 50)
+
+    def onselect(self, verts):
+        path = Path(verts)
+        self.ind = self.np.nonzero(path.contains_points(self.xys))[0]
+
+        for i in self.ind:
+            self.bulk_deleted.append({i: [self.xs[i], self.ys[i]]})
+            self.ys[i] = 9999
+            # self.ondelete(i)
+        self.on_bulk_delete()
+
+    def disconnect(self):
+        self.lasso.disconnect_events()
+
+    def on_bulk_delete(self):
+        self.text.set_text(
+            'bulk items deleted')
+        nines_ind = self.np.where(self.ys == 9999)
+        nonines_data = self.ys.copy()
+        nonines_data[nines_ind] = float('nan')
+        self.line.set_ydata(nonines_data)
+        self.fig.canvas.draw()
 
     def getDeleted(self):
         return self.deleted

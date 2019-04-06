@@ -396,8 +396,8 @@ class Start(QtWidgets.QWidget):
 
         self.browser = dp.PointBrowser(t,y,self._static_ax,self.line,self._static_fig, self.find_outliers(t, data, "PRD"))
         self.browser.onDataEnd += self.show_message
-        self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
-        self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
+        self.pid = self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
+        self.cid = self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
         ## need to activate focus onto the mpl canvas so that the keyboard can be used
         self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
         self.static_canvas.setFocus()
@@ -471,12 +471,17 @@ class Start(QtWidgets.QWidget):
         data_flat = self.sens_objects[sens].get_flat_data()
         nines_ind = np.where(data_flat == 9999)
         if(len(nines_ind[0])<data_flat.size):
-            data_flat[nines_ind] = float('nan')
+            # data_flat[nines_ind] = float('nan')
+            pass
         else:
             self.show_custom_message("Warning", "The following sensor has no data")
         self._static_ax.clear()
+        # disconnect canvas pick and press events when a new sensor is selected
+        # to eliminate multiple callbacks on sensor change
+        self.static_canvas.mpl_disconnect(self.pid)
+        self.static_canvas.mpl_disconnect(self.cid)
         self.browser.onDataEnd -= self.show_message
-
+        self.browser.disconnect()
         # time = np.arange(data_flat.size)
         time = self.sens_objects[sens].get_time_vector()
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
@@ -484,27 +489,34 @@ class Start(QtWidgets.QWidget):
 
         self.browser = dp.PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(time, data_flat, sens) )
         self.browser.onDataEnd += self.show_message
-        self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
-        self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
+        self.browser.on_sensor_change_update()
+        # update event ids so that they can be disconnect on next sensor change
+        self.pid = self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
+        self.cid  = self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
         ## need to activate focus onto the mpl canvas so that the keyboard can be used
         self.toolbar1.update()
         self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
         self.static_canvas.setFocus()
-        self._static_ax.autoscale(enable=True, axis='both', tight=True)
-        self._static_ax.set_xlim([time[0], time[-1]])
-        self._static_ax.margins(0.05, 0.05)
-        self._static_ax.figure.canvas.flush_events()
-        self._static_ax.figure.canvas.draw()
+        # TODO: All of the below should be moved to interactive_plot.py
+        # self._static_ax.autoscale(enable=True, axis='x', tight=True)
+        # self._static_ax.set_xlim([time[0], time[-1]])
+        # self._static_ax.margins(0.05, 0.05)
+        # self._static_ax.figure.canvas.flush_events()
+        # self._static_ax.figure.canvas.draw()
 
     def find_outliers(self, t, data, sens):
 
         channel_freq = self.sens_objects[sens].rate
         _freq = channel_freq+'min'
 
+
+        nines_ind = np.where(data == 9999)
+        nonines_data = data.copy()
+        nonines_data[nines_ind] = float('nan')
         # Get a date range to create pandas time Series
         # using the sampling frequency of the sensor
         rng = date_range(t[0], t[-1], freq=_freq)
-        ts = Series(data, rng)
+        ts = Series(nonines_data, rng)
 
         # resample the data and linearly interpolate the missing values
         upsampled = ts.resample(_freq)
@@ -523,11 +535,11 @@ class Start(QtWidgets.QWidget):
 
         # calculate the residual between the actual data and the moving average
         # and then find the data that lies outside of sigma*std
-        residual = data - y_av
+        residual = nonines_data - y_av
         std = np.nanstd(residual)
         sigma = 3.0
 
-        itemindex =np.where( (data > y_av + (sigma*std)) | (data < y_av - (sigma*std)) )
+        itemindex =np.where( (nonines_data > y_av + (sigma*std)) | (nonines_data < y_av - (sigma*std)) )
         return itemindex
 
     def moving_average(self, data, window_size):
