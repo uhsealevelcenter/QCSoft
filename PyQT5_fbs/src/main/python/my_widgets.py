@@ -67,15 +67,46 @@ class HelpScreen(QtWidgets.QWidget):
         l1.setText("Program manual")
         l2.setText(
         '''
-        Press Ctrl (Cmd) + O to load data
-        To delete a data point press "D"
-        Use left and right arrow to pan through the data
-        Press "b" to scroll backwards through the individual data points
-        Press "n" to scroll forward through the individual data points
+        INITIAL SETUP:
+        -------------
+        To save/load files to/from a server, connect to a server first (e.g CMD + K on a MAC,
+        WIN + R on Windows), and then follow the instruction below:
+        1) Specify the default loading folder by clicking "Change Load Folder" button
+        2) Specify the default saving folder by clicking "Change Save Folder" button
+
+        If no path is specified, the path will default to your home directory
+
+        DATA LOADING:
+        -------------
+        Press CTRL (CMD) + O to load data unprocessed (monp) data
+        Press CTRL (CMD) + T to load data processed (ts) data
+        Press CTRL (CMD) + R to reload the same data file and undo all changes
+
+        DATA MANIPULATION:
+        -----------------
+        To delete a single data point press "D"
+        To delete multiple data points use right mouse click (or CTRL + Left Click) to circle the points
+        To change a reference level for a specific channel, enter a new reference level in "Enter New Reference Level" text box
+        and then click "Change Ref Level" button. This will prompt you with a calendar and time selector to choose a point when an
+        adjustment to the reference level was made (usually supplied by technicians). The time/date selector can be modified
+        incrementally by using UP/DOWN arrows or simply by clicking the desired time/date portion to be changed and typing in
+        the time of change. Using TAB will scroll through year-month-day hour:minute sections.
+
+        DATA NAVIGATION:
+        ----------------
+        Use LEFT and RIGHT arrow to pan through the data
+        Press "B" to scroll backward through the individual data points
+        Press "N" to scroll forward through the individual data points
         Click on any particular data point to zoom in on that data section
         Press "0" to reset the view back to the entire data set
-        Press Ctrl (Cmd) + Z to undo data deletion
 
+        UNDO ACTIONS:
+        -------------
+        Press CTRL (CMD) + Z to undo data deletion
+        Press CTRL (CMD) + B to undo bulk data deletion
+
+        SAVE DATA:
+        ----------
         Click the "SAVE" button to save changes to a "TS" file
         '''
         )
