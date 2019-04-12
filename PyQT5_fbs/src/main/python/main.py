@@ -30,7 +30,13 @@ except AttributeError:
 
 
 class AppContext(ApplicationContext):
-    logging.basicConfig(filename='/tmp/qcsoft.log')
+    if sys.platform == 'win32':
+        from pathlib import Path
+        home = str(Path.home())
+        logging.basicConfig(filename=home+'\qcsoft.log')
+    else:
+        logging.basicConfig(filename='/tmp/qcsoft.log')
+
     def run(self):
         self.window.show()
         return self.app.exec_()

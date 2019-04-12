@@ -1,3 +1,4 @@
+-r base.txt
 Click==7.0
 pypiwin32==223
 pyqt5-tools==5.11.2.1.3
