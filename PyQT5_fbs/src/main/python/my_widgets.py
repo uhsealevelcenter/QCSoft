@@ -670,17 +670,18 @@ class Start(QtWidgets.QWidget):
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date.toString('yyyy-MM-dd')+'T'+time.toString("HH:mm")
                 if result:
-                    print("Succesfully changed to: ", str(self.refLevelEdit.text()))
+
                     REF_diff = int(str(self.refLevelEdit.text())) - int(self.sens_objects[self.sens_str].height)
                     new_REF = REF_diff + int(self.sens_objects[self.sens_str].height)
-
+                    #offset the data
+                    self.browser.offset_data(ISOstring, REF_diff)
                     # format the new reference to a 4 character string (i.e add leading zeros if necessary)
                     # update the header
                     new_header = self.sens_objects[self.sens_str].header[0][:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[0][64:]
                     self.sens_objects[self.sens_str].header[0] = new_header
                     self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
-                    #offset the data
-                    self.browser.offset_data(ISOstring, REF_diff)
+                    print("Succesfully changed to: ", str(self.refLevelEdit.text()))
+
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")
                 return
