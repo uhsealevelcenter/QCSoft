@@ -76,6 +76,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.start_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.second_screen))
         self.second_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.start_screen))
 
+
         self.setStatusTip("Permanent status bar")
         # Create an action in the menu bar that is later on assigned to one of
         # the options (e.g. File, Edit, View etc) in the menu bar
@@ -120,9 +121,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         file_menu.addAction(opents_file)
         file_menu.addAction(close_app)
         help_menu.addAction(open_help_menu)
-
+        
     def file_open(self, reload = False, ts = False):
-
         if not reload:
             # filters = "s*.dat;; ts*.dat"
             if ts:
@@ -207,27 +207,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 comb_headers = []
 
             self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
-
-
-            self.sens_str = "PRD"
-            self.data_flat = self.start_screen.sens_objects[self.sens_str].get_flat_data()
-            self.time = self.start_screen.sens_objects[self.sens_str].get_time_vector()
-            # self.time = self.start_screen.sens_objects[self.sens_str].get_time_vector()
-
-            ## Set 9999s to NaN so they don't show up on the graph
-            ## when initially plotted
-            ## nans are converted back to 9999s when file is saved
-            self.start_screen.lineEdit.setText(self.start_screen.sens_objects[self.sens_str].header[0])
-            nines_ind = np.where(self.data_flat == 9999)
-            self.data_flat[nines_ind] = float('nan')
-
-            self.start_screen.plot(self.time, self.data_flat)
-
-            # clear residual figure on new file load
-            self.start_screen._residual_ax.cla()
-            self.start_screen._residual_ax.figure.canvas.draw_idle()
-            # self.start_screen.residual_canvas.figure.clf()
-            # self.start_screen.residual_canvas.draw()
 
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)

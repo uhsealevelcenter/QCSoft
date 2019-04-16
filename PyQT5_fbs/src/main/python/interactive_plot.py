@@ -6,7 +6,7 @@ class PointBrowser:
     """
     Click on a point to select and highlight it -- the data that
     generated the point will be shown in the lower axes.  Use the 'n'
-    and 'p' keys to browse through the next and previous points
+    and 'b' keys to browse through the next and previous points
     """
 
     np = __import__('numpy')
@@ -26,8 +26,10 @@ class PointBrowser:
         self.deleted = []
         self.bulk_deleted = []
         self.onDataEnd = EventHook()
+        # print("self.outl", self.outl)
         if self.outl.any():
             self.lastind = self.outl[self.outl_ind]
+            # print("self.outl_ind", self.outl_ind)
         else:
             self.lastind = 0
         self.text = self.ax.text(0.7, 0.95, 'selected: none', bbox=dict(facecolor='red', alpha=0.5),
@@ -41,12 +43,13 @@ class PointBrowser:
         self.lasso = LassoSelector(self.ax, onselect=self.onselect, button=3)
 
     def onpress(self, event):
+        # print("ON PRESS")
         if self.lastind is None:
             return
         jump_step = 600
         # undo deletions made
         if event.key == 'ctrl+z' and self.deleted:
-            print("UNDO DELETIONS")
+            # print("UNDO DELETIONS")
             index, data = self.deleted.pop().popitem()
             self.xs[index] = data[0]
             self.ys[index] = data[1]
@@ -77,7 +80,7 @@ class PointBrowser:
             self.onpan(self.pan_index)
 
         if event.key == 'd':
-            print('Delete')
+            # print('Delete')
             self.ondelete(self.lastind)
             self.ys[self.lastind] = 9999
             if (self.lastind in self.outl):
@@ -127,7 +130,7 @@ class PointBrowser:
         self.update(event = event)
 
     def onpick(self, event):
-        print("ON PICK CALLED")
+        # print("ON PICK CALLED")
         # print(event.artist)
         if event.artist != self.line or event.mouseevent.button != 1:
             return True
@@ -161,7 +164,7 @@ class PointBrowser:
         self.update(event = None)
 
     def update(self, event = None):
-        print("UPDATE IS CALLED")
+        # print("UPDATE IS CALLED")
         if self.lastind is None:
             return
 
@@ -171,6 +174,7 @@ class PointBrowser:
         if (dataind in self.outl):
             self.outl_ind = self.np.argwhere(self.outl == dataind)[0][0]
 
+        # print("UPDATED OUTLIER INDEX", self.outl_ind)
         # pan the view to the highlighted point
         if event:
             if(event.key != '0' and event.key != 'left' and event.key != 'right'):
@@ -192,7 +196,7 @@ class PointBrowser:
         # print('UPDATE CALLED')
 
     def on_sensor_change_update(self):
-        print("MY_UPDATE IS CALLED")
+        # print("MY_UPDATE IS CALLED")
         nines_ind = self.np.where(self.ys == 9999)
         nonines_data = self.ys.copy()
         nonines_data[nines_ind] = float('nan')
@@ -212,10 +216,11 @@ class PointBrowser:
     def ondelete(self, ind):
         # do not append if item already deleted
         if (self.ys[ind] != 9999):
-            print("On Delete Called on index", ind)
+            # print("On Delete Called on index", ind)
             self.deleted.append({ind: [self.xs[ind], self.ys[ind]]})
 
     def onpan(self, p_index):
+        # print("ON PAN")
         pan_lim = len(self.xs) // self.jump_step
         # check for the edge case when the remainder of the division is 0
         # i.e. the number of data points divided by the jump step is a whole number
@@ -275,15 +280,20 @@ class PointBrowser:
     def next_pointer(self, data_ar, outl_ar, pointer, inc):
         if (data_ar[outl_ar[pointer]] != 9999):
             pointer += inc
+
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
                 self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
         # skip over deleted values
         while data_ar[outl_ar[pointer]] == 9999:
+            # print("skipping data", data_ar[outl_ar[pointer]])
+            # print("skipping index", pointer)
+            # print("POINTER", pointer)
+            # print("LEN of OUTLIER ARRAy", len(outl_ar))
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
+                self.onDataEnd.fire("WHILE LOOPThis was the last outlier. You can click the same channel again to find smaller outliers")
                 break
         return pointer
 
@@ -316,6 +326,10 @@ class PointBrowser:
     @property
     def data(self):
         return self.ys
+
+    # def __del__(self):
+    #   class_name = self.__class__.__name__
+    #   print (class_name, "destroyed")
 
 
 # C#-like event handling so that our main program can receive messages from

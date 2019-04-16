@@ -3,7 +3,7 @@ from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
 import os
 
 import numpy as np
-import interactive_plot as dp
+from interactive_plot import PointBrowser
 from sensor import Sensor, Station
 from extractor2 import DataExtractor
 from dialogs import DateDialog
@@ -272,6 +272,15 @@ class Start(QtWidgets.QWidget):
         self.home()
 
     def home(self):
+        print("HOME CALLED")
+        self.static_canvas.figure.clf()
+        self._static_ax = self.static_canvas.figure.subplots()
+        self._static_fig = self.static_canvas.figure
+        self.pid = -99
+        self.cid = -98
+        self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
+        # self.toolbar1.update() #Update the toolbar memory
+
         btn = QtWidgets.QPushButton("Save", self)
         btn.setStatusTip('Save to a File')
         self.verticalLayout_left_top.addWidget(btn, 0, QtCore.Qt.AlignTop)
@@ -360,6 +369,7 @@ class Start(QtWidgets.QWidget):
         # self.verticalLayout_left_top.addItem(spacerItem)
         self.sensor_dict["PRD"].setChecked(True)
         self.sens_str = "PRD"
+        self.plot()
         self.radio_button_group.buttonClicked.connect(self.on_sensor_changed)
         self.check_button_group.buttonClicked.connect(self.on_residual_sensor_changed)
 
@@ -408,32 +418,45 @@ class Start(QtWidgets.QWidget):
         #             # self._residual_ax.get_legend().remove()
         #             self._residual_ax.figure.canvas.draw_idle()
 
-    def plot(self, time, data):
-        self.static_canvas.figure.clf()
-        self._static_ax = self.static_canvas.figure.subplots()
+    def plot(self):
+        # print("MAIN PLOT CALLED")
+        self._static_ax.clear()
+        data_flat = self.sens_objects[self.sens_str].get_flat_data()
+        time = self.sens_objects[self.sens_str].get_time_vector()
+
+
+        ## Set 9999s to NaN so they don't show up on the graph
+        ## when initially plotted
+        ## nans are converted back to 9999s when file is saved
+        self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+        nines_ind = np.where(data_flat == 9999)
+        data_flat[nines_ind] = float('nan')
+
 
         # t = np.linspace(0, 10, 501)
-        t = np.arange(data.size)
+        # t = np.arange(data.size)
         t = time
-        y = data
+        y = data_flat
         # self._static_ax.plot(t, np.tan(t), ".")
-        self.line, = self._static_ax.plot(t, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
-        self._static_fig = self.static_canvas.figure
+        line, = self._static_ax.plot(t, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
+        # self._static_fig = self.static_canvas.figure
         self._static_ax.set_title('click on point you would like to remove and press "D"')
 
         self._static_ax.autoscale(enable=True, axis='both', tight=True)
         self._static_ax.set_xlim([t[0], t[-1]])
         self._static_ax.margins(0.05, 0.05)
 
-        self.browser = dp.PointBrowser(t,y,self._static_ax,self.line,self._static_fig, self.find_outliers(t, data, "PRD"))
-        self.browser.onDataEnd += self.show_message
-        self.pid = self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
-        self.cid = self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
+        # self.browser = PointBrowser(t,y,self._static_ax,line,self._static_fig, self.find_outliers(t, data_flat, "PRD"))
+        # self.browser.onDataEnd += self.show_message
+        # self.pidP = self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
+        # self.cidP = self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
+        # self.pid = -99
+        # self.cid = -98
         ## need to activate focus onto the mpl canvas so that the keyboard can be used
         self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
         self.static_canvas.setFocus()
         self.static_canvas.figure.tight_layout()
-        self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
+        # self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
         self.toolbar1.update() #Update the toolbar memory
 
         self.static_canvas.draw()
@@ -483,7 +506,7 @@ class Start(QtWidgets.QWidget):
         self._residual_ax.legend()
 
         if(is_interactive):
-            self.browser = dp.PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(x, y, sens1))
+            self.browser = PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(x, y, sens1))
             self.browser.onDataEnd += self.show_message
             canvas.mpl_connect('pick_event', self.browser.onpick)
             canvas.mpl_connect('key_press_event', self.browser.onpress)
@@ -509,16 +532,18 @@ class Start(QtWidgets.QWidget):
         self._static_ax.clear()
         # disconnect canvas pick and press events when a new sensor is selected
         # to eliminate multiple callbacks on sensor change
+        # self.static_canvas.mpl_disconnect(self.pidP)
+        # self.static_canvas.mpl_disconnect(self.cidP)
         self.static_canvas.mpl_disconnect(self.pid)
         self.static_canvas.mpl_disconnect(self.cid)
-        self.browser.onDataEnd -= self.show_message
-        self.browser.disconnect()
+        # self.browser.onDataEnd -= self.show_message
+        # self.browser.disconnect()
         # time = np.arange(data_flat.size)
         time = self.sens_objects[sens].get_time_vector()
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
 
 
-        self.browser = dp.PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(time, data_flat, sens) )
+        self.browser = PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(time, data_flat, sens) )
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
         # update event ids so that they can be disconnect on next sensor change
