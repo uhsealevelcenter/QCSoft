@@ -121,7 +121,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         file_menu.addAction(opents_file)
         file_menu.addAction(close_app)
         help_menu.addAction(open_help_menu)
-        
+
     def file_open(self, reload = False, ts = False):
         if not reload:
             # filters = "s*.dat;; ts*.dat"

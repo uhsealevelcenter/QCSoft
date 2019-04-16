@@ -420,7 +420,9 @@ class Start(QtWidgets.QWidget):
 
     def plot(self):
         # print("MAIN PLOT CALLED")
+        self.browser = None
         self._static_ax.clear()
+        self._residual_ax.cla()
         data_flat = self.sens_objects[self.sens_str].get_flat_data()
         time = self.sens_objects[self.sens_str].get_time_vector()
 
@@ -536,8 +538,9 @@ class Start(QtWidgets.QWidget):
         # self.static_canvas.mpl_disconnect(self.cidP)
         self.static_canvas.mpl_disconnect(self.pid)
         self.static_canvas.mpl_disconnect(self.cid)
-        # self.browser.onDataEnd -= self.show_message
-        # self.browser.disconnect()
+        if self.browser:
+            self.browser.onDataEnd -= self.show_message
+            self.browser.disconnect()
         # time = np.arange(data_flat.size)
         time = self.sens_objects[sens].get_time_vector()
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
