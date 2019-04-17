@@ -113,8 +113,6 @@ class HelpScreen(QtWidgets.QWidget):
         l1.setAlignment(QtCore.Qt.AlignCenter)
         l2.setAlignment(QtCore.Qt.AlignTop)
 
-
-
         self.layout.addWidget(l1)
         self.layout.addStretch()
         self.layout.addWidget(l2)

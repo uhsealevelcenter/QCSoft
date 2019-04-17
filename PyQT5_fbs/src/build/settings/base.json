@@ -1,5 +1,7 @@
 {
     "app_name": "UHSLC-QC",
     "main_module": "src/main/python/main.py",
-    "author": "Nemo K."
+    "author": "Nemo K.",
+    "public_settings":["app_name","version"],
+    "version": 0.1
 }

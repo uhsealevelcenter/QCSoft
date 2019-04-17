@@ -38,6 +38,9 @@ class AppContext(ApplicationContext):
         logging.basicConfig(filename='/tmp/qcsoft.log')
 
     def run(self):
+        version = self.build_settings["version"]
+        name = self.build_settings["app_name"]
+        self.window.setWindowTitle(name + " v" + str(version))
         self.window.show()
         return self.app.exec_()
 
@@ -61,7 +64,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.file_name = "NO NAME"
         # self._main = QtWidgets.QWidget()
         self.setCentralWidget(self._main)
-        self.setWindowTitle("UHSLC QC Software")
+        # self.setWindowTitle("UHSLC QC Software")
         self.setWindowIcon(QtGui.QIcon('uhslclogotext72_pfL_icon.ico'))
         self.resize(1837, 1200)
 
@@ -268,6 +271,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     appctxt = AppContext()
-    sys.excepthook = appctxt.exception_hook
+    # sys.excepthook = appctxt.exception_hook
     exit_code = appctxt.run()
     sys.exit(exit_code)
