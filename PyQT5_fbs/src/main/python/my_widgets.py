@@ -419,8 +419,9 @@ class Start(QtWidgets.QWidget):
     def plot(self):
         # print("MAIN PLOT CALLED")
         self.browser = None
-        self._static_ax.clear()
+        self._static_ax.cla()
         self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
         data_flat = self.sens_objects[self.sens_str].get_flat_data()
         time = self.sens_objects[self.sens_str].get_time_vector()
 
