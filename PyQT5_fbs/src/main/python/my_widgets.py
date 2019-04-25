@@ -224,7 +224,7 @@ class Start(QtWidgets.QWidget):
 
         self.label2 = QtWidgets.QLabel()
         self.label2.setObjectName(_fromUtf8("label"))
-        self.label2.setText(_translate("MainWindow", "Monhts:", None))
+        self.label2.setText(_translate("MainWindow", "Months:", None))
         self.horizontalLayout.addWidget(self.label2)
 
         self.lineEdit2 = QtWidgets.QLineEdit()
