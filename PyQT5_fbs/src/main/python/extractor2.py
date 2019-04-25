@@ -157,7 +157,11 @@ class DataExtractor:
                 for s in fields:
                     if s == '****' or s == ' ****' or s == '*****':
                         fields[fields.index(s)] = '9999'
-                row_data = [float(x) for x in fields]
+                if init_date < np.datetime64('2015-09-01'):
+                    row_data = [float(x) if x == '9999' else (float(x)/100)*304.801 for x in fields]
+                else:
+                    row_data = [float(x) for x in fields]
+
 
                 # And add this row to the
                 # entire data set.
