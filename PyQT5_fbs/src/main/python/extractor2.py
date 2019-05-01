@@ -102,7 +102,8 @@ class DataExtractor:
             lines_copy = list_of_lists[sensor][1][1:]
             # Check for missing date and reset the comparison array to default [0]
             missed_dates_ar = self.missing_dates(month_ar)
-            print("Missing dates", missed_dates_ar)
+            if missed_dates_ar:
+                print("Missing dates", missed_dates_ar)
 
             # There might be multiple days missing so need to loop through all of them
             for day in missed_dates_ar:
