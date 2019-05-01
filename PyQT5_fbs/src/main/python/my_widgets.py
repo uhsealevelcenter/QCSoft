@@ -391,6 +391,9 @@ class Start(QtWidgets.QWidget):
         # convert 'nans' back to 9999s
         nan_ind = np.argwhere(np.isnan(self.browser.data))
         self.browser.data[nan_ind] = 9999
+        # we want the sensor data object to point to self.browser.data and not self.browser.data.copy()
+        # because when the self.browser.data is modified on the graph
+        # the sensor data object will automatically be modified as well
         self.sens_objects[self.sens_str].data = self.browser.data
 
     def on_residual_sensor_changed(self, btn):
@@ -418,9 +421,12 @@ class Start(QtWidgets.QWidget):
 
     def plot(self):
         # print("MAIN PLOT CALLED")
+
+        # Set the data browser object to NoneType on every file load
         self.browser = None
-        self._static_ax.clear()
+        self._static_ax.cla()
         self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
         data_flat = self.sens_objects[self.sens_str].get_flat_data()
         time = self.sens_objects[self.sens_str].get_time_vector()
 
@@ -765,7 +771,7 @@ class Start(QtWidgets.QWidget):
                         for line in assem_data[m]:
                             the_file.write(line+"\n")
                         # Each file ends with two lines of 80 9s that's why adding an additional one
-                        the_file.write('9'*80)
+                        the_file.write('9'*80+"\n")
                     self.show_custom_message("Success", "Success \n" + file_name + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")

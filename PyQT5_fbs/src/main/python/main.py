@@ -271,6 +271,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     appctxt = AppContext()
-    # sys.excepthook = appctxt.exception_hook
+    sys.excepthook = appctxt.exception_hook
     exit_code = appctxt.run()
     sys.exit(exit_code)

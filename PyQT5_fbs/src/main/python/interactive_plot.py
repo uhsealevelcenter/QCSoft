@@ -293,7 +293,7 @@ class PointBrowser:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire("WHILE LOOPThis was the last outlier. You can click the same channel again to find smaller outliers")
+                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
                 break
         return pointer
 
