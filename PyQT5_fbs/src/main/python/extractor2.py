@@ -21,6 +21,7 @@ class DataExtractor:
         self.data_all = {}
         self.infos_time_col = {}
         self.prev_date = 0
+        self.units = []
 
         self.parse_file(filename)
 
@@ -157,15 +158,18 @@ class DataExtractor:
                 for s in fields:
                     if s == '****' or s == ' ****' or s == '*****':
                         fields[fields.index(s)] = '9999'
-                if init_date < np.datetime64('2015-09-01'):
-                    row_data = [float(x) if x == '9999' else (float(x)/100)*304.801 for x in fields]
-                else:
-                    row_data = [float(x) for x in fields]
-
+                row_data = [float(x) for x in fields]
 
                 # And add this row to the
                 # entire data set.
                 data.append(row_data)
+                
+            # Data prior to Spet 2015 was stored in Imperial units.
+            if init_date < np.datetime64('2015-09-01'):
+                self.units.append('Imperial')
+            else:
+                self.units.append('Metric')
+            
 
             # # Finally, convert the "list of
             # # lists" into a 2D array.
