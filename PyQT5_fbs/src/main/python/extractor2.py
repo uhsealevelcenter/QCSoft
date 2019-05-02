@@ -21,6 +21,7 @@ class DataExtractor:
         self.data_all = {}
         self.infos_time_col = {}
         self.prev_date = 0
+        self.units = []
 
         self.parse_file(filename)
 
@@ -101,7 +102,8 @@ class DataExtractor:
             lines_copy = list_of_lists[sensor][1][1:]
             # Check for missing date and reset the comparison array to default [0]
             missed_dates_ar = self.missing_dates(month_ar)
-            print("Missing dates", missed_dates_ar)
+            if missed_dates_ar:
+                print("Missing dates", missed_dates_ar)
 
             # There might be multiple days missing so need to loop through all of them
             for day in missed_dates_ar:
@@ -162,6 +164,13 @@ class DataExtractor:
                 # And add this row to the
                 # entire data set.
                 data.append(row_data)
+                
+            # Data prior to Spet 2015 was stored in Imperial units.
+            if init_date < np.datetime64('2015-09-01'):
+                self.units.append('Imperial')
+            else:
+                self.units.append('Metric')
+            
 
             # # Finally, convert the "list of
             # # lists" into a 2D array.
