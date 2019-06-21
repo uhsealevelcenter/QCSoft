@@ -12,6 +12,7 @@ import pandas._libs.tslibs.np_datetime
 import pandas._libs.tslibs.nattype
 import pandas._libs.skiplist
 from pandas import Series, date_range
+import filtering as filt
 
 
 if is_pyqt5():
@@ -313,6 +314,9 @@ class Start(QtWidgets.QWidget):
 
         self.check_button_group = QtWidgets.QButtonGroup()
         self.check_button_group.setExclusive(False)
+
+        self.radio_group_2 = QtWidgets.QButtonGroup()
+        self.radio_group_2.setExclusive(True)
         # self.verticalLayout_left_top.setParent(None)
         # for button in self.radio_button_group.buttons():
         print("NK", self.radio_button_group.buttons())
@@ -362,7 +366,14 @@ class Start(QtWidgets.QWidget):
                 self.verticalLayout_bottom.addWidget(self.sensor_dict2[key],0, QtCore.Qt.AlignTop)
 
             self.sensor_dict[key].setText(key)
-
+        radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
+        radio_btn_HF.setChecked(True)
+        self.mode = radio_btn_HF.text()
+        radio_btn_HD = QtWidgets.QRadioButton("Hourly", self)
+        self.radio_group_2.addButton(radio_btn_HF)
+        self.radio_group_2.addButton(radio_btn_HD)
+        self.verticalLayout_bottom.addWidget(radio_btn_HF)
+        self.verticalLayout_bottom.addWidget(radio_btn_HD)
         # spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         # self.verticalLayout_left_top.addItem(spacerItem)
         self.sensor_dict["PRD"].setChecked(True)
@@ -370,6 +381,7 @@ class Start(QtWidgets.QWidget):
         self.plot()
         self.radio_button_group.buttonClicked.connect(self.on_sensor_changed)
         self.check_button_group.buttonClicked.connect(self.on_residual_sensor_changed)
+        self.radio_group_2.buttonClicked.connect(self.on_frequency_changed)
 
     def on_sensor_changed(self, btn):
         print (btn.text())
@@ -387,6 +399,11 @@ class Start(QtWidgets.QWidget):
         self._residual_ax.figure.canvas.draw()
         # print("ref height:",self.sens_objects[self.sens_str].height)
 
+    def on_frequency_changed(self, btn):
+        print ("Frequency changesd",btn.text())
+        self.mode = btn.text()
+        self.on_residual_sensor_changed()
+
     def update_graph_values(self):
         # convert 'nans' back to 9999s
         nan_ind = np.argwhere(np.isnan(self.browser.data))
@@ -396,14 +413,14 @@ class Start(QtWidgets.QWidget):
         # the sensor data object will automatically be modified as well
         self.sens_objects[self.sens_str].data = self.browser.data
 
-    def on_residual_sensor_changed(self, btn):
+    def on_residual_sensor_changed(self):
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
 
         checkedItems = [button for button in self.check_button_group.buttons() if button.isChecked()]
         if(checkedItems):
             for button in checkedItems:
-                self.calculate_and_plot_residuals(self.sens_str, button.text())
+                self.calculate_and_plot_residuals(self.sens_str, button.text(), self.mode)
         else:
             self._residual_ax.cla()
             self._residual_ax.figure.canvas.draw()
@@ -467,7 +484,7 @@ class Start(QtWidgets.QWidget):
 
         self.static_canvas.draw()
 
-    def calculate_and_plot_residuals(self, sens_str1, sens_str2):
+    def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
         # resample_freq = min(int(self.sens_objects[sens_str1].rate), int(self.sens_objects[sens_str2].rate))
         # _freq = str(resample_freq)+'min'
         #
@@ -482,20 +499,35 @@ class Start(QtWidgets.QWidget):
         # resample the data and linearly interpolate the missing values
         # upsampled = ts.resample(_freq)
         # interp = upsampled.interpolate()
+        if mode == "Hourly":
+            data_obj ={}
+            for key in self.sens_objects.keys():
+                sl_data = self.sens_objects[key].get_flat_data().copy()
+                nines_ind = np.where(sl_data == 9999)
+                sl_data[nines_ind] = float('nan')
+                sl_data = sl_data -int(self.sens_objects[key].height)
+                data_obj[key.lower()]={'time':filt.datenum2(self.sens_objects[key].get_time_vector()), 'station':'014', 'sealevel':sl_data}
 
-        newd1 = self.resample2(sens_str1)
-        newd2 = self.resample2(sens_str2)
-        # newd1 = ts1.resample(_freq).interpolate()
-        # newd2 = ts2.resample(_freq).interpolate()
-        if(newd1.size>newd2.size):
-            resid = newd2 - newd1[:newd2.size]
+            data_hr = filt.hr_process_2(data_obj, filt.datetime(2019,1,1,0,0,0), filt.datetime(2019,2,1,0,0,0))
+            if sens_str2.lower() == "prd":
+                self.generic_plot(self.residual_canvas, data_hr[list(data_hr.keys())[0]]['time'], data_hr[list(data_hr.keys())[0]]['tide'],sens_str2,"", is_interactive = False)
+            else:
+                self.generic_plot(self.residual_canvas, data_hr[sens_str2.lower()]['time'], data_hr[sens_str2.lower()]['sealevel'],sens_str2,"", is_interactive = False)
+
         else:
-            resid = newd1 - newd2[:newd1.size]
+            newd1 = self.resample2(sens_str1)
+            newd2 = self.resample2(sens_str2)
+            # newd1 = ts1.resample(_freq).interpolate()
+            # newd2 = ts2.resample(_freq).interpolate()
+            if(newd1.size>newd2.size):
+                resid = newd2 - newd1[:newd2.size]
+            else:
+                resid = newd1 - newd2[:newd1.size]
 
-        # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
-        # time = np.arange(resid.size)
-        time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
-        self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, is_interactive = False)
+            # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
+            # time = np.arange(resid.size)
+            time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
+            self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, is_interactive = False)
 
     def generic_plot(self, canvas, x, y,sens1, sens2, is_interactive):
 
@@ -645,8 +677,8 @@ class Start(QtWidgets.QWidget):
         nines_ind = np.where(data == 9999)
         data[nines_ind] = float('nan')
         ave = np.nanmean(data)
-        datas = data[0:-1]-ave
-        datae = data[1:]-ave
+        datas = data[0:-1]-ave#int(self.sens_objects[sens_str].height)
+        datae = data[1:]-ave#int(self.sens_objects[sens_str].height)
         yc = (datae - datas)/int(self.sens_objects[sens_str].rate)
 
         min_data = []
