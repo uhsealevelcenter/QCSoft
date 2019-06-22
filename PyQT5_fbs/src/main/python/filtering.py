@@ -249,9 +249,6 @@ def hr_process_2(_data, yr1, yr2):
             # compute hourly average
             [th,xh] = hr_calwts_filt(_data[key]['time'],_data[key]['sealevel'])
 
-            # if key == 'rad':
-            #     print("test", np.nanmean(xh))
-
             # limit data between yr1 and yr2
             ky = np.argwhere(np.logical_and(th >= datenum(yr1), th < datenum(yr2)))
             if len(ky) == 0:
@@ -260,8 +257,8 @@ def hr_process_2(_data, yr1, yr2):
             xh = xh[ky]
 
             # interpolate predicted tide to hourly time stamp from 15min
-            pr = np.interp (th, _data['prd']['time'], _data['prd']['sealevel'])
-            hr_data[key] = {'time':th, 'sealevel':xh, 'tide':pr,'station':_data[key]['station']}
+            # pr = np.interp (th, _data['prd']['time'], _data['prd']['sealevel'])
+            hr_data[key] = {'time':th, 'sealevel':xh,'station':_data[key]['station']}
     return hr_data
 
 def is_number(s):

@@ -378,6 +378,7 @@ class Start(QtWidgets.QWidget):
         # self.verticalLayout_left_top.addItem(spacerItem)
         self.sensor_dict["PRD"].setChecked(True)
         self.sens_str = "PRD"
+        # self.sensor_dict2["PRD"].setEnabled(False)
         self.plot()
         self.radio_button_group.buttonClicked.connect(self.on_sensor_changed)
         self.check_button_group.buttonClicked.connect(self.on_residual_sensor_changed)
@@ -402,6 +403,10 @@ class Start(QtWidgets.QWidget):
     def on_frequency_changed(self, btn):
         print ("Frequency changesd",btn.text())
         self.mode = btn.text()
+        if(self.mode == "Minute"):
+            self.sensor_dict2["PRD"].setEnabled(True)
+        else:
+            self.sensor_dict2["PRD"].setEnabled(False)
         self.on_residual_sensor_changed()
 
     def update_graph_values(self):
@@ -501,18 +506,31 @@ class Start(QtWidgets.QWidget):
         # interp = upsampled.interpolate()
         if mode == "Hourly":
             data_obj ={}
-            for key in self.sens_objects.keys():
-                sl_data = self.sens_objects[key].get_flat_data().copy()
-                nines_ind = np.where(sl_data == 9999)
-                sl_data[nines_ind] = float('nan')
-                sl_data = sl_data -int(self.sens_objects[key].height)
-                data_obj[key.lower()]={'time':filt.datenum2(self.sens_objects[key].get_time_vector()), 'station':'014', 'sealevel':sl_data}
+            # data_obj["prd"]={'time':filt.datenum2(self.sens_objects["PRD"].get_time_vector()), 'station':'014', 'sealevel':self.sens_objects["PRD"].get_flat_data().copy()}
+            # for key in self.sens_objects.keys():
+            #     print("KEY", key)
+            sl_data = self.sens_objects[sens_str1].get_flat_data().copy()
+            sl_data = self.remove_9s(sl_data)
+            sl_data = sl_data - int(self.sens_objects[sens_str1].height)
+            data_obj[sens_str1.lower()]={'time':filt.datenum2(self.sens_objects[sens_str1].get_time_vector()), 'station':'014', 'sealevel':sl_data}
 
-            data_hr = filt.hr_process_2(data_obj, filt.datetime(2019,1,1,0,0,0), filt.datetime(2019,2,1,0,0,0))
-            if sens_str2.lower() == "prd":
-                self.generic_plot(self.residual_canvas, data_hr[list(data_hr.keys())[0]]['time'], data_hr[list(data_hr.keys())[0]]['tide'],sens_str2,"", is_interactive = False)
+            sl_data2 = self.sens_objects[sens_str2].get_flat_data().copy()
+            sl_data2 = self.remove_9s(sl_data2)
+            sl_data2 = sl_data2 - int(self.sens_objects[sens_str2].height)
+            data_obj[sens_str2.lower()]={'time':filt.datenum2(self.sens_objects[sens_str2].get_time_vector()), 'station':'014', 'sealevel':sl_data2}
+
+            year = self.sens_objects[sens_str2].date.astype(object).year
+            month = self.sens_objects[sens_str2].date.astype(object).month
+            data_hr = filt.hr_process_2(data_obj, filt.datetime(year,month,1,0,0,0), filt.datetime(year,month+1,1,0,0,0))
+
+
+            if sens_str1 != "PRD":
+                hr_resid = data_hr[sens_str1.lower()]["sealevel"]-data_hr[sens_str2.lower()]["sealevel"]
+                time = [ filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time'] ]
+                self.generic_plot(self.residual_canvas, time, hr_resid,sens_str1,sens_str2,"Hourly Residual", is_interactive = False)
             else:
-                self.generic_plot(self.residual_canvas, data_hr[sens_str2.lower()]['time'], data_hr[sens_str2.lower()]['sealevel'],sens_str2,"", is_interactive = False)
+                self.show_custom_message("Warning", "For hourly residual an actual channel needs to be selected in the top plot.")
+                self.generic_plot(self.residual_canvas, [0], [0],sens_str1,sens_str2,"Choose a channel in the top plot other than PRD", is_interactive = False)
 
         else:
             newd1 = self.resample2(sens_str1)
@@ -527,17 +545,17 @@ class Start(QtWidgets.QWidget):
             # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
             # time = np.arange(resid.size)
             time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
-            self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, is_interactive = False)
+            self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, "Residual", is_interactive = False)
 
-    def generic_plot(self, canvas, x, y,sens1, sens2, is_interactive):
+    def generic_plot(self, canvas, x, y,sens1, sens2, title, is_interactive):
 
         # self._residual_ax = canvas.figure.subplots()
 
         line, = self._residual_ax.plot(x, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
         line.set_gid(sens2)
         self._residual_fig = canvas.figure
-        self._residual_ax.set_title('Residual: '+sens1+" - "+sens2)
-        line.set_label('Residual: '+sens1+" - "+sens2)
+        self._residual_ax.set_title(title)
+        line.set_label(title+": "+sens1+" - "+sens2)
         self._residual_ax.autoscale(enable=True, axis='both', tight=True)
         self._residual_ax.set_xlim([x[0], x[-1]])
         self._residual_ax.margins(0.05, 0.05)
@@ -728,6 +746,12 @@ class Start(QtWidgets.QWidget):
             return True
         except ValueError:
             return  False
+
+    def remove_9s(self, data):
+        nines_ind = np.where(data == 9999)
+        data[nines_ind] = float('nan')
+        return data
+
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title,  descrip, QtWidgets.QMessageBox.Ok)
 
