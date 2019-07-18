@@ -142,8 +142,10 @@ class DataExtractor:
                 day = "0" + day
             if len(month) == 1:
                 month = "0" + month
-            if len(year) < 4:
+            if len(year) == 2:
                 year = "20" + year
+            if len(year) == 1:
+                year = "200" + year
 
             init_date = np.datetime64("-".join([year, month, day]) + 'T00:00:00.000000')
             self.init_dates.append(init_date)
