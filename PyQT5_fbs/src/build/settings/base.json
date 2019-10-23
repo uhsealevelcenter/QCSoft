@@ -3,5 +3,5 @@
     "main_module": "src/main/python/main.py",
     "author": "Nemo K.",
     "public_settings":["app_name","version"],
-    "version": "0.4"
+    "version": "0.6"
 }

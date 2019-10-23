@@ -280,24 +280,24 @@ class Start(QtWidgets.QWidget):
         self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
         # self.toolbar1.update() #Update the toolbar memory
 
-        btn = QtWidgets.QPushButton("Save", self)
-        btn.setStatusTip('Save to a File')
-        self.verticalLayout_left_top.addWidget(btn, 0, QtCore.Qt.AlignTop)
+        self.save_btn = QtWidgets.QPushButton("Save", self)
+        self.save_btn.setStatusTip('Save to a File')
+        self.verticalLayout_left_top.addWidget(self.save_btn, 0, QtCore.Qt.AlignTop)
 
         self.verticalLayout_left_main.addLayout(self.verticalLayout_left_top)
 
         self.verticalLayout_bottom = QtWidgets.QVBoxLayout()
         self.verticalLayout_bottom.setObjectName("verticalLayout_bottom")
 
-        pushButton_2 = QtWidgets.QPushButton("Residual",self)
-        pushButton_2.setObjectName("pushButton_2")
-        self.verticalLayout_bottom.addWidget(pushButton_2, 0, QtCore.Qt.AlignTop)
+        # pushButton_2 = QtWidgets.QPushButton("Residual",self)
+        # pushButton_2.setObjectName("pushButton_2")
+        # self.verticalLayout_bottom.addWidget(pushButton_2, 0, QtCore.Qt.AlignTop)
         self.verticalLayout_left_main.addLayout(self.verticalLayout_bottom)
 
         self.gridLayout.addLayout(self.verticalLayout_left_main, 0, 0, 1, 1)
 
         self.setLayout(self.gridLayout)
-        btn.clicked.connect(self.save_to_ts_files)
+        self.save_btn.clicked.connect(self.save_to_ts_files)
 
         # pushButton_2.clicked.connect(self.calculate_and_plot_residuals)
 
@@ -319,11 +319,11 @@ class Start(QtWidgets.QWidget):
         self.radio_group_2.setExclusive(True)
         # self.verticalLayout_left_top.setParent(None)
         # for button in self.radio_button_group.buttons():
-        print("NK", self.radio_button_group.buttons())
+        # print("NK", self.radio_button_group.buttons())
             # self.radio_button_group.removeButton(button)
 
 
-        print("self.verticalLayout_left_top widget count", self.verticalLayout_left_top.count())
+        # print("self.verticalLayout_left_top widget count", self.verticalLayout_left_top.count())
         # Remove all sensor checkbox widgets from the layout
         # every time a new sensor is selected
         for i in range(self.verticalLayout_left_top.count()):
@@ -376,9 +376,17 @@ class Start(QtWidgets.QWidget):
         self.verticalLayout_bottom.addWidget(radio_btn_HD)
         # spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         # self.verticalLayout_left_top.addItem(spacerItem)
+
+
+        # btn = QtWidgets.QPushButton("Plot All", self)
+        # btn.setStatusTip('Relative levels = signal - average over selected period')
+        # self.verticalLayout_left_top.addWidget(btn, 0, QtCore.Qt.AlignTop)
+        # btn.clicked.connect(self.plot_all)
+
         self.sensor_dict["PRD"].setChecked(True)
         self.sens_str = "PRD"
         # self.sensor_dict2["PRD"].setEnabled(False)
+        self.sensor_dict2["ALL"].setEnabled(False)
         self.plot()
         self.radio_button_group.buttonClicked.connect(self.on_sensor_changed)
         self.check_button_group.buttonClicked.connect(self.on_residual_sensor_changed)
@@ -386,10 +394,17 @@ class Start(QtWidgets.QWidget):
 
     def on_sensor_changed(self, btn):
         print (btn.text())
-        self.sens_str = btn.text()
-        self._update_top_canvas(btn.text())
-        self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
-        self.update_graph_values()
+        if(btn.text() == "ALL"):
+            self.save_btn.setEnabled(False)
+            self.btnRefLevel.setEnabled(False)
+            self.plot_all()
+        else:
+            self.save_btn.setEnabled(True)
+            self.btnRefLevel.setEnabled(True)
+            self.sens_str = btn.text()
+            self._update_top_canvas(btn.text())
+            self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+            self.update_graph_values()
 
         # Update residual buttons and graph when the top sensor is changed
         # self.on_residual_sensor_changed(None)
@@ -489,6 +504,50 @@ class Start(QtWidgets.QWidget):
 
         self.static_canvas.draw()
 
+    def plot_all(self):
+        print("PLOT ALL CLICKED")
+        # Set the data browser object to NoneType on every file load
+        self.browser = None
+        self._static_ax.cla()
+        self._residual_ax.cla()
+        self._static_ax.figure.canvas.draw()
+        self._residual_ax.figure.canvas.draw()
+
+        for sens in self.sens_objects:
+            if sens == "ALL":
+                pass
+            else:
+                data_flat = self.sens_objects[sens].get_flat_data()
+                time = self.sens_objects[sens].get_time_vector()
+
+                ## Set 9999s to NaN so they don't show up on the graph
+                ## when initially plotted
+                ## nans are converted back to 9999s when file is saved
+                self.lineEdit.setText('No Header -- Plotting all sensors')
+                nines_ind = np.where(data_flat == 9999)
+                data_flat[nines_ind] = float('nan')
+
+                t = time
+                y = data_flat - np.nanmean(data_flat)
+                # self._static_ax.plot(t, np.tan(t), ".")
+                line, = self._static_ax.plot(t, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
+                line.set_label(sens)
+                # self._static_fig = self.static_canvas.figure
+                self._static_ax.set_title('Relative levels = signal - average over selected period')
+
+                self._static_ax.autoscale(enable=True, axis='both', tight=True)
+                self._static_ax.set_xlim([t[0], t[-1]])
+                self._static_ax.margins(0.05, 0.05)
+                self._static_ax.legend()
+
+                self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+                self.static_canvas.setFocus()
+                self.static_canvas.figure.tight_layout()
+                self.toolbar1.update() #Update the toolbar memory
+                self.static_canvas.draw()
+                # self.generic_plot(self.static_canvas, [1,2,3],[100,200,150],'sens_str1','sens_str2', "PLOT ALL", is_interactive = False)
+
+
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
         # resample_freq = min(int(self.sens_objects[sens_str1].rate), int(self.sens_objects[sens_str2].rate))
         # _freq = str(resample_freq)+'min'
@@ -580,6 +639,10 @@ class Start(QtWidgets.QWidget):
     def _update_top_canvas(self, sens):
         data_flat = self.sens_objects[sens].get_flat_data()
         nines_ind = np.where(data_flat == 9999)
+        # nonines_data = data_flat.copy()
+        # nonines_data[nines_ind] = float('nan')
+        # data_flat = nonines_data
+        # data_flat =data_flat - np.nanmean(data_flat)
         if(len(nines_ind[0])<data_flat.size):
             # data_flat[nines_ind] = float('nan')
             pass
@@ -756,6 +819,9 @@ class Start(QtWidgets.QWidget):
         choice = QtWidgets.QMessageBox.information(self, title,  descrip, QtWidgets.QMessageBox.Ok)
 
     def save_to_ts_files(self):
+        # Deleting tkey "ALL" from the list of sensors
+        if "ALL" in self.sens_objects:
+            del self.sens_objects["ALL"]
         if(self.sens_objects):
             months = len(self.sens_objects["PRD"].line_num)  # amount of months loaded
             # print("Amount of months loaded", months)

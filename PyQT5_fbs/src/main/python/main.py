@@ -208,6 +208,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 comb_data = np.ndarray(0)
                 line_count = []
                 comb_headers = []
+                self.start_screen.sens_objects["ALL"] = {}
 
             self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
 
