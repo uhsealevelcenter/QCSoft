@@ -179,6 +179,11 @@ class HelpScreen(QtWidgets.QWidget):
         else:
             pass
 
+class QHLine(QtWidgets.QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 class Start(QtWidgets.QWidget):
 
@@ -285,6 +290,7 @@ class Start(QtWidgets.QWidget):
         self.verticalLayout_left_top.addWidget(self.save_btn, 0, QtCore.Qt.AlignTop)
 
         self.verticalLayout_left_main.addLayout(self.verticalLayout_left_top)
+        self.verticalLayout_left_main.addWidget(QHLine(), 0)
 
         self.verticalLayout_bottom = QtWidgets.QVBoxLayout()
         self.verticalLayout_bottom.setObjectName("verticalLayout_bottom")
@@ -368,6 +374,7 @@ class Start(QtWidgets.QWidget):
                 self.verticalLayout_bottom.addWidget(self.sensor_dict2[key],0, QtCore.Qt.AlignTop)
 
             self.sensor_dict[key].setText(key)
+
         radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
         radio_btn_HF.setChecked(True)
         self.mode = radio_btn_HF.text()
