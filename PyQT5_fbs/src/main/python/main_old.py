@@ -1,54 +1,129 @@
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
+import logging
+import traceback
+
 from fbs_runtime.application_context import ApplicationContext, cached_property
-from PyQt5.QtWidgets import QMainWindow
-from uhslcdesign import Ui_MainWindow
+from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
 
 from my_widgets import *
 
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-            FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
+    pass
 
-class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
-    def run(self):                              # 2. Implement run()
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtWidgets.QApplication.UnicodeUTF8
+
+
+    def _translate(context, text, disambig):
+        return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtWidgets.QApplication.translate(context, text, disambig)
+
+
+class AppContext(ApplicationContext):
+    if sys.platform == 'win32':
+        from pathlib import Path
+        home = str(Path.home())
+        logging.basicConfig(filename=home+'\qcsoft.log')
+    else:
+        logging.basicConfig(filename='/tmp/qcsoft.log')
+
+    def run(self):
         version = self.build_settings["version"]
         name = self.build_settings["app_name"]
         self.window.setWindowTitle(name + " v" + str(version))
         self.window.show()
-        return self.app.exec_()                 # 3. End run() with this line
+        return self.app.exec_()
+
+    def exception_hook(self, exc_type, exc_value, exc_traceback):
+        self.window.critical_dialog(title="ERROR!", text="Uncaught exception", info_text="log file saved at '/tmp/qcsoft.log'", details=traceback.format_tb(exc_traceback))
+        logging.error(
+            {"Uncaught exception, filename", self.window.file_name[0][0]},
+            exc_info=(exc_type, exc_value, exc_traceback)
+        )
 
     @cached_property
     def window(self):
         return ApplicationWindow()
 
-class ApplicationWindow(QMainWindow):
+
+class ApplicationWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
-        self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        # self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        self._main = QtWidgets.QStackedWidget()
+        self.file_name = "NO NAME"
+        # self._main = QtWidgets.QWidget()
+        self.setCentralWidget(self._main)
+        # self.setWindowTitle("UHSLC QC Software")
+        self.setWindowIcon(QtGui.QIcon('uhslclogotext72_pfL_icon.ico'))
+        self.resize(1837, 1200)
 
         # Create Screen objects
-        self.start_screen = Start(self.ui)
+        self.start_screen = Start(self)
+        self.second_screen = HelpScreen(self)
+        self._main.addWidget(self.start_screen)
+        self._main.addWidget(self.second_screen)
 
-        self.ui.actionInstructions.triggered.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
-        self.ui.backButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
+        self._main.setCurrentWidget(self.start_screen)
 
-        close_app = self.ui.actionQuit;
+        self.start_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.second_screen))
+        self.second_screen.clicked.connect(lambda: self._main.setCurrentWidget(self.start_screen))
+
+
+        self.setStatusTip("Permanent status bar")
+        # Create an action in the menu bar that is later on assigned to one of
+        # the options (e.g. File, Edit, View etc) in the menu bar
+        close_app = QtWidgets.QAction("&Exit", self)
+        close_app.setShortcut("Ctrl+Q")
+        # Show the tip in the status bar on hover
+        close_app.setStatusTip('Leave the app')
         close_app.triggered.connect(self.close_application)
 
-        open_file = self.ui.actionOpen
+        open_help_menu = QtWidgets.QAction("&Instructions", self)
+        open_help_menu.setShortcut("F1")
+        open_help_menu.triggered.connect(self.start_screen.clicked.emit)
+        # open_help_menu.triggered.connect(self.open_help_menu)
+
+        open_file = QtWidgets.QAction("&Open monp", self)
+        open_file.setShortcut("Ctrl+O")
+        open_file.setStatusTip('Load a File')
         open_file.triggered.connect(self.file_open)
 
-        reload_file = self.ui.actionReload
+        reload_file = QtWidgets.QAction("&Reload", self)
+        reload_file.setShortcut("Ctrl+R")
+        reload_file.setStatusTip('Reload all file(s) that were loaded')
         reload_file.triggered.connect(self.get_loaded_files)
 
-        opents_file = self.ui.actionOpen_TS
+        opents_file = QtWidgets.QAction("&Open ts", self)
+        opents_file.setShortcut("Ctrl+T")
+        opents_file.setStatusTip('Opens ts folder')
         opents_file.triggered.connect(self.open_ts)
+
+        self.statusBar()
+
+        # Create dropwon menu
+        main_menu = self.menuBar()
+
+        # Add options to the menuBar
+        file_menu = main_menu.addMenu('&File')
+        help_menu = main_menu.addMenu('&Help')
+
+        # Connect action with the option
+        file_menu.addAction(open_file)
+        file_menu.addAction(reload_file)
+        file_menu.addAction(opents_file)
+        file_menu.addAction(close_app)
+        help_menu.addAction(open_help_menu)
 
     def file_open(self, reload = False, ts = False):
         if not reload:
@@ -101,7 +176,7 @@ class ApplicationWindow(QMainWindow):
 
 
 
-            self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
+            self.start_screen.lineEdit2.setText("Loaded: " + str(self.month_count) + " months")
 
             # Create DataExtractor for each month that was loaded into program
             for j in range(self.month_count):
@@ -196,6 +271,7 @@ class ApplicationWindow(QMainWindow):
         # return self.file_name;
 
 if __name__ == '__main__':
-    appctxt = AppContext()                      # 4. Instantiate the subclass
-    exit_code = appctxt.run()                   # 5. Invoke run()
+    appctxt = AppContext()
+    sys.excepthook = appctxt.exception_hook
+    exit_code = appctxt.run()
     sys.exit(exit_code)

@@ -13,6 +13,8 @@ import pandas._libs.tslibs.nattype
 import pandas._libs.skiplist
 from pandas import Series, date_range
 import filtering as filt
+from uhslcdesign import Ui_MainWindow
+from PyQt5.QtWidgets import QMainWindow
 
 
 if is_pyqt5():
@@ -185,163 +187,42 @@ class QHLine(QtWidgets.QFrame):
         self.setFrameShape(QtWidgets.QFrame.HLine)
         self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
-class Start(QtWidgets.QWidget):
+class Start(QMainWindow):
 
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        super(Start, self).__init__(parent)
-        # layout = QtWidgets.QHBoxLayout()
-        # button = QtWidgets.QPushButton('Go to second!')
-        # layout.addWidget(button)
-        # self.setLayout(layout)
-        # button.clicked.connect(self.clicked.emit)
-        print("START SCREEN INIT CALLED")
+        super(Start, self).__init__()
+        self.ui = parent
         self.sens_objects = {} ## Collection of Sensor objects for station for one month
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-
-
-        self.verticalLayout_left_main = QtWidgets.QVBoxLayout()
-        self.verticalLayout_left_main.setObjectName(_fromUtf8("verticalLayout_left_main"))
-
-        self.verticalLayout_left_top = QtWidgets.QVBoxLayout()
-        self.verticalLayout_left_top.setObjectName(_fromUtf8("verticalLayout_left"))
-
-        self.verticalLayout_right = QtWidgets.QVBoxLayout()
-        self.verticalLayout_right.setObjectName(_fromUtf8("verticalLayout_right"))
-
-
-
-
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-
-        self.label = QtWidgets.QLabel()
-        self.label.setObjectName(_fromUtf8("label"))
-        self.label.setText(_translate("MainWindow", "Meta Data:", None))
-        self.horizontalLayout.addWidget(self.label)
-
-        self.lineEdit = QtWidgets.QLineEdit()
-        self.lineEdit.setObjectName(_fromUtf8("lineEdit"))
-        self.lineEdit.setDisabled(True)
-        # self.lineEdit.setFixedWidth(300)
-        self.horizontalLayout.addWidget(self.lineEdit)
-
-        self.label2 = QtWidgets.QLabel()
-        self.label2.setObjectName(_fromUtf8("label"))
-        self.label2.setText(_translate("MainWindow", "Months:", None))
-        self.horizontalLayout.addWidget(self.label2)
-
-        self.lineEdit2 = QtWidgets.QLineEdit()
-        self.lineEdit2.setObjectName(_fromUtf8("lineEdit"))
-        self.lineEdit2.setDisabled(True)
-        self.lineEdit2.setFixedWidth(200)
-        self.horizontalLayout.addWidget(self.lineEdit2)
-
-        self.refLevelEdit = QtWidgets.QLineEdit()
-        self.refLevelEdit.setObjectName(_fromUtf8("refLevelEdit"))
-        self.refLevelEdit.setPlaceholderText('Enter New Reference Level')
-        self.horizontalLayout.addWidget(self.refLevelEdit)
-        self.refLevelEdit.setFixedWidth(180)
-
-        self.btnRefLevel = QtWidgets.QPushButton("Change Ref level", self)
-        self.btnRefLevel.setStatusTip('Changes the selected sensor\'s reference level after choosing date/time')
-        self.horizontalLayout.addWidget(self.btnRefLevel)
-        self.btnRefLevel.clicked.connect(self.show_ref_dialog)
-
-
-        self.verticalLayout_right.addLayout(self.horizontalLayout)
-
-        self.static_canvas = FigureCanvas(Figure(figsize=(20, 4)))
-        self.verticalLayout_right.addWidget(NavigationToolbar(self.static_canvas, self))
-        self.verticalLayout_right.addWidget(self.static_canvas)
-
-        # self.addToolBar(NavigationToolbar(self.static_canvas, self))
-
-        self.residual_canvas = FigureCanvas(Figure(figsize=(20, 4)))
-        self.verticalLayout_right.addWidget(NavigationToolbar(self.residual_canvas, self))
-        self.verticalLayout_right.addWidget(self.residual_canvas)
-        self._residual_ax = self.residual_canvas.figure.subplots()
-        # self.addToolBar(QtCore.Qt.BottomToolBarArea,
-        #                 NavigationToolbar(self.residual_canvas, self)
-        # test = NavigationToolbar(self.residual_canvas, self)
-        # # test.setAllowedAreas ( QtCore.Qt.BottomToolBarArea)
-        # self.verticalLayout_right.addWidget(test)
-
-
-
-
-        self.gridLayout.addLayout(self.verticalLayout_right, 0, 1, 1, 1)
         self.home()
 
     def home(self):
         print("HOME CALLED")
-        self.static_canvas.figure.clf()
-        self._static_ax = self.static_canvas.figure.subplots()
-        self._static_fig = self.static_canvas.figure
+        # print("static_canvas",self.static_canvas)
+        self.ui.mplwidget_top.canvas.figure.clf()
+        self.ui.mplwidget_bottom.canvas.figure.clf()
+        self._static_ax = self.ui.mplwidget_top.canvas.figure.subplots()
+        self._static_fig = self.ui.mplwidget_top.canvas.figure
         self.pid = -99
         self.cid = -98
         self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
-        # self.toolbar1.update() #Update the toolbar memory
-
-        self.save_btn = QtWidgets.QPushButton("Save", self)
-        self.save_btn.setStatusTip('Save to a File')
-        self.verticalLayout_left_top.addWidget(self.save_btn, 0, QtCore.Qt.AlignTop)
-
-        self.verticalLayout_left_main.addLayout(self.verticalLayout_left_top)
-        self.verticalLayout_left_main.addWidget(QHLine(), 0)
-
-        self.verticalLayout_bottom = QtWidgets.QVBoxLayout()
-        self.verticalLayout_bottom.setObjectName("verticalLayout_bottom")
-
-        # pushButton_2 = QtWidgets.QPushButton("Residual",self)
-        # pushButton_2.setObjectName("pushButton_2")
-        # self.verticalLayout_bottom.addWidget(pushButton_2, 0, QtCore.Qt.AlignTop)
-        self.verticalLayout_left_main.addLayout(self.verticalLayout_bottom)
-
-        self.gridLayout.addLayout(self.verticalLayout_left_main, 0, 0, 1, 1)
-
-        self.setLayout(self.gridLayout)
-        self.save_btn.clicked.connect(self.save_to_ts_files)
-
-        # pushButton_2.clicked.connect(self.calculate_and_plot_residuals)
-
-    # def _update_canvas(self):
-    #     self._residual_ax.clear()
-    #     t = np.linspace(0, 10, 101)
-    #     # Shift the sinusoid as a function of time.
-    #     self._residual_ax.plot(t, np.sin(t + time.time()))
-    #     self._residual_ax.figure.canvas.draw()
+        self.toolbar1.update() #Update the toolbar memory
+        # self._residual_fig = self.ui.mplwidget_bottom.canvas.figure
+        self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
+        self.ui.save_btn.clicked.connect(self.save_to_ts_files)
 
     def make_sensor_buttons(self, sensors):
-        self.radio_button_group = QtWidgets.QButtonGroup()
-        self.radio_button_group.setExclusive(True)
-
-        self.check_button_group = QtWidgets.QButtonGroup()
-        self.check_button_group.setExclusive(False)
-
-        self.radio_group_2 = QtWidgets.QButtonGroup()
-        self.radio_group_2.setExclusive(True)
-        # self.verticalLayout_left_top.setParent(None)
-        # for button in self.radio_button_group.buttons():
-        # print("NK", self.radio_button_group.buttons())
-            # self.radio_button_group.removeButton(button)
-
-
-        # print("self.verticalLayout_left_top widget count", self.verticalLayout_left_top.count())
-        # print("self.verticalLayout_left_bottom widget count", self.verticalLayout_bottom.count())
         # Remove all sensor checkbox widgets from the layout
-        # every time a new sensor is selected
-        for i in range(self.verticalLayout_left_top.count()):
-            item = self.verticalLayout_left_top.itemAt(i)
+        # every time new data is loaded
+        for i in range(self.ui.verticalLayout_left_top.count()):
+            item = self.ui.verticalLayout_left_top.itemAt(i)
             # self.verticalLayout_left_top.removeWidget(item.widget())
             widget = item.widget()
-            # 0 index not removed because that is the SAVE button
-            if widget is not None and i!=0:
+            if widget is not None:
                 widget.deleteLater()
-        for i in range(self.verticalLayout_bottom.count()):
-            item = self.verticalLayout_bottom.itemAt(i)
+        for i in range(self.ui.verticalLayout_bottom.count()):
+            item = self.ui.verticalLayout_bottom.itemAt(i)
             # self.verticalLayout_left_top.removeWidget(item.widget())
             widget = item.widget()
             if widget is not None:
@@ -364,69 +245,56 @@ class Start(QtWidgets.QWidget):
             self.sensor_check_btns = QtWidgets.QCheckBox(key, self)
             self.sensor_dict[key] = self.sensor_radio_btns
             self.sensor_dict2[key] = self.sensor_check_btns
-            self.radio_button_group.addButton(self.sensor_dict[key])
-            self.check_button_group.addButton(self.sensor_dict2[key])
+            self.ui.buttonGroup_data.addButton(self.sensor_dict[key])
+            self.ui.buttonGroup_residual.addButton(self.sensor_dict2[key])
             if(counter>0):
-                self.verticalLayout_left_top.addWidget(self.sensor_dict[key])
-                self.verticalLayout_bottom.addWidget(self.sensor_dict2[key])
+                self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key])
+                self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key])
             else:
-                self.verticalLayout_left_top.addWidget(self.sensor_dict[key],0, QtCore.Qt.AlignTop)
-                self.verticalLayout_bottom.addWidget(self.sensor_dict2[key],0, QtCore.Qt.AlignTop)
+                self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key],0, QtCore.Qt.AlignTop)
+                self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key],0, QtCore.Qt.AlignTop)
 
             self.sensor_dict[key].setText(key)
 
-        radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
-        radio_btn_HF.setChecked(True)
-        self.mode = radio_btn_HF.text()
-        radio_btn_HD = QtWidgets.QRadioButton("Hourly", self)
-        self.radio_group_2.addButton(radio_btn_HF)
-        self.radio_group_2.addButton(radio_btn_HD)
-        self.verticalLayout_bottom.addWidget(radio_btn_HF)
-        self.verticalLayout_bottom.addWidget(radio_btn_HD)
-        # spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        # self.verticalLayout_left_top.addItem(spacerItem)
-
-
-        # btn = QtWidgets.QPushButton("Plot All", self)
-        # btn.setStatusTip('Relative levels = signal - average over selected period')
-        # self.verticalLayout_left_top.addWidget(btn, 0, QtCore.Qt.AlignTop)
-        # btn.clicked.connect(self.plot_all)
+        # radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
+        # radio_btn_HF.setChecked(True)
+        self.mode = self.ui.radioButton_Minute.text()
 
         self.sensor_dict["PRD"].setChecked(True)
         self.sens_str = "PRD"
         # self.sensor_dict2["PRD"].setEnabled(False)
         self.sensor_dict2["ALL"].setEnabled(False)
         self.plot(all=False)
-        self.radio_button_group.buttonClicked.connect(self.on_sensor_changed)
-        self.check_button_group.buttonClicked.connect(self.on_residual_sensor_changed)
-        self.radio_group_2.buttonClicked.connect(self.on_frequency_changed)
+        self.ui.buttonGroup_data.buttonClicked.connect(self.on_sensor_changed)
+        self.ui.buttonGroup_residual.buttonClicked.connect(self.on_residual_sensor_changed)
+        self.ui.buttonGroup_resolution.buttonClicked.connect(self.on_frequency_changed)
 
     def on_sensor_changed(self, btn):
         print (btn.text())
         if(btn.text() == "ALL"):
             # TODO: plot_all and plot should be merged to one function
-            self.save_btn.setEnabled(False)
-            self.btnRefLevel.setEnabled(False)
+            self.ui.save_btn.setEnabled(False)
+            self.ui.ref_level_btn.setEnabled(False)
             self.plot(all=True)
         else:
-            self.save_btn.setEnabled(True)
-            self.btnRefLevel.setEnabled(True)
+            self.ui.save_btn.setEnabled(True)
+            self.ui.ref_level_btn.setEnabled(True)
             self.sens_str = btn.text()
             self._update_top_canvas(btn.text())
-            self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+            self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
             self.update_graph_values()
 
         # Update residual buttons and graph when the top sensor is changed
         # self.on_residual_sensor_changed(None)
         # Clear residual buttons and graph when the top sensor is changed
-        for button in self.check_button_group.buttons():
+        for button in self.ui.buttonGroup_residual.buttons():
             button.setChecked(False)
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
         # print("ref height:",self.sens_objects[self.sens_str].height)
 
     def on_frequency_changed(self, btn):
-        print ("Frequency changesd",btn.text())
+        print ("Frequency changed",btn.text())
         self.mode = btn.text()
         if(self.mode == "Minute"):
             self.sensor_dict2["PRD"].setEnabled(True)
@@ -447,24 +315,13 @@ class Start(QtWidgets.QWidget):
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
 
-        checkedItems = [button for button in self.check_button_group.buttons() if button.isChecked()]
+        checkedItems = [button for button in self.ui.buttonGroup_residual.buttons() if button.isChecked()]
         if(checkedItems):
             for button in checkedItems:
                 self.calculate_and_plot_residuals(self.sens_str, button.text(), self.mode)
         else:
             self._residual_ax.cla()
             self._residual_ax.figure.canvas.draw()
-
-        # if(btn.isChecked()):
-        #     self.calculate_and_plot_residuals(self.sens_str, btn.text())
-        # else:
-        #     # remove artist from the plot
-        #     for line in self._residual_ax.lines:
-        #         if(line.get_gid() == btn.text()):
-        #             line.set_label('_nolegend_')
-        #             line.remove()
-        #             # self._residual_ax.get_legend().remove()
-        #             self._residual_ax.figure.canvas.draw_idle()
 
     def plot(self, all=False):
         # Set the data browser object to NoneType on every file load
@@ -481,7 +338,7 @@ class Start(QtWidgets.QWidget):
             lineEditText = self.sens_objects[self.sens_str].header[0]
             sens_objects = [self.sens_str]
             title = 'Tide Prediction'
-        self.lineEdit.setText(lineEditText)
+        self.ui.lineEdit.setText(lineEditText)
         for sens in sens_objects:
             ## Set 9999s to NaN so they don't show up on the graph
             ## when initially plotted
@@ -514,12 +371,12 @@ class Start(QtWidgets.QWidget):
                 self._static_ax.set_xlim([t[0], t[-1]])
                 self._static_ax.margins(0.05, 0.05)
 
-                self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
-                self.static_canvas.setFocus()
-                self.static_canvas.figure.tight_layout()
+                self.ui.mplwidget_top.canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+                self.ui.mplwidget_top.canvas.setFocus()
+                self.ui.mplwidget_top.canvas.figure.tight_layout()
                 # self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
                 self.toolbar1.update() #Update the toolbar memory
-                self.static_canvas.draw()
+                self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
         # resample_freq = min(int(self.sens_objects[sens_str1].rate), int(self.sens_objects[sens_str2].rate))
@@ -559,10 +416,10 @@ class Start(QtWidgets.QWidget):
             if sens_str1 != "PRD":
                 hr_resid = data_hr[sens_str1.lower()]["sealevel"]-data_hr[sens_str2.lower()]["sealevel"]
                 time = [ filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time'] ]
-                self.generic_plot(self.residual_canvas, time, hr_resid,sens_str1,sens_str2,"Hourly Residual", is_interactive = False)
+                self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid,sens_str1,sens_str2,"Hourly Residual", is_interactive = False)
             else:
                 self.show_custom_message("Warning", "For hourly residual an actual channel needs to be selected in the top plot.")
-                self.generic_plot(self.residual_canvas, [0], [0],sens_str1,sens_str2,"Choose a channel in the top plot other than PRD", is_interactive = False)
+                self.generic_plot(self.ui.mplwidget_bottom.canvas, [0], [0],sens_str1,sens_str2,"Choose a channel in the top plot other than PRD", is_interactive = False)
 
         else:
             newd1 = self.resample2(sens_str1)
@@ -577,10 +434,10 @@ class Start(QtWidgets.QWidget):
             # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
             # time = np.arange(resid.size)
             time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
-            self.generic_plot(self.residual_canvas, time, resid,sens_str1,sens_str2, "Residual", is_interactive = False)
+            self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid,sens_str1,sens_str2, "Residual", is_interactive = False)
 
     def generic_plot(self, canvas, x, y,sens1, sens2, title, is_interactive):
-
+        print("GENERIC PLOT CALLED")
         # self._residual_ax = canvas.figure.subplots()
 
         line, = self._residual_ax.plot(x, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
@@ -626,8 +483,8 @@ class Start(QtWidgets.QWidget):
         # to eliminate multiple callbacks on sensor change
         # self.static_canvas.mpl_disconnect(self.pidP)
         # self.static_canvas.mpl_disconnect(self.cidP)
-        self.static_canvas.mpl_disconnect(self.pid)
-        self.static_canvas.mpl_disconnect(self.cid)
+        self.ui.mplwidget_top.canvas.mpl_disconnect(self.pid)
+        self.ui.mplwidget_top.canvas.mpl_disconnect(self.cid)
         if self.browser:
             self.browser.onDataEnd -= self.show_message
             self.browser.disconnect()
@@ -640,12 +497,12 @@ class Start(QtWidgets.QWidget):
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
         # update event ids so that they can be disconnect on next sensor change
-        self.pid = self.static_canvas.mpl_connect('pick_event', self.browser.onpick)
-        self.cid  = self.static_canvas.mpl_connect('key_press_event', self.browser.onpress)
+        self.pid = self.ui.mplwidget_top.canvas.mpl_connect('pick_event', self.browser.onpick)
+        self.cid  = self.ui.mplwidget_top.canvas.mpl_connect('key_press_event', self.browser.onpress)
         ## need to activate focus onto the mpl canvas so that the keyboard can be used
         self.toolbar1.update()
-        self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
-        self.static_canvas.setFocus()
+        self.ui.mplwidget_top.canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+        self.ui.mplwidget_top.canvas.setFocus()
 
     def find_outliers(self, t, data, sens):
 
@@ -763,7 +620,7 @@ class Start(QtWidgets.QWidget):
                     # update the header
                     new_header = self.sens_objects[self.sens_str].header[0][:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[0][64:]
                     self.sens_objects[self.sens_str].header[0] = new_header
-                    self.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+                    self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
                     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
 
             else:
