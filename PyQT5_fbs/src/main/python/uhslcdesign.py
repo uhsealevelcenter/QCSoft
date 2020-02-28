@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designep7380.ui'
+# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designCy7380.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1368, 1212)
+        MainWindow.resize(1421, 1198)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -154,12 +154,12 @@ class Ui_MainWindow(object):
         self.lineEdit_2.setReadOnly(True)
         self.lineEdit_2.setObjectName("lineEdit_2")
         self.horizontalLayout.addWidget(self.lineEdit_2)
-        self.lineEdit_3 = QtWidgets.QLineEdit(self.page)
-        self.lineEdit_3.setMinimumSize(QtCore.QSize(100, 0))
-        self.lineEdit_3.setMaximumSize(QtCore.QSize(150, 16777215))
-        self.lineEdit_3.setMaxLength(32000)
-        self.lineEdit_3.setObjectName("lineEdit_3")
-        self.horizontalLayout.addWidget(self.lineEdit_3)
+        self.refLevelEdit = QtWidgets.QLineEdit(self.page)
+        self.refLevelEdit.setMinimumSize(QtCore.QSize(100, 0))
+        self.refLevelEdit.setMaximumSize(QtCore.QSize(150, 16777215))
+        self.refLevelEdit.setMaxLength(32000)
+        self.refLevelEdit.setObjectName("refLevelEdit")
+        self.horizontalLayout.addWidget(self.refLevelEdit)
         self.ref_level_btn = QtWidgets.QPushButton(self.page)
         self.ref_level_btn.setObjectName("ref_level_btn")
         self.horizontalLayout.addWidget(self.ref_level_btn)
@@ -194,14 +194,12 @@ class Ui_MainWindow(object):
         self.label_title.setAlignment(QtCore.Qt.AlignCenter)
         self.label_title.setObjectName("label_title")
         self.verticalLayout_3.addWidget(self.label_title)
-        self.line_5 = QtWidgets.QFrame(self.page_2)
-        self.line_5.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_5.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_5.setObjectName("line_5")
-        self.verticalLayout_3.addWidget(self.line_5)
-        self.label_4 = QtWidgets.QLabel(self.page_2)
-        self.label_4.setObjectName("label_4")
-        self.verticalLayout_3.addWidget(self.label_4)
+        self.textBrowser = QtWidgets.QTextBrowser(self.page_2)
+        self.textBrowser.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.textBrowser.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.textBrowser.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        self.textBrowser.setObjectName("textBrowser")
+        self.verticalLayout_3.addWidget(self.textBrowser)
         self.line_4 = QtWidgets.QFrame(self.page_2)
         self.line_4.setFrameShape(QtWidgets.QFrame.HLine)
         self.line_4.setFrameShadow(QtWidgets.QFrame.Sunken)
@@ -211,26 +209,26 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.gridLayout_5 = QtWidgets.QGridLayout()
         self.gridLayout_5.setObjectName("gridLayout_5")
-        self.lineEdit_5 = QtWidgets.QLineEdit(self.page_2)
-        self.lineEdit_5.setEnabled(True)
+        self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditLoadPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEdit_5.sizePolicy().hasHeightForWidth())
-        self.lineEdit_5.setSizePolicy(sizePolicy)
-        self.lineEdit_5.setReadOnly(True)
-        self.lineEdit_5.setObjectName("lineEdit_5")
-        self.gridLayout_5.addWidget(self.lineEdit_5, 1, 0, 1, 1)
-        self.lineEdit_4 = QtWidgets.QLineEdit(self.page_2)
-        self.lineEdit_4.setEnabled(True)
+        sizePolicy.setHeightForWidth(self.lineEditLoadPath.sizePolicy().hasHeightForWidth())
+        self.lineEditLoadPath.setSizePolicy(sizePolicy)
+        self.lineEditLoadPath.setReadOnly(True)
+        self.lineEditLoadPath.setObjectName("lineEditLoadPath")
+        self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
+        self.lineEditPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEdit_4.sizePolicy().hasHeightForWidth())
-        self.lineEdit_4.setSizePolicy(sizePolicy)
-        self.lineEdit_4.setReadOnly(True)
-        self.lineEdit_4.setObjectName("lineEdit_4")
-        self.gridLayout_5.addWidget(self.lineEdit_4, 0, 0, 1, 1)
+        sizePolicy.setHeightForWidth(self.lineEditPath.sizePolicy().hasHeightForWidth())
+        self.lineEditPath.setSizePolicy(sizePolicy)
+        self.lineEditPath.setReadOnly(True)
+        self.lineEditPath.setObjectName("lineEditPath")
+        self.gridLayout_5.addWidget(self.lineEditPath, 0, 0, 1, 1)
         self.pushButton_save_folder = QtWidgets.QPushButton(self.page_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -260,7 +258,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.stackedWidget, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1368, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1421, 21))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -310,10 +308,55 @@ class Ui_MainWindow(object):
         self.radioButton_Minute.setText(_translate("MainWindow", "Minute"))
         self.label.setText(_translate("MainWindow", "Meta Data:"))
         self.label_2.setText(_translate("MainWindow", "Months:"))
-        self.lineEdit_3.setPlaceholderText(_translate("MainWindow", "Enter New Ref Level"))
+        self.refLevelEdit.setPlaceholderText(_translate("MainWindow", "Enter New Ref Level"))
         self.ref_level_btn.setText(_translate("MainWindow", "Change Ref Level"))
         self.label_title.setText(_translate("MainWindow", "Software manual"))
-        self.label_4.setText(_translate("MainWindow", "INITIAL SETUP:"))
+        self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">INITIAL SETUP:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">------------------</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">To save/load files to/from a server, connect to a server from your operating system (e.g CMD + K on a MAC, WIN + R on Windows), and then follow the instruction below:</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        1) Specify the default loading folder by clicking &quot;Change Load Folder&quot; button</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        2) Specify the default saving folder by clicking &quot;Change Save Folder&quot; button</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">If no path is specified, the path will default to your home directory on your local machine.  If different local directory needs to be used, this can be achieved by using the same two steps above. </span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA LOADING:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + O to load unprocessed (monp) data</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + T to load processed (ts) data</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + R to reload the same data file and undo all changes</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA MANIPULATION:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">---------------------------</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete a single data point press &quot;D&quot;</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete multiple data points use right mouse click (or CTRL + Left Click) to circle the points</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To change a reference level for a specific channel, enter a new reference level in &quot;Enter New Reference Level&quot; text box</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        and then click &quot;Change Ref Level&quot; button. This will prompt you with a calendar and time selector to choose a point when an</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        adjustment to the reference level was made (usually supplied by technicians). The time/date selector can be modified</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        incrementally by using UP/DOWN arrows or simply by clicking the desired time/date portion to be changed and typing in</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        the time of change. Using TAB will scroll through year-month-day hour:minute sections.</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA NAVIGATION:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-----------------------</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Use LEFT and RIGHT arrow to pan through the data</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;B&quot; to scroll backward through the individual data points</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;N&quot; to scroll forward through the individual data points</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click on any particular data point to zoom in on that data section</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;0&quot; to reset the view back to the entire data set</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">UNDO ACTIONS:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + Z to undo data deletion</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + B to undo bulk data deletion</span></p>\n"
+"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">SAVE DATA:</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">--------------</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
         self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
         self.pushButton_load_folder.setText(_translate("MainWindow", "Change Load Folder"))
         self.backButton.setText(_translate("MainWindow", "Back To Main Menu"))

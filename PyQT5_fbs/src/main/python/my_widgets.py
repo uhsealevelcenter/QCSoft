@@ -39,137 +39,33 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-class HelpScreen(QtWidgets.QWidget):
+class HelpScreen(QMainWindow):
 
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        super(HelpScreen, self).__init__(parent)
+        super(HelpScreen, self).__init__()
 
         # Object for data persistence
         # self.settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
         # st.SETTINGS.remove("savepath")
-
-        self.layout = QtWidgets.QVBoxLayout()
-
-        l1 = QtWidgets.QLabel()
-        l2 = QtWidgets.QLabel()
-
-        fontTitle = QtGui.QFont()
-        fontTitle.setPointSize(16)
-        fontTitle.setBold(True)
-        fontTitle.setWeight(75)
-
-        fontTitlePara = QtGui.QFont()
-        fontTitlePara.setPointSize(12)
-        fontTitlePara.setBold(False)
-        fontTitlePara.setWeight(50)
-
-        l1.setFont(fontTitle)
-        l2.setFont(fontTitlePara)
-        l1.setText("Program manual")
-        l2.setText(
-        '''
-        INITIAL SETUP:
-        -------------
-        To save/load files to/from a server, connect to a server first (e.g CMD + K on a MAC,
-        WIN + R on Windows), and then follow the instruction below:
-        1) Specify the default loading folder by clicking "Change Load Folder" button
-        2) Specify the default saving folder by clicking "Change Save Folder" button
-
-        If no path is specified, the path will default to your home directory
-
-        DATA LOADING:
-        -------------
-        Press CTRL (CMD) + O to load data unprocessed (monp) data
-        Press CTRL (CMD) + T to load data processed (ts) data
-        Press CTRL (CMD) + R to reload the same data file and undo all changes
-
-        DATA MANIPULATION:
-        -----------------
-        To delete a single data point press "D"
-        To delete multiple data points use right mouse click (or CTRL + Left Click) to circle the points
-        To change a reference level for a specific channel, enter a new reference level in "Enter New Reference Level" text box
-        and then click "Change Ref Level" button. This will prompt you with a calendar and time selector to choose a point when an
-        adjustment to the reference level was made (usually supplied by technicians). The time/date selector can be modified
-        incrementally by using UP/DOWN arrows or simply by clicking the desired time/date portion to be changed and typing in
-        the time of change. Using TAB will scroll through year-month-day hour:minute sections.
-
-        DATA NAVIGATION:
-        ----------------
-        Use LEFT and RIGHT arrow to pan through the data
-        Press "B" to scroll backward through the individual data points
-        Press "N" to scroll forward through the individual data points
-        Click on any particular data point to zoom in on that data section
-        Press "0" to reset the view back to the entire data set
-
-        UNDO ACTIONS:
-        -------------
-        Press CTRL (CMD) + Z to undo data deletion
-        Press CTRL (CMD) + B to undo bulk data deletion
-
-        SAVE DATA:
-        ----------
-        Click the "SAVE" button to save changes to a "TS" file
-        '''
-        )
-        l1.setAlignment(QtCore.Qt.AlignCenter)
-        l2.setAlignment(QtCore.Qt.AlignTop)
-
-        self.layout.addWidget(l1)
-        self.layout.addStretch()
-        self.layout.addWidget(l2)
-
-
-        self.lineEditPath = QtWidgets.QLineEdit()
-        self.lineEditPath.setObjectName(_fromUtf8("lineEditPath"))
-        self.lineEditPath.setDisabled(True)
-        self.lineEditPath.setFixedWidth(280)
+        self.ui = parent
 
         # If a save path hasn't been defined, give it a home directory
         if(st.get_path(st.SAVE_KEY)):
-            self.lineEditPath.setPlaceholderText(st.get_path(st.SAVE_KEY))
+            self.ui.lineEditPath.setPlaceholderText(st.get_path(st.SAVE_KEY))
         else:
             st.SETTINGS.setValue(st.SAVE_KEY,os.path.expanduser('~'))
-            self.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
-
-        self.layout.addWidget(self.lineEditPath)
-
-        saveButton = QtWidgets.QPushButton("Change Save Folder")
-        saveButton.setFixedWidth(180)
-        self.layout.addWidget(saveButton)
+            self.ui.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
 
 
+        self.ui.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
 
-        self.lineEditLoadPath = QtWidgets.QLineEdit()
-        self.lineEditLoadPath.setObjectName(_fromUtf8("lineEditLoadPath"))
-        self.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
-        self.lineEditLoadPath.setDisabled(True)
-        self.lineEditLoadPath.setFixedWidth(280)
+        saveButton = self.ui.pushButton_save_folder
+        loadButton = self.ui.pushButton_load_folder
 
-
-        self.layout.addWidget(self.lineEditLoadPath)
-
-        loadButton = QtWidgets.QPushButton("Change Load Folder")
-        loadButton.setFixedWidth(180)
-        self.layout.addWidget(loadButton)
-
-
-        button = QtWidgets.QPushButton("Back to main")
-        self.layout.addWidget(button)
-
-
-        self.layout.addStretch()
-        # self.button1 = QtWidgets.QPushButton("Button 1")
-        # self.layout.addWidget(self.button1)
-        #
-        # self.button2 = QtWidgets.QPushButton("Button 2")
-        # self.layout.addWidget(self.button2)
-
-        self.setLayout(self.layout)
-        button.clicked.connect(self.clicked.emit)
-        saveButton.clicked.connect(lambda: self.savePath(self.lineEditPath,st.SAVE_KEY))
-        loadButton.clicked.connect(lambda: self.savePath(self.lineEditLoadPath,st.LOAD_KEY))
+        saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath,st.SAVE_KEY))
+        loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath,st.LOAD_KEY))
 
     def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
@@ -180,12 +76,6 @@ class HelpScreen(QtWidgets.QWidget):
             lineEditObj.setText("")
         else:
             pass
-
-class QHLine(QtWidgets.QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QtWidgets.QFrame.HLine)
-        self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 class Start(QMainWindow):
 
@@ -211,6 +101,7 @@ class Start(QMainWindow):
         # self._residual_fig = self.ui.mplwidget_bottom.canvas.figure
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
         self.ui.save_btn.clicked.connect(self.save_to_ts_files)
+        self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
 
     def make_sensor_buttons(self, sensors):
         # Remove all sensor checkbox widgets from the layout
@@ -606,13 +497,13 @@ class Start(QMainWindow):
             self.show_custom_message("Error!", "Data needs to be loaded first.")
             return
         else:
-            if(self.is_digit(str(self.refLevelEdit.text()))):
+            if(self.is_digit(str(self.ui.refLevelEdit.text()))):
                 # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date.toString('yyyy-MM-dd')+'T'+time.toString("HH:mm")
                 if result:
 
-                    REF_diff = int(str(self.refLevelEdit.text())) - int(self.sens_objects[self.sens_str].height)
+                    REF_diff = int(str(self.ui.refLevelEdit.text())) - int(self.sens_objects[self.sens_str].height)
                     new_REF = REF_diff + int(self.sens_objects[self.sens_str].height)
                     #offset the data
                     self.browser.offset_data(ISOstring, REF_diff)
@@ -621,7 +512,7 @@ class Start(QMainWindow):
                     new_header = self.sens_objects[self.sens_str].header[0][:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[0][64:]
                     self.sens_objects[self.sens_str].header[0] = new_header
                     self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
-                    print("Succesfully changed to: ", str(self.refLevelEdit.text()))
+                    print("Succesfully changed to: ", str(self.ui.refLevelEdit.text()))
 
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")

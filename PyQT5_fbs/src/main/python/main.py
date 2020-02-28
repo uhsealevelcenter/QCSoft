@@ -34,6 +34,7 @@ class ApplicationWindow(QMainWindow):
 
         # Create Screen objects
         self.start_screen = Start(self.ui)
+        self.help_screen = HelpScreen(self.ui)
 
         self.ui.actionInstructions.triggered.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
         self.ui.backButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
