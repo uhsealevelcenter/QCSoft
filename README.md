@@ -45,21 +45,45 @@ pip install -r requirements/mac.txt
 pip install -r requirements/windows.txt
 ```
 
-If you ever decide to add additional dependencies that are platform specific, you would add a dependency into the , 
+If you ever decide to add additional dependencies that are platform specific, you would add a dependency into the 
 appropriate requirements/*.txt file. The platform independent dependencies should be added to base.txt. The base.txt 
 file is referenced in each of the platform specific .txt files and thus pip install does not have to performed on it. 
 
-### Running the sowtware
+### Running the software
 
 The python source code is located in [src/main/python/](PyQT5_fbs/src/main/python/)
 
-Run main.py to initiate GUI. Once started press F1 to bring the Help/Instructions menu. 
+Run main.py to initiate GUI. Once started press F1 to bring the Help/Instructions menu.
+
+### Changing the GUI
+
+The GUI was designed using QT Designer. The designer produces a .ui file that is that converted to python code. The .ui
+file is located at [src/main/python/stacked_design.ui](PyQT5_fbs/src/main/python/). 
+The resulting .py file is located [uhslsdesign.py](PyQT5_fbs/src/main/python)
+
+<strong>Important notes:</strong> 
+QT Designer uses a custom matplotlib widget which was written to allow for dropping a graphing matplotlib widget in the ui. 
+The matplotlib widget code is at QCSoft/PyQT5_fbs/src/main/python/MyQTDesignerPlugins/.
+
+So far the custom widget only works on Windows. [See here](https://github.com/altendky/pyqt-tools/issues/12) for the status on other platforms.
+To start the designer you must use pyqt5-tools and must start the designer from Your_Virt_Env\Scripts\pyqt5designer.exe. 
+You might also have to run Your_Virt_Env\Scripts\pyqt5toolsinstalluic.exe to be able to display custom widgets in the QT Designer Widget Box tool.
+And one last thing, you will have to tell QT Designer where the widget python files reside by setting up the PYQTDESIGNERPATH system variable 
+to the folder where the widget files are located. For more info you can check out [this stackoverflow](https://stackoverflow.com/questions/47364804/qt5-matplotlib-designer-plugin)
+answer. If everything is set up correctly, you will be able to see the custom plugin by clicking on Help > About Plugins. 
+
+Once you have finished modifying UI changes saved the .ui file. To convert the .ui file to python, simply run pyuic5.exe your_file_name.ui -o output_name.py
+Make sure output_name.py is importing the widget plugin as well, in our case this should be at the bottom of the
+generated .py file:
+
+from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
+
 
 ## Authors
 
 * **Nemanja Komar** - *Initial work* - [Nems808](https://github.com/nems808)
 
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+See also the list of [contributors](https://github.com/nems808/QCSoft/contributors) who participated in this project.
 
 ## License
 
