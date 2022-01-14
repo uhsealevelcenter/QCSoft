@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow
 from uhslcdesign import Ui_MainWindow
 
 from my_widgets import *
-import darkdetect
+# import darkdetect
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -20,12 +20,12 @@ class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
     def run(self):                              # 2. Implement run()
         version = self.build_settings["version"]
         name = self.build_settings["app_name"]
-        if sys.platform == 'darwin' and darkdetect.isDark():
-            p = self.app.palette()
-            p.setColor(QPalette.Base, QColor(101, 101, 101))
-            p.setColor(QPalette.WindowText, QColor(231, 231, 231))
-            p.setColor(QPalette.Text, QColor(231, 231, 231))
-            self.app.setPalette(p)
+        # if sys.platform == 'darwin' and darkdetect.isDark():
+        #     p = self.app.palette()
+        #     p.setColor(QPalette.Base, QColor(101, 101, 101))
+        #     p.setColor(QPalette.WindowText, QColor(231, 231, 231))
+        #     p.setColor(QPalette.Text, QColor(231, 231, 231))
+        #     self.app.setPalette(p)
         self.window.setWindowTitle(name + " v" + str(version))
         self.window.show()
         return self.app.exec_()                 # 3. End run() with this line

@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from utide import solve, reconstruct
 from scipy import stats
+import filter_weights as fw
 
 def calwts(Tc, S):
     """
@@ -525,12 +526,12 @@ def hr_process_2(_data, yr1, yr2):
 def day_119filt(_data, _lat):
     filt_wts = []
     data_day = {}
-    with open("filt_wts.txt", "r") as file:
-        for line in file:
-            if is_number(line):
-                filt_wts.append(float(line.strip()))
+    # with open("filt_wts.txt", "r") as file:
+    #     for line in file:
+    #         if is_number(line):
+    #             filt_wts.append(float(line.strip()))
 
-    filt_wts = np.asarray(filt_wts)
+    filt_wts = np.asarray(fw.weights)
     wts = np.concatenate((np.flip(filt_wts[-59:],0), filt_wts), axis=0)
 
     t = _data["time"]
