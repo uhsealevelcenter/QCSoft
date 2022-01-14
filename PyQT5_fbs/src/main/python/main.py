@@ -1,10 +1,12 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QPalette, QColor
 from fbs_runtime.application_context import ApplicationContext, cached_property
 from PyQt5.QtWidgets import QMainWindow
 from uhslcdesign import Ui_MainWindow
 
 from my_widgets import *
+import darkdetect
 
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
@@ -18,6 +20,12 @@ class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
     def run(self):                              # 2. Implement run()
         version = self.build_settings["version"]
         name = self.build_settings["app_name"]
+        if sys.platform == 'darwin' and darkdetect.isDark():
+            p = self.app.palette()
+            p.setColor(QPalette.Base, QColor(101, 101, 101))
+            p.setColor(QPalette.WindowText, QColor(231, 231, 231))
+            p.setColor(QPalette.Text, QColor(231, 231, 231))
+            self.app.setPalette(p)
         self.window.setWindowTitle(name + " v" + str(version))
         self.window.show()
         return self.app.exec_()                 # 3. End run() with this line
@@ -39,7 +47,7 @@ class ApplicationWindow(QMainWindow):
         self.ui.actionInstructions.triggered.connect(lambda: self.ui.stackedWidget.setCurrentIndex(1))
         self.ui.backButton.clicked.connect(lambda: self.ui.stackedWidget.setCurrentIndex(0))
 
-        close_app = self.ui.actionQuit;
+        close_app = self.ui.actionQuit
         close_app.triggered.connect(self.close_application)
 
         open_file = self.ui.actionOpen
