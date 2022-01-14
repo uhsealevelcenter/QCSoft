@@ -58,19 +58,49 @@ class HelpScreen(QMainWindow):
             st.SETTINGS.setValue(st.SAVE_KEY,os.path.expanduser('~'))
             self.ui.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
 
-
         self.ui.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
+
+        # If a fast delivery save path hasn't been defined, give it a home directory
+        if(st.get_path(st.FD_PATH)):
+            self.ui.lineEditFDPath.setPlaceholderText(st.get_path(st.FD_PATH))
+        else:
+            st.SETTINGS.setValue(st.FD_PATH,os.path.expanduser('~'))
+            self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
+
+        if st.get_path(st.DIN_PATH):
+            self.ui.lineEdit_din.setPlaceholderText(st.get_path(st.DIN_PATH))
+
+        print("FD PATH", st.get_path(st.FD_PATH))
 
         saveButton = self.ui.pushButton_save_folder
         loadButton = self.ui.pushButton_load_folder
+        dinSave = self.ui.pushButton_din
+        FDSave = self.ui.pushButton_fd_folder
 
-        saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath,st.SAVE_KEY))
-        loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath,st.LOAD_KEY))
+        saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath, st.SAVE_KEY))
+        loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath, st.LOAD_KEY))
+        dinSave.clicked.connect(lambda: self.saveDIN(self.ui.lineEdit_din, st.DIN_PATH))
+        FDSave.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.FD_PATH))
 
     def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
         if(folder_name):
             st.SETTINGS.setValue(setStr, folder_name)
+            st.SETTINGS.sync()
+            lineEditObj.setPlaceholderText(st.get_path(setStr))
+            lineEditObj.setText("")
+        else:
+            pass
+
+    def saveDIN(self, lineEditObj, setStr):
+        filters = "*.din"
+        if st.DIN_PATH:
+            path = st.DIN_PATH
+        else:
+            path = os.path.expanduser('~')
+        file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
+        if(file_name):
+            st.SETTINGS.setValue(setStr, file_name[0][0])
             st.SETTINGS.sync()
             lineEditObj.setPlaceholderText(st.get_path(setStr))
             lineEditObj.setText("")
@@ -523,7 +553,7 @@ class Start(QMainWindow):
             int(n)
             return True
         except ValueError:
-            return  False
+            return False
 
     def remove_9s(self, data):
         nines_ind = np.where(data == 9999)
@@ -612,7 +642,69 @@ class Start(QMainWindow):
                     self.show_custom_message("Success", "Success \n" + file_name + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")
+                self.save_fast_delivery(self.sens_objects)
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
+
+    def save_fast_delivery(self, _data):
+        import scipy.io as sio
+        # 1. Check if the .din file was added and that it still exist at that path
+        #       b) also check that a save folder is set up
+        # 2. If it does. load in the primary channel for our station
+        # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved
+        # 4. Perform filtering and save
+        din_path = None
+        save_path = None
+        if st.get_path(st.DIN_PATH):
+            din_path = st.get_path(st.DIN_PATH)
+        else:
+            self.show_custom_message("Warning", "The fast delivery data cannot be processed because you haven't selected"
+                                                "the .din file location. Press F1 to access the menu to select it. And "
+                                                "then click the save button again.")
+            return
+
+        if st.get_path(st.FD_PATH):
+            save_path = st.get_path(st.FD_PATH)
+        else:
+            self.show_custom_message("Warning", "Please select a location where you would like your hourly and daily data"
+                                                "to be saved. Click save again once selected.")
+            return
+
+        data_obj ={}
+
+
+        station_num = _data["PRD"].type[0:-3]
+        primary_sensor = filt.get_channel_priority(din_path, station_num)[0].upper()  # returns multiple sensor in order of importance
+        sl_data = _data[primary_sensor].get_flat_data().copy()
+        sl_data = self.remove_9s(sl_data)
+        sl_data = sl_data - int(_data[primary_sensor].height)
+        data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
+                                       'station': station_num, 'sealevel': sl_data}
+
+        year = _data[primary_sensor].date.astype(object).year
+        month = _data[primary_sensor].date.astype(object).month
+
+        #  Filter to hourly
+        data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
+                                    filt.datetime(year, month + 1, 1, 0, 0, 0))
+
+        # for channel parameters see filt.channel_merge function
+        # We are not actually merging channels here (not needed for fast delivery)
+        # But we still need to run the data through the merge function, even though we are only using one channel
+        # in order to get the correct output data format suitable for the daily filter
+        ch_params = [{primary_sensor.lower(): 0}]
+        hourly_merged = filt.channel_merge(data_hr, ch_params)
+
+        # Note that hourly merged returns a channel attritubute which is an array of integers representing channel type.
+        # used for a particular day of data. In Fast delivery, all the number should be the same because no merge
+        # int -> channel name mapping is inside of filtering.py var_flag function
+        data_day = filt.day_119filt(hourly_merged, _data[primary_sensor].location[0])
+
+        month_str = "{:02}".format(month)
+        hourly_filename = save_path + '/'+'th'+str(station_num)+str(year)[-2:]+month_str+'.mat'
+        daily_filename = save_path + '/'+'da' + str(station_num) + str(year)[-2:] + month_str + '.mat'
+        sio.savemat(hourly_filename, data_hr)
+        sio.savemat(daily_filename, data_day)
+        self.show_custom_message("Success", "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")

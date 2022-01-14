@@ -110,7 +110,7 @@ class ApplicationWindow(QMainWindow):
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station name will be the same
             station_name = de[0].headers[0][:6]
-            my_station = Station(station_name, [0, 1])
+            my_station = Station(station_name, de[0].loc)
             comb_headers = []
             # Cycle through all the Sensors
             # The reason de[0] is used is because the program only allows to load

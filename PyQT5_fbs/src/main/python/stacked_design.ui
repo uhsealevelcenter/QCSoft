@@ -361,10 +361,18 @@
             <property name="cursor">
              <cursorShape>CrossCursor</cursorShape>
             </property>
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);
+font: 8pt &quot;Arial&quot;;</string>
+            </property>
            </widget>
           </item>
           <item>
-           <widget class="MatplotlibWidget" name="mplwidget_bottom"/>
+           <widget class="MatplotlibWidget" name="mplwidget_bottom">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(255, 255, 255);</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -478,22 +486,6 @@ p, li { white-space: pre-wrap; }
              <layout class="QVBoxLayout" name="verticalLayout_4">
               <item>
                <layout class="QGridLayout" name="gridLayout_5">
-                <item row="1" column="0">
-                 <widget class="QLineEdit" name="lineEditLoadPath">
-                  <property name="enabled">
-                   <bool>true</bool>
-                  </property>
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
                 <item row="0" column="0">
                  <widget class="QLineEdit" name="lineEditPath">
                   <property name="enabled">
@@ -507,6 +499,9 @@ p, li { white-space: pre-wrap; }
                   </property>
                   <property name="readOnly">
                    <bool>true</bool>
+                  </property>
+                  <property name="placeholderText">
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -533,6 +528,56 @@ p, li { white-space: pre-wrap; }
                  <widget class="QPushButton" name="pushButton_load_folder">
                   <property name="text">
                    <string>Change Load Folder</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLineEdit" name="lineEditLoadPath">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLineEdit" name="lineEditFDPath">
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Click Change FD Save Folder to choose a folder where to save Fast Delivery Huorly and Daily data...</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QPushButton" name="pushButton_fd_folder">
+                  <property name="text">
+                   <string>Change FD Save Folder</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLineEdit" name="lineEdit_din">
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Click the button on the right to choose the din file from which primary sensors are loaded</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QPushButton" name="pushButton_din">
+                  <property name="text">
+                   <string>Set .din file</string>
                   </property>
                  </widget>
                 </item>
@@ -649,12 +694,12 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_resolution"/>
-  <buttongroup name="buttonGroup_data"/>
   <buttongroup name="buttonGroup_residual">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
+  <buttongroup name="buttonGroup_data"/>
+  <buttongroup name="buttonGroup_resolution"/>
  </buttongroups>
 </ui>

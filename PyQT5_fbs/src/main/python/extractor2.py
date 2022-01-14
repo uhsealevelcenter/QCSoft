@@ -22,6 +22,7 @@ class DataExtractor:
         self.infos_time_col = {}
         self.prev_date = 0
         self.units = []
+        self.loc = [0,0]
 
         self.parse_file(filename)
 
@@ -40,6 +41,22 @@ class DataExtractor:
     def missing_dates(self, L):
         start, end = L[0], L[-1]
         return sorted(set(range(start, end + 1)).difference(L))
+
+    def extract_lat(self, header):
+        NorS = header[25] # Extract a character to see if it is North or South
+        lat_deg = header[18:20]
+        lat_min = header[21:23]
+        lat_dec_deg = int(lat_deg) + int(lat_min)/60
+
+        return -lat_dec_deg if NorS == "S" else lat_dec_deg
+
+    def extract_long(self, header):
+        WorE = header[40]  # West or East (W or E)
+        long_deg = header[32:35]
+        long_min = header[36:38]
+        long_dec_deg = int(long_deg) + int(long_min)/60
+
+        return -long_dec_deg if WorE == "W" else long_dec_deg
 
     def parse_file(self, filename):
         list_of_lists = []
@@ -65,6 +82,8 @@ class DataExtractor:
             # search for digits in the first element of the header and put the together
             station_num = ''.join(map(str, [int(s) for s in header.split()[0][0:4] if s.isdigit()]))
             self.sensor_ids.append(station_num + header[6:9])
+
+        self.loc = [self.extract_lat(self.headers[0]), self.extract_long(self.headers[0])]
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted

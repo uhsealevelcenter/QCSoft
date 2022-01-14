@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designCy7380.ui'
+# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_design_custom_matlplotlib_widget_colorEtSszL.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1421, 1198)
+        MainWindow.resize(1525, 1270)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -166,9 +166,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addLayout(self.horizontalLayout)
         self.mplwidget_top = MatplotlibWidget(self.page)
         self.mplwidget_top.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
+        self.mplwidget_top.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+"font: 8pt \"Arial\";")
         self.mplwidget_top.setObjectName("mplwidget_top")
         self.verticalLayout_2.addWidget(self.mplwidget_top)
         self.mplwidget_bottom = MatplotlibWidget(self.page)
+        self.mplwidget_bottom.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.mplwidget_bottom.setObjectName("mplwidget_bottom")
         self.verticalLayout_2.addWidget(self.mplwidget_bottom)
         self.gridLayout_2.addLayout(self.verticalLayout_2, 0, 1, 1, 1)
@@ -209,16 +212,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.gridLayout_5 = QtWidgets.QGridLayout()
         self.gridLayout_5.setObjectName("gridLayout_5")
-        self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
-        self.lineEditLoadPath.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEditLoadPath.sizePolicy().hasHeightForWidth())
-        self.lineEditLoadPath.setSizePolicy(sizePolicy)
-        self.lineEditLoadPath.setReadOnly(True)
-        self.lineEditLoadPath.setObjectName("lineEditLoadPath")
-        self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
         self.lineEditPath = QtWidgets.QLineEdit(self.page_2)
         self.lineEditPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
@@ -227,6 +220,7 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.lineEditPath.sizePolicy().hasHeightForWidth())
         self.lineEditPath.setSizePolicy(sizePolicy)
         self.lineEditPath.setReadOnly(True)
+        self.lineEditPath.setPlaceholderText("")
         self.lineEditPath.setObjectName("lineEditPath")
         self.gridLayout_5.addWidget(self.lineEditPath, 0, 0, 1, 1)
         self.pushButton_save_folder = QtWidgets.QPushButton(self.page_2)
@@ -241,6 +235,30 @@ class Ui_MainWindow(object):
         self.pushButton_load_folder = QtWidgets.QPushButton(self.page_2)
         self.pushButton_load_folder.setObjectName("pushButton_load_folder")
         self.gridLayout_5.addWidget(self.pushButton_load_folder, 1, 1, 1, 1)
+        self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditLoadPath.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineEditLoadPath.sizePolicy().hasHeightForWidth())
+        self.lineEditLoadPath.setSizePolicy(sizePolicy)
+        self.lineEditLoadPath.setReadOnly(True)
+        self.lineEditLoadPath.setObjectName("lineEditLoadPath")
+        self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
+        self.lineEditFDPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditFDPath.setReadOnly(True)
+        self.lineEditFDPath.setObjectName("lineEditFDPath")
+        self.gridLayout_5.addWidget(self.lineEditFDPath, 2, 0, 1, 1)
+        self.pushButton_fd_folder = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_fd_folder.setObjectName("pushButton_fd_folder")
+        self.gridLayout_5.addWidget(self.pushButton_fd_folder, 2, 1, 1, 1)
+        self.lineEdit_din = QtWidgets.QLineEdit(self.page_2)
+        self.lineEdit_din.setReadOnly(True)
+        self.lineEdit_din.setObjectName("lineEdit_din")
+        self.gridLayout_5.addWidget(self.lineEdit_din, 3, 0, 1, 1)
+        self.pushButton_din = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_din.setObjectName("pushButton_din")
+        self.gridLayout_5.addWidget(self.pushButton_din, 3, 1, 1, 1)
         self.verticalLayout_4.addLayout(self.gridLayout_5)
         self.backButton = QtWidgets.QPushButton(self.page_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -258,7 +276,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.stackedWidget, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1421, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1525, 21))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -359,6 +377,10 @@ class Ui_MainWindow(object):
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
         self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
         self.pushButton_load_folder.setText(_translate("MainWindow", "Change Load Folder"))
+        self.lineEditFDPath.setPlaceholderText(_translate("MainWindow", "Click Change FD Save Folder to choose a folder where to save Fast Delivery Huorly and Daily data..."))
+        self.pushButton_fd_folder.setText(_translate("MainWindow", "Change FD Save Folder"))
+        self.lineEdit_din.setPlaceholderText(_translate("MainWindow", "Click the button on the right to choose the din file from which primary sensors are loaded"))
+        self.pushButton_din.setText(_translate("MainWindow", "Set .din file"))
         self.backButton.setText(_translate("MainWindow", "Back To Main Menu"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
@@ -372,5 +394,6 @@ class Ui_MainWindow(object):
         self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
         self.actionInstructions.setText(_translate("MainWindow", "Instructions"))
         self.actionInstructions.setShortcut(_translate("MainWindow", "F1"))
+
 
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
