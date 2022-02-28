@@ -726,6 +726,11 @@ class Start(QMainWindow):
         station_num = _data["PRD"].type[0:-3]
         primary_sensor = filt.get_channel_priority(din_path, station_num)[
             0].upper()  # returns multiple sensor in order of importance
+        if primary_sensor not in _data:
+            self.show_custom_message("Error", f"Your .din file says that {primary_sensor} "
+                                              f"is the primary sensor but the file you have loaded does "
+                                              f"not contain that sensor. Hourly and daily data will not be saved.")
+            return
         sl_data = _data[primary_sensor].get_flat_data().copy()
         sl_data = self.remove_9s(sl_data)
         sl_data = sl_data - int(_data[primary_sensor].height)
