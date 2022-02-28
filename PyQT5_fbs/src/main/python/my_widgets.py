@@ -68,20 +68,27 @@ class HelpScreen(QMainWindow):
             st.SETTINGS.setValue(st.FD_PATH, os.path.expanduser('~'))
             self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
 
+        # If a high frequency data save path hasn't been defined, give it a home directory
+        if (st.get_path(st.HF_PATH)):
+            self.ui.lineEditHFPath.setPlaceholderText(st.get_path(st.HF_PATH))
+        else:
+            st.SETTINGS.setValue(st.HF_PATH, os.path.expanduser('~'))
+            self.ui.lineEditHFPath.setPlaceholderText(os.path.expanduser('~'))
+
         if st.get_path(st.DIN_PATH):
             self.ui.lineEdit_din.setPlaceholderText(st.get_path(st.DIN_PATH))
-
-        print("FD PATH", st.get_path(st.FD_PATH))
 
         saveButton = self.ui.pushButton_save_folder
         loadButton = self.ui.pushButton_load_folder
         dinSave = self.ui.pushButton_din
         FDSave = self.ui.pushButton_fd_folder
+        hf_save = self.ui.pushButton_hf_data
 
         saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath, st.SAVE_KEY))
         loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath, st.LOAD_KEY))
         dinSave.clicked.connect(lambda: self.saveDIN(self.ui.lineEdit_din, st.DIN_PATH))
         FDSave.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.FD_PATH))
+        hf_save.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.HF_PATH))
 
     def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
@@ -662,11 +669,11 @@ class Start(QMainWindow):
     # this function is called for every month of data loaded
     def save_mat_high_fq(self, file_name):
         import scipy.io as sio
-        if st.get_path(st.FD_PATH):
-            save_path = st.get_path(st.FD_PATH)
+        if st.get_path(st.HF_PATH):
+            save_path = st.get_path(st.HF_PATH)
         else:
             self.show_custom_message("Warning",
-                                     "Please select a location where you would like your hourly, daily and high "
+                                     "Please select a location where you would like your high "
                                      "frequency matlab data "
                                      "to be saved. Click save again once selected.")
             return
@@ -679,7 +686,14 @@ class Start(QMainWindow):
             data_obj = [time, sl_data]
             # transposing the data so that it matches the shape of the UHSLC matlab format
             matlab_obj = {'NNNN': file_name+key.lower(), file_name+key.lower(): np.transpose(data_obj, (1, 0))}
-            sio.savemat(save_path+'/'+file_name+key.lower()+'.mat', matlab_obj)
+            try:
+                sio.savemat(save_path+'/'+file_name+key.lower()+'.mat', matlab_obj)
+                self.show_custom_message("Success",
+                                             "Success \n" + file_name+key.lower()+'.mat' + " Saved to " + st.get_path(st.HF_PATH) + "\n")
+            except IOError as e:
+                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(st.HF_PATH) + "\n" + str(
+                    e) + "\n Please select a different path to save to")
+
 
     def save_fast_delivery(self, _data):
         import scipy.io as sio
@@ -712,6 +726,11 @@ class Start(QMainWindow):
         station_num = _data["PRD"].type[0:-3]
         primary_sensor = filt.get_channel_priority(din_path, station_num)[
             0].upper()  # returns multiple sensor in order of importance
+        if primary_sensor not in _data:
+            self.show_custom_message("Error", f"Your .din file says that {primary_sensor} "
+                                              f"is the primary sensor but the file you have loaded does "
+                                              f"not contain that sensor. Hourly and daily data will not be saved.")
+            return
         sl_data = _data[primary_sensor].get_flat_data().copy()
         sl_data = self.remove_9s(sl_data)
         sl_data = sl_data - int(_data[primary_sensor].height)
