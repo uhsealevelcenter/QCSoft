@@ -16,13 +16,12 @@ import filtering as filt
 from uhslcdesign import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow
 
-
 if is_pyqt5():
     from matplotlib.backends.backend_qt5agg import (
         FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 else:
     from matplotlib.backends.backend_qt4agg import (
-            FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 
 try:
@@ -33,14 +32,16 @@ except AttributeError:
 
 try:
     _encoding = QtWidgets.QApplication.UnicodeUTF8
+
+
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
-class HelpScreen(QMainWindow):
 
+class HelpScreen(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
@@ -52,19 +53,19 @@ class HelpScreen(QMainWindow):
         self.ui = parent
 
         # If a save path hasn't been defined, give it a home directory
-        if(st.get_path(st.SAVE_KEY)):
+        if (st.get_path(st.SAVE_KEY)):
             self.ui.lineEditPath.setPlaceholderText(st.get_path(st.SAVE_KEY))
         else:
-            st.SETTINGS.setValue(st.SAVE_KEY,os.path.expanduser('~'))
+            st.SETTINGS.setValue(st.SAVE_KEY, os.path.expanduser('~'))
             self.ui.lineEditPath.setPlaceholderText(os.path.expanduser('~'))
 
         self.ui.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
 
         # If a fast delivery save path hasn't been defined, give it a home directory
-        if(st.get_path(st.FD_PATH)):
+        if (st.get_path(st.FD_PATH)):
             self.ui.lineEditFDPath.setPlaceholderText(st.get_path(st.FD_PATH))
         else:
-            st.SETTINGS.setValue(st.FD_PATH,os.path.expanduser('~'))
+            st.SETTINGS.setValue(st.FD_PATH, os.path.expanduser('~'))
             self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
 
         if st.get_path(st.DIN_PATH):
@@ -84,7 +85,7 @@ class HelpScreen(QMainWindow):
 
     def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
-        if(folder_name):
+        if (folder_name):
             st.SETTINGS.setValue(setStr, folder_name)
             st.SETTINGS.sync()
             lineEditObj.setPlaceholderText(st.get_path(setStr))
@@ -99,7 +100,7 @@ class HelpScreen(QMainWindow):
         else:
             path = os.path.expanduser('~')
         file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
-        if(file_name):
+        if (file_name):
             st.SETTINGS.setValue(setStr, file_name[0][0])
             st.SETTINGS.sync()
             lineEditObj.setPlaceholderText(st.get_path(setStr))
@@ -107,14 +108,14 @@ class HelpScreen(QMainWindow):
         else:
             pass
 
-class Start(QMainWindow):
 
+class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         super(Start, self).__init__()
         self.ui = parent
-        self.sens_objects = {} ## Collection of Sensor objects for station for one month
+        self.sens_objects = {}  ## Collection of Sensor objects for station for one month
         self.home()
 
     def home(self):
@@ -126,8 +127,8 @@ class Start(QMainWindow):
         self._static_fig = self.ui.mplwidget_top.canvas.figure
         self.pid = -99
         self.cid = -98
-        self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
-        self.toolbar1.update() #Update the toolbar memory
+        self.toolbar1 = self._static_fig.canvas.toolbar  # Get the toolbar handler
+        self.toolbar1.update()  # Update the toolbar memory
         # self._residual_fig = self.ui.mplwidget_bottom.canvas.figure
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
         self.ui.save_btn.clicked.connect(self.save_to_ts_files)
@@ -160,7 +161,7 @@ class Start(QMainWindow):
         # Counter added to figure out when the last item was added
         # Set alignment of the last item to push all the radio buttons up
         counter = len(sensors.items())
-        for key,value in sensors.items():
+        for key, value in sensors.items():
             counter -= 1
             self.sensor_radio_btns = QtWidgets.QRadioButton(key, self)
             self.sensor_check_btns = QtWidgets.QCheckBox(key, self)
@@ -168,12 +169,12 @@ class Start(QMainWindow):
             self.sensor_dict2[key] = self.sensor_check_btns
             self.ui.buttonGroup_data.addButton(self.sensor_dict[key])
             self.ui.buttonGroup_residual.addButton(self.sensor_dict2[key])
-            if(counter>0):
+            if (counter > 0):
                 self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key])
                 self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key])
             else:
-                self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key],0, QtCore.Qt.AlignTop)
-                self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key],0, QtCore.Qt.AlignTop)
+                self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key], 0, QtCore.Qt.AlignTop)
+                self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key], 0, QtCore.Qt.AlignTop)
 
             self.sensor_dict[key].setText(key)
 
@@ -191,8 +192,8 @@ class Start(QMainWindow):
         self.ui.buttonGroup_resolution.buttonClicked.connect(self.on_frequency_changed)
 
     def on_sensor_changed(self, btn):
-        print (btn.text())
-        if(btn.text() == "ALL"):
+        print(btn.text())
+        if (btn.text() == "ALL"):
             # TODO: plot_all and plot should be merged to one function
             self.ui.save_btn.setEnabled(False)
             self.ui.ref_level_btn.setEnabled(False)
@@ -215,9 +216,9 @@ class Start(QMainWindow):
         # print("ref height:",self.sens_objects[self.sens_str].height)
 
     def on_frequency_changed(self, btn):
-        print ("Frequency changed",btn.text())
+        print("Frequency changed", btn.text())
         self.mode = btn.text()
-        if(self.mode == "Minute"):
+        if (self.mode == "Minute"):
             self.sensor_dict2["PRD"].setEnabled(True)
         else:
             self.sensor_dict2["PRD"].setEnabled(False)
@@ -237,7 +238,7 @@ class Start(QMainWindow):
         self._residual_ax.figure.canvas.draw()
 
         checkedItems = [button for button in self.ui.buttonGroup_residual.buttons() if button.isChecked()]
-        if(checkedItems):
+        if (checkedItems):
             for button in checkedItems:
                 self.calculate_and_plot_residuals(self.sens_str, button.text(), self.mode)
         else:
@@ -281,7 +282,7 @@ class Start(QMainWindow):
                 t = time
                 y = data_flat - mean
                 # self._static_ax.plot(t, np.tan(t), ".")
-                line, = self._static_ax.plot(t, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
+                line, = self._static_ax.plot(t, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance
                 # self._static_fig = self.static_canvas.figure
                 if all:
                     line.set_label(sens)
@@ -292,11 +293,11 @@ class Start(QMainWindow):
                 self._static_ax.set_xlim([t[0], t[-1]])
                 self._static_ax.margins(0.05, 0.05)
 
-                self.ui.mplwidget_top.canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+                self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
                 self.ui.mplwidget_top.canvas.setFocus()
                 self.ui.mplwidget_top.canvas.figure.tight_layout()
                 # self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
-                self.toolbar1.update() #Update the toolbar memory
+                self.toolbar1.update()  # Update the toolbar memory
                 self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
@@ -315,77 +316,83 @@ class Start(QMainWindow):
         # upsampled = ts.resample(_freq)
         # interp = upsampled.interpolate()
         if mode == "Hourly":
-            data_obj ={}
+            data_obj = {}
             # data_obj["prd"]={'time':filt.datenum2(self.sens_objects["PRD"].get_time_vector()), 'station':'014', 'sealevel':self.sens_objects["PRD"].get_flat_data().copy()}
             # for key in self.sens_objects.keys():
             #     print("KEY", key)
             sl_data = self.sens_objects[sens_str1].get_flat_data().copy()
             sl_data = self.remove_9s(sl_data)
             sl_data = sl_data - int(self.sens_objects[sens_str1].height)
-            data_obj[sens_str1.lower()]={'time':filt.datenum2(self.sens_objects[sens_str1].get_time_vector()), 'station':'014', 'sealevel':sl_data}
+            data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.sens_objects[sens_str1].get_time_vector()),
+                                           'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.sens_objects[sens_str2].get_flat_data().copy()
             sl_data2 = self.remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.sens_objects[sens_str2].height)
-            data_obj[sens_str2.lower()]={'time':filt.datenum2(self.sens_objects[sens_str2].get_time_vector()), 'station':'014', 'sealevel':sl_data2}
+            data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.sens_objects[sens_str2].get_time_vector()),
+                                           'station': '014', 'sealevel': sl_data2}
 
             year = self.sens_objects[sens_str2].date.astype(object).year
             month = self.sens_objects[sens_str2].date.astype(object).month
-            data_hr = filt.hr_process_2(data_obj, filt.datetime(year,month,1,0,0,0), filt.datetime(year,month+1,1,0,0,0))
-
+            data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
+                                        filt.datetime(year, month + 1, 1, 0, 0, 0))
 
             if sens_str1 != "PRD":
-                hr_resid = data_hr[sens_str1.lower()]["sealevel"]-data_hr[sens_str2.lower()]["sealevel"]
-                time = [ filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time'] ]
-                self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid,sens_str1,sens_str2,"Hourly Residual", is_interactive = False)
+                hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
+                time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
+                self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid, sens_str1, sens_str2,
+                                  "Hourly Residual", is_interactive=False)
             else:
-                self.show_custom_message("Warning", "For hourly residual an actual channel needs to be selected in the top plot.")
-                self.generic_plot(self.ui.mplwidget_bottom.canvas, [0], [0],sens_str1,sens_str2,"Choose a channel in the top plot other than PRD", is_interactive = False)
+                self.show_custom_message("Warning",
+                                         "For hourly residual an actual channel needs to be selected in the top plot.")
+                self.generic_plot(self.ui.mplwidget_bottom.canvas, [0], [0], sens_str1, sens_str2,
+                                  "Choose a channel in the top plot other than PRD", is_interactive=False)
 
         else:
             newd1 = self.resample2(sens_str1)
             newd2 = self.resample2(sens_str2)
             # newd1 = ts1.resample(_freq).interpolate()
             # newd2 = ts2.resample(_freq).interpolate()
-            if(newd1.size>newd2.size):
+            if (newd1.size > newd2.size):
                 resid = newd2 - newd1[:newd2.size]
             else:
                 resid = newd1 - newd2[:newd1.size]
 
             # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
             # time = np.arange(resid.size)
-            time = date_range(self.sens_objects[sens_str1].date, periods = resid.size, freq='1min')
-            self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid,sens_str1,sens_str2, "Residual", is_interactive = False)
+            time = date_range(self.sens_objects[sens_str1].date, periods=resid.size, freq='1min')
+            self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid, sens_str1, sens_str2, "Residual",
+                              is_interactive=False)
 
-    def generic_plot(self, canvas, x, y,sens1, sens2, title, is_interactive):
+    def generic_plot(self, canvas, x, y, sens1, sens2, title, is_interactive):
         print("GENERIC PLOT CALLED")
         # self._residual_ax = canvas.figure.subplots()
 
-        line, = self._residual_ax.plot(x, y, '-', picker=5,lw=0.5,markersize=3)  # 5 points tolerance
+        line, = self._residual_ax.plot(x, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance
         line.set_gid(sens2)
         self._residual_fig = canvas.figure
         self._residual_ax.set_title(title)
-        line.set_label(title+": "+sens1+" - "+sens2)
+        line.set_label(title + ": " + sens1 + " - " + sens2)
         self._residual_ax.autoscale(enable=True, axis='both', tight=True)
         self._residual_ax.set_xlim([x[0], x[-1]])
         self._residual_ax.margins(0.05, 0.05)
         self._residual_ax.legend()
 
-        if(is_interactive):
-            self.browser = PointBrowser(x,y,self._residual_ax,line,self._residual_fig, self.find_outliers(x, y, sens1))
+        if (is_interactive):
+            self.browser = PointBrowser(x, y, self._residual_ax, line, self._residual_fig,
+                                        self.find_outliers(x, y, sens1))
             self.browser.onDataEnd += self.show_message
             canvas.mpl_connect('pick_event', self.browser.onpick)
             canvas.mpl_connect('key_press_event', self.browser.onpress)
             ## need to activate focus onto the mpl canvas so that the keyboard can be used
-            canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+            canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
             canvas.setFocus()
 
         self._residual_ax.figure.tight_layout()
-        self.toolbar2 = self._residual_fig.canvas.toolbar #Get the toolbar handler
-        self.toolbar2.update() #Update the toolbar memory
+        self.toolbar2 = self._residual_fig.canvas.toolbar  # Get the toolbar handler
+        self.toolbar2.update()  # Update the toolbar memory
 
         self._residual_ax.figure.canvas.draw()
-
 
     def _update_top_canvas(self, sens):
         data_flat = self.sens_objects[sens].get_flat_data()
@@ -394,7 +401,7 @@ class Start(QMainWindow):
         # nonines_data[nines_ind] = float('nan')
         # data_flat = nonines_data
         # data_flat =data_flat - np.nanmean(data_flat)
-        if(len(nines_ind[0])<data_flat.size):
+        if (len(nines_ind[0]) < data_flat.size):
             # data_flat[nines_ind] = float('nan')
             pass
         else:
@@ -411,25 +418,25 @@ class Start(QMainWindow):
             self.browser.disconnect()
         # time = np.arange(data_flat.size)
         time = self.sens_objects[sens].get_time_vector()
-        self.line, = self._static_ax.plot(time, data_flat, '-', picker=5,lw=0.5,markersize=3)
+        self.line, = self._static_ax.plot(time, data_flat, '-', picker=5, lw=0.5, markersize=3)
 
         self._static_ax.set_title('select a point you would like to remove and press "D"')
-        self.browser = PointBrowser(time,data_flat,self._static_ax,self.line,self._static_fig, self.find_outliers(time, data_flat, sens) )
+        self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig,
+                                    self.find_outliers(time, data_flat, sens))
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
         # update event ids so that they can be disconnect on next sensor change
         self.pid = self.ui.mplwidget_top.canvas.mpl_connect('pick_event', self.browser.onpick)
-        self.cid  = self.ui.mplwidget_top.canvas.mpl_connect('key_press_event', self.browser.onpress)
+        self.cid = self.ui.mplwidget_top.canvas.mpl_connect('key_press_event', self.browser.onpress)
         ## need to activate focus onto the mpl canvas so that the keyboard can be used
         self.toolbar1.update()
-        self.ui.mplwidget_top.canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+        self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.ui.mplwidget_top.canvas.setFocus()
 
     def find_outliers(self, t, data, sens):
 
         channel_freq = self.sens_objects[sens].rate
-        _freq = channel_freq+'min'
-
+        _freq = channel_freq + 'min'
 
         nines_ind = np.where(data == 9999)
         nonines_data = data.copy()
@@ -445,7 +452,7 @@ class Start(QMainWindow):
 
         # calculate a window size for moving average routine so the window
         # size is always 60 minutes long
-        window_size = 60//int(channel_freq)
+        window_size = 60 // int(channel_freq)
 
         # calculate moving average including the interolated data
         # moving_average removes big outliers before calculating moving average
@@ -460,7 +467,7 @@ class Start(QMainWindow):
         std = np.nanstd(residual)
         sigma = 3.0
 
-        itemindex =np.where( (nonines_data > y_av + (sigma*std)) | (nonines_data < y_av - (sigma*std)) )
+        itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
         return itemindex
 
     def moving_average(self, data, window_size):
@@ -485,16 +492,17 @@ class Start(QMainWindow):
         # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
         # my_mean=np.nanmean(filtered_data)
 
-        my_mean=np.nanmean(filtered_data)
+        my_mean = np.nanmean(filtered_data)
         my_std = np.nanstd(filtered_data)
 
         # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
-        itemindex = np.where(((filtered_data>my_mean+3*my_std )  | (filtered_data<my_mean-3*my_std)))
-        filtered_data[itemindex]=np.nanmean(filtered_data)
+        itemindex = np.where(((filtered_data > my_mean + 3 * my_std) | (filtered_data < my_mean - 3 * my_std)))
+        filtered_data[itemindex] = np.nanmean(filtered_data)
         # Fix boundary effects by adding prepending and appending values to the data
-        filtered_data = np.insert(filtered_data,0,np.ones(window_size)*np.nanmean(filtered_data[:window_size//2]))
-        filtered_data = np.insert(filtered_data,filtered_data.size,np.ones(window_size)*np.nanmean(filtered_data[-window_size//2:]))
-        window = np.ones(int(window_size))/float(window_size)
+        filtered_data = np.insert(filtered_data, 0, np.ones(window_size) * np.nanmean(filtered_data[:window_size // 2]))
+        filtered_data = np.insert(filtered_data, filtered_data.size,
+                                  np.ones(window_size) * np.nanmean(filtered_data[-window_size // 2:]))
+        window = np.ones(int(window_size)) / float(window_size)
         # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
         return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
 
@@ -503,20 +511,20 @@ class Start(QMainWindow):
         nines_ind = np.where(data == 9999)
         data[nines_ind] = float('nan')
         ave = np.nanmean(data)
-        datas = data[0:-1]-ave#int(self.sens_objects[sens_str].height)
-        datae = data[1:]-ave#int(self.sens_objects[sens_str].height)
-        yc = (datae - datas)/int(self.sens_objects[sens_str].rate)
+        datas = data[0:-1] - ave  # int(self.sens_objects[sens_str].height)
+        datae = data[1:] - ave  # int(self.sens_objects[sens_str].height)
+        yc = (datae - datas) / int(self.sens_objects[sens_str].rate)
 
         min_data = []
-        for j in range(0,len(datas)):
-            for i in range(0,int(self.sens_objects[sens_str].rate)):
-                min_data.append(float(datas[j]+yc[j]))
+        for j in range(0, len(datas)):
+            for i in range(0, int(self.sens_objects[sens_str].rate)):
+                min_data.append(float(datas[j] + yc[j]))
         # nan_ind = np.argwhere(np.isnan(min_data))
         # min_data[nan_ind] = 9999
         return np.asarray(min_data)
 
     def show_message(self, *args):
-        print("SHOW MESSAGE",*args)
+        print("SHOW MESSAGE", *args)
         # choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
         self.show_custom_message(*args, *args)
 
@@ -527,19 +535,19 @@ class Start(QMainWindow):
             self.show_custom_message("Error!", "Data needs to be loaded first.")
             return
         else:
-            if(self.is_digit(str(self.ui.refLevelEdit.text()))):
+            if (self.is_digit(str(self.ui.refLevelEdit.text()))):
                 # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
                 date, time, result = DateDialog.getDateTime(self)
-                ISOstring = date.toString('yyyy-MM-dd')+'T'+time.toString("HH:mm")
+                ISOstring = date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
                 if result:
-
                     REF_diff = int(str(self.ui.refLevelEdit.text())) - int(self.sens_objects[self.sens_str].height)
                     new_REF = REF_diff + int(self.sens_objects[self.sens_str].height)
-                    #offset the data
+                    # offset the data
                     self.browser.offset_data(ISOstring, REF_diff)
                     # format the new reference to a 4 character string (i.e add leading zeros if necessary)
                     # update the header
-                    new_header = self.sens_objects[self.sens_str].header[0][:60]+'{:04d}'.format(new_REF)+self.sens_objects[self.sens_str].header[0][64:]
+                    new_header = self.sens_objects[self.sens_str].header[0][:60] + '{:04d}'.format(new_REF) + \
+                                 self.sens_objects[self.sens_str].header[0][64:]
                     self.sens_objects[self.sens_str].header[0] = new_header
                     self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
                     print("Succesfully changed to: ", str(self.ui.refLevelEdit.text()))
@@ -561,16 +569,16 @@ class Start(QMainWindow):
         return data
 
     def show_custom_message(self, title, descrip):
-        choice = QtWidgets.QMessageBox.information(self, title,  descrip, QtWidgets.QMessageBox.Ok)
+        choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
     def save_to_ts_files(self):
         # Deleting tkey "ALL" from the list of sensors
         if "ALL" in self.sens_objects:
             del self.sens_objects["ALL"]
-        if(self.sens_objects):
+        if (self.sens_objects):
             months = len(self.sens_objects["PRD"].line_num)  # amount of months loaded
             # print("Amount of months loaded", months)
-            assem_data=[[] for j in range(months)]  # initial an empty list of lists with the number of months
+            assem_data = [[] for j in range(months)]  # initial an empty list of lists with the number of months
             nan_ind = np.argwhere(np.isnan(self.browser.data))
             # print("NAN INDICES",nan_ind)
             # self.browser.data[nan_ind] = 9999
@@ -586,67 +594,92 @@ class Start(QMainWindow):
                 for key, value in self.sens_objects.items():
                     # Add header
                     # separate PRD from the rest because it has to be saved on the top file
-                    if(key == "PRD"):
+                    if (key == "PRD"):
                         prd_list[m].append(self.sens_objects[key].header[m].strip("\n"))
                     else:
                         assem_data[m].append(self.sens_objects[key].header[m].strip("\n"))
                     # The ugly range is calculating start and end line numbers for each month that was Loaded
                     # so that the data can be saved to separate, monthly files
-                    for i in range(sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:]), sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:])+self.sens_objects[key].line_num[m]):
+                    for i in range(sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:]),
+                                   sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:]) +
+                                   self.sens_objects[key].line_num[m]):
                         # File formatting is differs based on the sampling rate of a sensor
-                        if(int(self.sens_objects[key].rate)>=5):
-                            # ys_str_list.append(' '.join(str(e) for e in ys[i*12:12+i*12].tolist()))
+                        if (int(self.sens_objects[key].rate) >= 5):
                             # Get only sealevel reading, without anything else (no time/date etc)
-                            data = ''.join('{:5.0f}'.format(e) for e in self.sens_objects[key].data.flatten()[i*12:12+i*12].tolist())
+                            data = ''.join('{:5.0f}'.format(e) for e in
+                                           self.sens_objects[key].data.flatten()[i * 12:12 + i * 12].tolist())
                             # The columns/rows containing only time/data and no sealevel measurements
-                            # it_col_formatted = self.sens_objects[key].time_info[i].split(" ")
-                            # it_col_formatted[0] = ' '
-                            # it_col_formatted[1] = self.sens_objects[key].type
-                            # it_col_formatted[3] = self.sens_objects[key].time_info[0].split(" ")[3][-2:] #formatting year to a 2 digit
-                            it_col_formatted = '  '+self.sens_objects[key].type+'  '+self.sens_objects[key].time_info[i][8:12].strip()[-2:] + self.sens_objects[key].time_info[i][12:20]
+                            it_col_formatted = '  ' + self.sens_objects[key].type + '  ' + \
+                                               self.sens_objects[key].time_info[i][8:12].strip()[-2:] + \
+                                               self.sens_objects[key].time_info[i][12:20]
                             # assem_data.append(info_time_col[i][0:]+data)
-                            if(key == "PRD"):
-                                prd_list[m].append(''.join(it_col_formatted)+data)
+                            if (key == "PRD"):
+                                prd_list[m].append(''.join(it_col_formatted) + data)
                             else:
-                                assem_data[m].append(''.join(it_col_formatted)+data)
+                                assem_data[m].append(''.join(it_col_formatted) + data)
                         else:
-                            # ys_str_list.append(''.join(str(e) for e in ys[i*15:15+i*15].tolist()))
-                            data = ''.join('{:4.0f}'.format(e) for e in self.sens_objects[key].data.flatten()[i*15:15+i*15].tolist())
-                            # it_col_formatted = self.sens_objects[key].time_info[i].split(" ")
-                            # it_col_formatted[0] = ' '
-                            # it_col_formatted[1] = self.sens_objects[key].type
-                            # it_col_formatted[3] = self.sens_objects[key].time_info[0].split(" ")[3][-2:] #formatting year to a 2 digit
-                            it_col_formatted = '  '+self.sens_objects[key].type+'  '+self.sens_objects[key].time_info[i][8:12].strip()[-2:] + self.sens_objects[key].time_info[i][12:20]
+                            data = ''.join('{:4.0f}'.format(e) for e in
+                                           self.sens_objects[key].data.flatten()[i * 15:15 + i * 15].tolist())
+                            it_col_formatted = '  ' + self.sens_objects[key].type + '  ' + \
+                                               self.sens_objects[key].time_info[i][8:12].strip()[-2:] + \
+                                               self.sens_objects[key].time_info[i][12:20]
                             # assem_data.append(info_time_col[i][0:]+data)
-                            assem_data[m].append(''.join(it_col_formatted)+data)
-                    if(key == "PRD"):
-                        prd_list[m].append('9'*80)
+                            assem_data[m].append(''.join(it_col_formatted) + data)
+                    if (key == "PRD"):
+                        prd_list[m].append('9' * 80)
                     else:
-                        assem_data[m].append('9'*80)
+                        assem_data[m].append('9' * 80)
                 del data
                 # find the start date lines of each monp file that was loaded
-                date_str = self.sens_objects[key].time_info[sum(self.sens_objects[key].line_num[:])-sum(self.sens_objects[key].line_num[m:])]
+                date_str = self.sens_objects[key].time_info[
+                    sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:])]
                 month_int = int(date_str[12:14][-2:])
                 month_str = "{:02}".format(month_int)
                 year_str = date_str[8:12][-2:]
                 station_num = self.sens_objects[key].type[0:-3]
-                file_name ='t' + station_num + year_str + month_str + '.dat'
+                file_name = 't' + station_num + year_str + month_str
+                file_extension = '.dat'
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name, 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name+file_extension, 'w') as the_file:
                         for lin in prd_list[m]:
-                            the_file.write(lin+"\n")
+                            the_file.write(lin + "\n")
                         for line in assem_data[m]:
-                            the_file.write(line+"\n")
+                            the_file.write(line + "\n")
                         # Each file ends with two lines of 80 9s that's why adding an additional one
-                        the_file.write('9'*80+"\n")
-                    self.show_custom_message("Success", "Success \n" + file_name + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
+                        the_file.write('9' * 80 + "\n")
+                    self.show_custom_message("Success",
+                                             "Success \n" + file_name+file_extension + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
                 except IOError as e:
-                    self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(e) + "\n Please select a different path to save to")
+                    self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(
+                        e) + "\n Please select a different path to save to")
                 self.save_fast_delivery(self.sens_objects)
+                self.save_mat_high_fq(file_name)
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
+
+    # this function is called for every month of data loaded
+    def save_mat_high_fq(self, file_name):
+        import scipy.io as sio
+        if st.get_path(st.FD_PATH):
+            save_path = st.get_path(st.FD_PATH)
+        else:
+            self.show_custom_message("Warning",
+                                     "Please select a location where you would like your hourly, daily and high "
+                                     "frequency matlab data "
+                                     "to be saved. Click save again once selected.")
+            return
+
+        for key, value in self.sens_objects.items():
+            sl_data = self.sens_objects[key].get_flat_data().copy()
+            sl_data = self.remove_9s(sl_data)
+            sl_data = sl_data - int(self.sens_objects[key].height)
+            time = filt.datenum2(self.sens_objects[key].get_time_vector())
+            data_obj = [time, sl_data]
+            # transposing the data so that it matches the shape of the UHSLC matlab format
+            matlab_obj = {'NNNN': file_name+key.lower(), file_name+key.lower(): np.transpose(data_obj, (1, 0))}
+            sio.savemat(save_path+'/'+file_name+key.lower()+'.mat', matlab_obj)
 
     def save_fast_delivery(self, _data):
         import scipy.io as sio
@@ -660,28 +693,30 @@ class Start(QMainWindow):
         if st.get_path(st.DIN_PATH):
             din_path = st.get_path(st.DIN_PATH)
         else:
-            self.show_custom_message("Warning", "The fast delivery data cannot be processed because you haven't selected"
-                                                "the .din file location. Press F1 to access the menu to select it. And "
-                                                "then click the save button again.")
+            self.show_custom_message("Warning",
+                                     "The fast delivery data cannot be processed because you haven't selected"
+                                     "the .din file location. Press F1 to access the menu to select it. And "
+                                     "then click the save button again.")
             return
 
         if st.get_path(st.FD_PATH):
             save_path = st.get_path(st.FD_PATH)
         else:
-            self.show_custom_message("Warning", "Please select a location where you would like your hourly and daily data"
-                                                "to be saved. Click save again once selected.")
+            self.show_custom_message("Warning",
+                                     "Please select a location where you would like your hourly and daily data"
+                                     "to be saved. Click save again once selected.")
             return
 
-        data_obj ={}
-
+        data_obj = {}
 
         station_num = _data["PRD"].type[0:-3]
-        primary_sensor = filt.get_channel_priority(din_path, station_num)[0].upper()  # returns multiple sensor in order of importance
+        primary_sensor = filt.get_channel_priority(din_path, station_num)[
+            0].upper()  # returns multiple sensor in order of importance
         sl_data = _data[primary_sensor].get_flat_data().copy()
         sl_data = self.remove_9s(sl_data)
         sl_data = sl_data - int(_data[primary_sensor].height)
         data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
-                                       'station': station_num, 'sealevel': sl_data}
+                                            'station': station_num, 'sealevel': sl_data}
 
         year = _data[primary_sensor].date.astype(object).year
         month = _data[primary_sensor].date.astype(object).month
@@ -697,14 +732,15 @@ class Start(QMainWindow):
         ch_params = [{primary_sensor.lower(): 0}]
         hourly_merged = filt.channel_merge(data_hr, ch_params)
 
-        # Note that hourly merged returns a channel attritubute which is an array of integers representing channel type.
+        # Note that hourly merged returns a channel attribute which is an array of integers representing channel type.
         # used for a particular day of data. In Fast delivery, all the number should be the same because no merge
         # int -> channel name mapping is inside of filtering.py var_flag function
         data_day = filt.day_119filt(hourly_merged, _data[primary_sensor].location[0])
 
         month_str = "{:02}".format(month)
-        hourly_filename = save_path + '/'+'th'+str(station_num)+str(year)[-2:]+month_str+'.mat'
-        daily_filename = save_path + '/'+'da' + str(station_num) + str(year)[-2:] + month_str + '.mat'
+        hourly_filename = save_path + '/' + 'th' + str(station_num) + str(year)[-2:] + month_str + '.mat'
+        daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.mat'
         sio.savemat(hourly_filename, data_hr)
         sio.savemat(daily_filename, data_day)
-        self.show_custom_message("Success", "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
+        self.show_custom_message("Success",
+                                 "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
