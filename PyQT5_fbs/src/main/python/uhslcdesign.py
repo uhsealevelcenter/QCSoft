@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_design_custom_matlplotlib_widget_colorEtSszL.ui'
+# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designPkPVYQ.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1525, 1270)
+        MainWindow.resize(1199, 894)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -212,6 +212,23 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.gridLayout_5 = QtWidgets.QGridLayout()
         self.gridLayout_5.setObjectName("gridLayout_5")
+        self.pushButton_load_folder = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_load_folder.setObjectName("pushButton_load_folder")
+        self.gridLayout_5.addWidget(self.pushButton_load_folder, 1, 1, 1, 1)
+        self.lineEditFDPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditFDPath.setReadOnly(True)
+        self.lineEditFDPath.setObjectName("lineEditFDPath")
+        self.gridLayout_5.addWidget(self.lineEditFDPath, 2, 0, 1, 1)
+        self.lineEdit_din = QtWidgets.QLineEdit(self.page_2)
+        self.lineEdit_din.setReadOnly(True)
+        self.lineEdit_din.setObjectName("lineEdit_din")
+        self.gridLayout_5.addWidget(self.lineEdit_din, 4, 0, 1, 1)
+        self.pushButton_din = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_din.setObjectName("pushButton_din")
+        self.gridLayout_5.addWidget(self.pushButton_din, 4, 1, 1, 1)
+        self.pushButton_fd_folder = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_fd_folder.setObjectName("pushButton_fd_folder")
+        self.gridLayout_5.addWidget(self.pushButton_fd_folder, 2, 1, 1, 1)
         self.lineEditPath = QtWidgets.QLineEdit(self.page_2)
         self.lineEditPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
@@ -232,9 +249,6 @@ class Ui_MainWindow(object):
         self.pushButton_save_folder.setMaximumSize(QtCore.QSize(200, 16777215))
         self.pushButton_save_folder.setObjectName("pushButton_save_folder")
         self.gridLayout_5.addWidget(self.pushButton_save_folder, 0, 1, 1, 1)
-        self.pushButton_load_folder = QtWidgets.QPushButton(self.page_2)
-        self.pushButton_load_folder.setObjectName("pushButton_load_folder")
-        self.gridLayout_5.addWidget(self.pushButton_load_folder, 1, 1, 1, 1)
         self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
         self.lineEditLoadPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
@@ -245,20 +259,12 @@ class Ui_MainWindow(object):
         self.lineEditLoadPath.setReadOnly(True)
         self.lineEditLoadPath.setObjectName("lineEditLoadPath")
         self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
-        self.lineEditFDPath = QtWidgets.QLineEdit(self.page_2)
-        self.lineEditFDPath.setReadOnly(True)
-        self.lineEditFDPath.setObjectName("lineEditFDPath")
-        self.gridLayout_5.addWidget(self.lineEditFDPath, 2, 0, 1, 1)
-        self.pushButton_fd_folder = QtWidgets.QPushButton(self.page_2)
-        self.pushButton_fd_folder.setObjectName("pushButton_fd_folder")
-        self.gridLayout_5.addWidget(self.pushButton_fd_folder, 2, 1, 1, 1)
-        self.lineEdit_din = QtWidgets.QLineEdit(self.page_2)
-        self.lineEdit_din.setReadOnly(True)
-        self.lineEdit_din.setObjectName("lineEdit_din")
-        self.gridLayout_5.addWidget(self.lineEdit_din, 3, 0, 1, 1)
-        self.pushButton_din = QtWidgets.QPushButton(self.page_2)
-        self.pushButton_din.setObjectName("pushButton_din")
-        self.gridLayout_5.addWidget(self.pushButton_din, 3, 1, 1, 1)
+        self.lineEditHFPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditHFPath.setObjectName("lineEditHFPath")
+        self.gridLayout_5.addWidget(self.lineEditHFPath, 3, 0, 1, 1)
+        self.pushButton_hf_data = QtWidgets.QPushButton(self.page_2)
+        self.pushButton_hf_data.setObjectName("pushButton_hf_data")
+        self.gridLayout_5.addWidget(self.pushButton_hf_data, 3, 1, 1, 1)
         self.verticalLayout_4.addLayout(self.gridLayout_5)
         self.backButton = QtWidgets.QPushButton(self.page_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -276,7 +282,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.stackedWidget, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1525, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1199, 18))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -332,7 +338,7 @@ class Ui_MainWindow(object):
         self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">INITIAL SETUP:</span></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">------------------</span></p>\n"
 "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
@@ -340,8 +346,11 @@ class Ui_MainWindow(object):
 "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        1) Specify the default loading folder by clicking &quot;Change Load Folder&quot; button</span></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        2) Specify the default saving folder by clicking &quot;Change Save Folder&quot; button</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">3) Specify default folder for saving fast delivery data (.mat files)</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">4) Specify default folder for saving high frequency data (.mat files)</span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">5) Specify the .din file path to load stations sensrors information</span></p>\n"
 "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">If no path is specified, the path will default to your home directory on your local machine.  If different local directory needs to be used, this can be achieved by using the same two steps above. </span></p>\n"
+"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">If no path is specified, the path will default to your home directory on your local machine or you will be asked to set it up.  If different local directory needs to be used, this can be achieved by performing the same steps above. </span></p>\n"
 "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA LOADING:</span></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
@@ -375,12 +384,13 @@ class Ui_MainWindow(object):
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">SAVE DATA:</span></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">--------------</span></p>\n"
 "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
-        self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
         self.pushButton_load_folder.setText(_translate("MainWindow", "Change Load Folder"))
         self.lineEditFDPath.setPlaceholderText(_translate("MainWindow", "Click Change FD Save Folder to choose a folder where to save Fast Delivery Huorly and Daily data..."))
-        self.pushButton_fd_folder.setText(_translate("MainWindow", "Change FD Save Folder"))
         self.lineEdit_din.setPlaceholderText(_translate("MainWindow", "Click the button on the right to choose the din file from which primary sensors are loaded"))
         self.pushButton_din.setText(_translate("MainWindow", "Set .din file"))
+        self.pushButton_fd_folder.setText(_translate("MainWindow", "Change FD Save Folder"))
+        self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
+        self.pushButton_hf_data.setText(_translate("MainWindow", "Change high freq folder"))
         self.backButton.setText(_translate("MainWindow", "Back To Main Menu"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
@@ -394,6 +404,5 @@ class Ui_MainWindow(object):
         self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
         self.actionInstructions.setText(_translate("MainWindow", "Instructions"))
         self.actionInstructions.setShortcut(_translate("MainWindow", "F1"))
-
 
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
