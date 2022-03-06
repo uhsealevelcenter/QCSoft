@@ -41,3 +41,43 @@ class Sensor(Station):
 
     def get_time_vector(self):
         return np.array([self.date + np.timedelta64(i*int(self.rate), 'm') for i in range(self.get_flat_data().size)])
+
+
+class Sensor2:
+    """
+    rate   : sampling rate,
+    height : switch height,
+    type   : sensor type,
+    date   : the initial date/time,
+    data   : sea level measurements
+    """
+
+    def __init__(self, rate: int, height: int, sensor_type: str, data: [int], date: str, time_info: str, header: str):
+        self.rate = rate
+        self.height = height
+        self.type = sensor_type
+        self.data = data
+        self.date = date
+        self.time_info = time_info
+        self.header = header
+
+
+class Station2:
+    def __init__(self, name: str, location: [float, float], station_id: str, sensors: [Sensor2]):
+        self.name = name
+        self.location = location
+        self.id = station_id
+        self.sensors = sensors
+
+
+class Month:
+
+    def __init__(self, station: Station2, month: int):
+        self.station = station
+        self.month = month
+
+
+class DataCollection:
+
+    def __init__(self, month: [Month]):
+        self.months = month
