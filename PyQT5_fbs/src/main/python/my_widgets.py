@@ -1,28 +1,19 @@
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
-
 import os
 
-import numpy as np
-from interactive_plot import PointBrowser
-from sensor import Sensor, Station
-from extractor2 import DataExtractor
-from dialogs import DateDialog
-import settings as st
-import pandas._libs.tslibs.np_datetime
-import pandas._libs.tslibs.nattype
-import pandas._libs.skiplist
-from pandas import Series, date_range
-import filtering as filt
-from uhslcdesign import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow
+from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
+from pandas import Series, date_range
+
+import filtering as filt
+import settings as st
+from dialogs import DateDialog
+from interactive_plot import PointBrowser
+from sensor import *
 
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
+    pass
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -107,7 +98,7 @@ class HelpScreen(QMainWindow):
         else:
             path = os.path.expanduser('~')
         file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
-        if (file_name):
+        if file_name:
             st.SETTINGS.setValue(setStr, file_name[0][0])
             st.SETTINGS.sync()
             lineEditObj.setPlaceholderText(st.get_path(setStr))
@@ -176,7 +167,7 @@ class Start(QMainWindow):
             self.sensor_dict2[key] = self.sensor_check_btns
             self.ui.buttonGroup_data.addButton(self.sensor_dict[key])
             self.ui.buttonGroup_residual.addButton(self.sensor_dict2[key])
-            if (counter > 0):
+            if counter > 0:
                 self.ui.verticalLayout_left_top.addWidget(self.sensor_dict[key])
                 self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key])
             else:
@@ -200,7 +191,7 @@ class Start(QMainWindow):
 
     def on_sensor_changed(self, btn):
         print(btn.text())
-        if (btn.text() == "ALL"):
+        if btn.text() == "ALL":
             # TODO: plot_all and plot should be merged to one function
             self.ui.save_btn.setEnabled(False)
             self.ui.ref_level_btn.setEnabled(False)
@@ -583,7 +574,7 @@ class Start(QMainWindow):
         if "ALL" in self.sens_objects:
             del self.sens_objects["ALL"]
         if (self.sens_objects):
-            months = len(self.sens_objects["PRD"].line_num)  # amount of months loaded
+            months = len(self.sens_objects["PRD"].line_count)  # amount of months loaded
             # print("Amount of months loaded", months)
             assem_data = [[] for j in range(months)]  # initial an empty list of lists with the number of months
             nan_ind = np.argwhere(np.isnan(self.browser.data))
@@ -607,9 +598,10 @@ class Start(QMainWindow):
                         assem_data[m].append(self.sens_objects[key].header[m].strip("\n"))
                     # The ugly range is calculating start and end line numbers for each month that was Loaded
                     # so that the data can be saved to separate, monthly files
-                    for i in range(sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:]),
-                                   sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:]) +
-                                   self.sens_objects[key].line_num[m]):
+                    for i in range(
+                            sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:]),
+                            sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:]) +
+                            self.sens_objects[key].line_count[m]):
                         # File formatting is differs based on the sampling rate of a sensor
                         if (int(self.sens_objects[key].rate) >= 5):
                             # Get only sealevel reading, without anything else (no time/date etc)
@@ -639,7 +631,7 @@ class Start(QMainWindow):
                 del data
                 # find the start date lines of each monp file that was loaded
                 date_str = self.sens_objects[key].time_info[
-                    sum(self.sens_objects[key].line_num[:]) - sum(self.sens_objects[key].line_num[m:])]
+                    sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:])]
                 month_int = int(date_str[12:14][-2:])
                 month_str = "{:02}".format(month_int)
                 year_str = date_str[8:12][-2:]
@@ -647,7 +639,7 @@ class Start(QMainWindow):
                 file_name = 't' + station_num + year_str + month_str
                 file_extension = '.dat'
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name+file_extension, 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name + file_extension, 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin + "\n")
                         for line in assem_data[m]:
@@ -655,7 +647,8 @@ class Start(QMainWindow):
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9' * 80 + "\n")
                     self.show_custom_message("Success",
-                                             "Success \n" + file_name+file_extension + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
+                                             "Success \n" + file_name + file_extension + " Saved to " + st.get_path(
+                                                 st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(
                         e) + "\n Please select a different path to save to")
@@ -685,15 +678,16 @@ class Start(QMainWindow):
             time = filt.datenum2(self.sens_objects[key].get_time_vector())
             data_obj = [time, sl_data]
             # transposing the data so that it matches the shape of the UHSLC matlab format
-            matlab_obj = {'NNNN': file_name+key.lower(), file_name+key.lower(): np.transpose(data_obj, (1, 0))}
+            matlab_obj = {'NNNN': file_name + key.lower(), file_name + key.lower(): np.transpose(data_obj, (1, 0))}
             try:
-                sio.savemat(save_path+'/'+file_name+key.lower()+'.mat', matlab_obj)
+                sio.savemat(save_path + '/' + file_name + key.lower() + '.mat', matlab_obj)
                 self.show_custom_message("Success",
-                                             "Success \n" + file_name+key.lower()+'.mat' + " Saved to " + st.get_path(st.HF_PATH) + "\n")
+                                         "Success \n" + file_name + key.lower() + '.mat' + " Saved to " + st.get_path(
+                                             st.HF_PATH) + "\n")
             except IOError as e:
-                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(st.HF_PATH) + "\n" + str(
+                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
+                    st.HF_PATH) + "\n" + str(
                     e) + "\n Please select a different path to save to")
-
 
     def save_fast_delivery(self, _data):
         import scipy.io as sio
@@ -729,7 +723,8 @@ class Start(QMainWindow):
         if primary_sensor not in _data:
             self.show_custom_message("Error", "Your .din file says that {} "
                                               "is the primary sensor but the file you have loaded does "
-                                              "not contain that sensor. Hourly and daily data will not be saved.".format(primary_sensor))
+                                              "not contain that sensor. Hourly and daily data will not be saved.".format(
+                primary_sensor))
             return
         sl_data = _data[primary_sensor].get_flat_data().copy()
         sl_data = self.remove_9s(sl_data)

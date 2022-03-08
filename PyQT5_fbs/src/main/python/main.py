@@ -1,21 +1,18 @@
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QPalette, QColor
-from fbs_runtime.application_context import ApplicationContext, cached_property
-from PyQt5.QtWidgets import QMainWindow
-from uhslcdesign import Ui_MainWindow
 
+from PyQt5 import QtWidgets
+from fbs_runtime.application_context import ApplicationContext, cached_property
+
+from extractor2 import DataExtractor
 from my_widgets import *
+from uhslcdesign import Ui_MainWindow
 
 # import darkdetect
 
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
+    pass
 
 
 class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
@@ -101,7 +98,7 @@ class ApplicationWindow(QMainWindow):
             # in_file = open(name[0],'r')
             self.month_count = len(self.file_name[0])
             print('FILENAME', self.file_name[0][0])
-            self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
+            # self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
 
             comb_data = np.ndarray(
                 0)  # ndarray of concatonated data for all the months that were loaded for a particular station
@@ -113,39 +110,75 @@ class ApplicationWindow(QMainWindow):
 
             self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
 
+            # data_collection = DataCollection()
             # Create DataExtractor for each month that was loaded into program
+            months = []
             for j in range(self.month_count):
                 de.append(DataExtractor(self.file_name[0][j]))
+                month_int = de[j].init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
+
+                sensors = SensorCollection()
+                for i in range(len(de[j].sensor_ids)):
+                    sens_rate = de[j].frequencies[i]
+                    height = de[-1].refs[i]
+                    type = de[j].sensor_ids[i][-3:]
+                    date = de[j].init_dates[i]
+                    data = de[j].data_all[type]
+                    time_info_col = de[j].infos_time_col[type]
+                    header = de[j].headers[i]
+                    line_count = len(time_info_col)
+
+                    sensor = Sensor(rate=sens_rate, height=height, sensor_type=type, date=date,
+                                    data=data, time_info=time_info_col, header=header,
+                                    line_count=line_count)
+                    sensors.add_sensor(sensor)
+                all_sensor = Sensor(None, None, 'ALL', None, None, None, None, None)
+                sensors.add_sensor(all_sensor)
+                month = Month(month=month_int, sensors=sensors)
+                months.append(month)
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station name will be the same
-            station_name = de[0].headers[0][:6]
-            my_station = Station(station_name, de[0].loc)
-            comb_headers = []
-            # Cycle through all the Sensors
-            # The reason de[0] is used is because the program only allows to load
-            # multiple months for the same station, so the station sensors should be the same
-            # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-            for i in range(len(de[0].sensor_ids)):
-                # cycle through all the months loaded (ie. DataExtractor objects)
-                for d in de:
-                    comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
-                    comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
-                    line_count.append(len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
-                    comb_headers.append(d.headers[i])
-                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
-                                                                                  de[-1].refs[i], de[0].sensor_ids[i],
-                                                                                  de[0].init_dates[i], comb_data,
-                                                                                  comb_time_col, comb_headers)
-                self.start_screen.sens_objects[
-                    de[0].sensor_ids[i][-3:]].line_num = line_count  # adding a line_num attribute for each sensor
-                # Empty the combined data
-                comb_time_col = []
-                comb_data = np.ndarray(0)
-                line_count = []
-                comb_headers = []
-                self.start_screen.sens_objects["ALL"] = {}
+            # station_name = de[0].headers[0][:6]
+            # my_station = Station(station_name, de[0].loc)
+            # comb_headers = []
+            #
+            # # Cycle through all the Sensors
+            # # The reason de[0] is used is because the program only allows to load
+            # # multiple months for the same station, so the station sensors should be the same
+            # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
+            # sensors = SensorCollection()
+            # for i in range(len(de[0].sensor_ids)):
+            #     # cycle through all the months loaded (ie. DataExtractor objects)
+            #     for d in de:
+            #         comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
+            #         comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
+            #         comb_headers.append(d.headers[i])
+            #
+            #     # Populate new data structures
+            #     sensor = Sensor(de[0].frequencies[i], de[-1].refs[i], de[0].sensor_ids[i][-3:], de[0].init_dates[i],
+            #                     comb_data, comb_time_col, comb_headers,
+            #                     len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
+            #     sensors.add_sensor(sensor)
+            #
+            #     # Empty the combined data
+            #     comb_time_col = []
+            #     comb_data = np.ndarray(0)
+            #     comb_headers = []
+            #     # self.start_screen.sens_objects["ALL"] = {}
+            #
+            # # An empty sensor, used to create "ALL" radio button in the GUI
+            # all_sensor = Sensor(None, None, 'ALL', None, None, None, None, None)
+            # sensors.add_sensor(all_sensor)
+            #
+            # station = Station(de[0].headers[0][3:6], de[0].loc, de[0].headers[0][:3], sensors)
+            name = de[0].headers[0][3:6]
+            location = de[0].loc
+            station_id = de[0].headers[0][:3]
 
-            self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
+            station = Station(name=name, location=location, station_id=station_id, month=months)
+            # Todo: pass station here instead of sensors object
+            self.start_screen.sens_objects = station.month_collection[0].sensor_collection.sensors
+            self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)

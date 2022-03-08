@@ -1,83 +1,78 @@
 import numpy as np
-# sensor
 
 
-class Station:
+class Sensor:
     """
-    name:     num_id (e.g. "109GAN")
-    location: ["lat", "long"]
-    """
-
-    def __init__(self, name, location):
-        self.name = name
-        self.location = location
-
-
-class Sensor(Station):
-    """
-    Station: Station object,
     rate   : sampling rate,
     height : switch height,
-    offset : offset of the switch,
     type   : sensor type,
     date   : the initial date/time,
     data   : sea level measurements
     """
 
-    def __init__(self, Station, rate, height, typ, date0, data, info, header):
-        # Station.__init__(self, Station.name, Station.location)
-        self.name = Station.name
-        self.location = Station.location
+    def __init__(self, rate: int, height: int, sensor_type: str, date: str, data: [int], time_info: str, header: str,
+                 line_count: int):
         self.rate = rate
         self.height = height
-        self.type = typ
-        self.date = date0
+        self.type = sensor_type
+        self.date = date
         self.data = data
-        self.time_info = info
+        self.time_info = time_info
         self.header = header
+        self.line_count = line_count
 
     def get_flat_data(self):
         return self.data.flatten()
 
     def get_time_vector(self):
-        return np.array([self.date + np.timedelta64(i*int(self.rate), 'm') for i in range(self.get_flat_data().size)])
+        return np.array(
+            [self.date + np.timedelta64(i * int(self.rate), 'm') for i in range(self.get_flat_data().size)])
+
+    def __repr__(self):
+        return self.type
 
 
-class Sensor2:
-    """
-    rate   : sampling rate,
-    height : switch height,
-    type   : sensor type,
-    date   : the initial date/time,
-    data   : sea level measurements
-    """
-
-    def __init__(self, rate: int, height: int, sensor_type: str, data: [int], date: str, time_info: str, header: str):
-        self.rate = rate
-        self.height = height
-        self.type = sensor_type
-        self.data = data
-        self.date = date
-        self.time_info = time_info
-        self.header = header
-
-
-class Station2:
-    def __init__(self, name: str, location: [float, float], station_id: str, sensors: [Sensor2]):
-        self.name = name
-        self.location = location
-        self.id = station_id
+class SensorCollection:
+    def __init__(self, sensors: Sensor = None):
+        if sensors is None:
+            sensors = {}
         self.sensors = sensors
+
+    def add_sensor(self, sensor: Sensor):
+        self.sensors[sensor.type] = sensor
 
 
 class Month:
 
-    def __init__(self, station: Station2, month: int):
-        self.station = station
+    def __init__(self, month: int, sensors: SensorCollection):
         self.month = month
+        self.name = 'january'  # Todo: this is a placeholder, the month name should ne calculated based on the
+        # integer 1 through 12
+        self.sensor_collection = sensors
+
+
+# It should be like this: Each Station has a Month/Months associated with it, and then each Month has one or more
+# Sensors. This
+# way we can
+# account for removal/addition of sensors between months.
+# I've been going a lot back and forth between whether Station should have Months or whether the Month should have
+# one Station. The right approach seems to be that each Station can have one or multiple months loaded with it,
+# and each month has its own Sensors with their own data.
+
+class Station:
+    def __init__(self, name: str, location: [float, float], station_id: str, month: [Month]):
+        self.name = name
+        self.location = location
+        self.id = station_id
+        self.month_collection = month
 
 
 class DataCollection:
 
-    def __init__(self, month: [Month]):
-        self.months = month
+    def __init__(self, month: Month = None):
+        if month is None:
+            months = []
+        self.months = months
+
+    def add_sensor(self, month: Month):
+        self.months.append(month)
