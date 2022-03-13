@@ -78,6 +78,17 @@ generated .py file:
 
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
 
+### Package building problems
+
+Scipy and utide might not get picked up by the PyInstaller which would crash the app freezing process (when running fbs freeze). In order to fix this, you will have to navigate to the PyInstaller folder of your python interpretter (/python3.6/site-packages/PyInstaller/hooks) and add a file for each of the libraries that need to be imported and name them hook-[package-name].py. For utide library the contents of this file would look like this:
+```python
+from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files
+hidden_imports=collect_submodules('utide')
+
+datas=collect_data_files('utide')
+```
+See [this](https://stackoverflow.com/questions/51267453/scipy-import-error-with-pyinstaller) and [this](https://stackoverflow.com/questions/49559770/how-do-you-resolve-hidden-imports-not-found-warnings-in-pyinstaller-for-scipy?rq=1) on stack overflow for more info.
 
 ## Authors
 
