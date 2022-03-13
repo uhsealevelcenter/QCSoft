@@ -84,7 +84,7 @@ Scipy and utide might not get picked up by the PyInstaller which would crash the
 ```python
 from PyInstaller.utils.hooks import collect_submodules
 from PyInstaller.utils.hooks import collect_data_files
-hidden_imports=collect_submodules('utide')
+hiddenimports=collect_submodules('utide')
 
 datas=collect_data_files('utide')
 ```
