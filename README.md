@@ -99,6 +99,14 @@ You will have to run the following command:
 sudo apt-get install libpython3.6-dev
 ```
 
+You might also have to update hidden_imports inside of your /src/build/settings/base.json by adding the following:
+```
+{
+    ... ,
+    "hidden_imports": ["scipy", "utide", "some_other_package_that_you_added"]
+}
+```
+
 
 ## Authors
 
