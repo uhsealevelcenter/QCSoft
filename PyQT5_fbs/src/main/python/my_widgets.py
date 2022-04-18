@@ -763,3 +763,25 @@ class Start(QMainWindow):
         sio.savemat(daily_filename, data_day)
         self.show_custom_message("Success",
                                  "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
+
+        line_str = f'{_data[primary_sensor].name} WOC {year} {month}'
+        sl_round_up = np.ceil(data_day['sealevel']).astype(int) # round up sealevel data and convert to int
+
+        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up] # convert data to string
+
+        daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
+        final_str = ""
+        counter = 1
+        try:
+            with open(daily_filename, 'w') as the_file:
+                for i, sl in enumerate(sl_str):
+                    if i % 11 == 0:
+                        final_str = line_str + str(counter) + " " + ''.join(sl_str[i:i + 11])
+                        the_file.write(final_str + "\n")
+                        counter += 1
+        except IOError as e:
+            self.show_custom_message("Error", "Cannot Save to " + daily_filename + "\n" + str(
+            e) + "\n Please select a different path to save to")
+
+
+
