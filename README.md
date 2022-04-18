@@ -78,6 +78,35 @@ generated .py file:
 
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
 
+### Package freeze and build problems
+
+Scipy and utide might not get picked up by the PyInstaller which would crash the app freezing process (when running fbs freeze). In order to fix this, you will have to navigate to the PyInstaller folder of your python interpretter (/python3.6/site-packages/PyInstaller/hooks) and add a file for each of the libraries that need to be imported and name them hook-[package-name].py. For utide library the contents of this file would look like this:
+```python
+from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files
+hiddenimports=collect_submodules('utide')
+
+datas=collect_data_files('utide')
+```
+See [this](https://stackoverflow.com/questions/51267453/scipy-import-error-with-pyinstaller) and [this](https://stackoverflow.com/questions/49559770/how-do-you-resolve-hidden-imports-not-found-warnings-in-pyinstaller-for-scipy?rq=1) on stack overflow for more info.
+
+If you are on Ubuntu and you get an error message similar to this one when running fbs freeze:
+```
+Unable to find "/usr/include/python3.6m/pyconfig.h" when adding binary and data files.
+```
+You will have to run the following command:
+```
+sudo apt-get install libpython3.6-dev
+```
+
+You might also have to update hidden_imports inside of your /src/build/settings/base.json by adding the following:
+```
+{
+    ... ,
+    "hidden_imports": ["scipy", "utide", "some_other_package_that_you_added"]
+}
+```
+
 
 ## Authors
 

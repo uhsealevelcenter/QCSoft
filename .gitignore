@@ -2,3 +2,5 @@
 **/__pycache__/
 **/target/
 PyQT5_fbs/src/build/settings/secret.json
+*.xml
+*.pyc
