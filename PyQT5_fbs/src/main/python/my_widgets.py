@@ -1,28 +1,19 @@
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
-
 import os
 
 import numpy as np
-from interactive_plot import PointBrowser
-from sensor import Sensor, Station
-from extractor2 import DataExtractor
-from dialogs import DateDialog
-import settings as st
-import pandas._libs.tslibs.np_datetime
-import pandas._libs.tslibs.nattype
-import pandas._libs.skiplist
-from pandas import Series, date_range
-import filtering as filt
-from uhslcdesign import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow
+from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
+from pandas import Series, date_range
+
+import filtering as filt
+import settings as st
+from dialogs import DateDialog
+from interactive_plot import PointBrowser
 
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
+    pass
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -647,7 +638,7 @@ class Start(QMainWindow):
                 file_name = 't' + station_num + year_str + month_str
                 file_extension = '.dat'
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name+file_extension, 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name + file_extension, 'w') as the_file:
                         for lin in prd_list[m]:
                             the_file.write(lin + "\n")
                         for line in assem_data[m]:
@@ -655,7 +646,8 @@ class Start(QMainWindow):
                         # Each file ends with two lines of 80 9s that's why adding an additional one
                         the_file.write('9' * 80 + "\n")
                     self.show_custom_message("Success",
-                                             "Success \n" + file_name+file_extension + " Saved to " + st.get_path(st.SAVE_KEY) + "\n")
+                                             "Success \n" + file_name + file_extension + " Saved to " + st.get_path(
+                                                 st.SAVE_KEY) + "\n")
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(
                         e) + "\n Please select a different path to save to")
@@ -685,15 +677,16 @@ class Start(QMainWindow):
             time = filt.datenum2(self.sens_objects[key].get_time_vector())
             data_obj = [time, sl_data]
             # transposing the data so that it matches the shape of the UHSLC matlab format
-            matlab_obj = {'NNNN': file_name+key.lower(), file_name+key.lower(): np.transpose(data_obj, (1, 0))}
+            matlab_obj = {'NNNN': file_name + key.lower(), file_name + key.lower(): np.transpose(data_obj, (1, 0))}
             try:
-                sio.savemat(save_path+'/'+file_name+key.lower()+'.mat', matlab_obj)
+                sio.savemat(save_path + '/' + file_name + key.lower() + '.mat', matlab_obj)
                 self.show_custom_message("Success",
-                                             "Success \n" + file_name+key.lower()+'.mat' + " Saved to " + st.get_path(st.HF_PATH) + "\n")
+                                         "Success \n" + file_name + key.lower() + '.mat' + " Saved to " + st.get_path(
+                                             st.HF_PATH) + "\n")
             except IOError as e:
-                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(st.HF_PATH) + "\n" + str(
+                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
+                    st.HF_PATH) + "\n" + str(
                     e) + "\n Please select a different path to save to")
-
 
     def save_fast_delivery(self, _data):
         import scipy.io as sio
@@ -765,23 +758,20 @@ class Start(QMainWindow):
                                  "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
 
         monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
-        # Remove nans, replace with 9999
+        # Remove nans, replace with 9999 to match the legacy files
         nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
         data_day['sealevel'][nan_ind] = 9999
         sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
 
-        # Remove 9999 and replace with empty value (check with fee if this is the way it is done?
-
-
-
         # right justify with 5 spaces
-        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up] # convert data to string
+        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
 
         daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
 
-        # format the date string to match the legacy .dat format
+        # format the date and name strings to match the legacy .dat format
         month_str = str(month).rjust(2, ' ')
-        line_begin_str = f'{_data[primary_sensor].name} WOC {year}{month_str}'
+        station_name = _data[primary_sensor].name.ljust(7)
+        line_begin_str = f'{station_name}WOC {year}{month_str}'
         counter = 1
         try:
             with open(daily_filename, 'w') as the_file:
@@ -796,7 +786,4 @@ class Start(QMainWindow):
                         counter += 1
         except IOError as e:
             self.show_custom_message("Error", "Cannot Save to " + daily_filename + "\n" + str(
-            e) + "\n Please select a different path to save to")
-
-
-
+                e) + "\n Please select a different path to save to")

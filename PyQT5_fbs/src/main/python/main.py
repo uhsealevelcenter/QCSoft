@@ -1,23 +1,25 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QPalette, QColor
 from fbs_runtime.application_context import ApplicationContext, cached_property
 from PyQt5.QtWidgets import QMainWindow
+
+from extractor2 import DataExtractor
+from sensor import Station, Sensor
 from uhslcdesign import Ui_MainWindow
 
 from my_widgets import *
+
 # import darkdetect
 
 if is_pyqt5():
-    from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 else:
-    from matplotlib.backends.backend_qt4agg import (
-            FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
+    pass
 from matplotlib.figure import Figure
 
-class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
-    def run(self):                              # 2. Implement run()
+
+class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
+    def run(self):  # 2. Implement run()
         version = self.build_settings["version"]
         name = self.build_settings["app_name"]
         # if sys.platform == 'darwin' and darkdetect.isDark():
@@ -28,11 +30,12 @@ class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
         #     self.app.setPalette(p)
         self.window.setWindowTitle(name + " v" + str(version))
         self.window.show()
-        return self.app.exec_()                 # 3. End run() with this line
+        return self.app.exec_()  # 3. End run() with this line
 
     @cached_property
     def window(self):
         return ApplicationWindow()
+
 
 class ApplicationWindow(QMainWindow):
     def __init__(self):
@@ -59,7 +62,8 @@ class ApplicationWindow(QMainWindow):
         opents_file = self.ui.actionOpen_TS
         opents_file.triggered.connect(self.open_ts)
 
-    def file_open(self, reload = False, ts = False):
+    # @staticmethod
+    def file_open(self, reload=False, ts=False):
         if not reload:
             # filters = "s*.dat;; ts*.dat"
             if ts:
@@ -86,9 +90,9 @@ class ApplicationWindow(QMainWindow):
             pass
         else:
             self.critical_dialog(title="ERROR",
-            text="Warning, wrong files selected",
-            info_text="The files need to belong to the adjacent months and the same station. Please select valid files to continue",
-            details=''''MAC:
+                                 text="Warning, wrong files selected",
+                                 info_text="The files need to belong to the adjacent months and the same station. Please select valid files to continue",
+                                 details=''''MAC:
             The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
             The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
             ''')
@@ -107,8 +111,6 @@ class ApplicationWindow(QMainWindow):
             de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
             line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
             # loaded for a particular station. Added as an attribute to respective sensor objects
-
-
 
             self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
 
@@ -198,13 +200,16 @@ class ApplicationWindow(QMainWindow):
             sys.exit()
         else:
             pass
+
     def get_loaded_files(self):
         self.file_open(reload=True)
+
     def open_ts(self):
-        self.file_open(reload=False, ts = True)
+        self.file_open(reload=False, ts=True)
         # return self.file_name;
 
+
 if __name__ == '__main__':
-    appctxt = AppContext()                      # 4. Instantiate the subclass
-    exit_code = appctxt.run()                   # 5. Invoke run()
+    appctxt = AppContext()  # 4. Instantiate the subclass
+    exit_code = appctxt.run()  # 5. Invoke run()
     sys.exit(exit_code)
