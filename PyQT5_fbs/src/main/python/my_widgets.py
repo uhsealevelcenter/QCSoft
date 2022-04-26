@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
@@ -8,7 +9,9 @@ import filtering as filt
 import settings as st
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
+
 from sensor import *
+
 
 if is_pyqt5():
     pass
@@ -758,3 +761,34 @@ class Start(QMainWindow):
         sio.savemat(daily_filename, data_day)
         self.show_custom_message("Success",
                                  "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
+
+        monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
+        # Remove nans, replace with 9999 to match the legacy files
+        nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
+        data_day['sealevel'][nan_ind] = 9999
+        sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
+
+        # right justify with 5 spaces
+        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
+
+        daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
+
+        # format the date and name strings to match the legacy .dat format
+        month_str = str(month).rjust(2, ' ')
+        station_name = _data[primary_sensor].name.ljust(7)
+        line_begin_str = f'{station_name}WOC {year}{month_str}'
+        counter = 1
+        try:
+            with open(daily_filename, 'w') as the_file:
+                for i, sl in enumerate(sl_str):
+                    if i % 11 == 0:
+                        line_str = line_begin_str + str(counter) + " " + ''.join(sl_str[i:i + 11])
+                        if counter == 3:
+                            line_str = line_str.ljust(75)
+                            final_str = line_str[:-5] + str(monthly_mean)
+                            line_str = final_str
+                        the_file.write(line_str + "\n")
+                        counter += 1
+        except IOError as e:
+            self.show_custom_message("Error", "Cannot Save to " + daily_filename + "\n" + str(
+                e) + "\n Please select a different path to save to")

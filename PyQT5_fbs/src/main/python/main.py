@@ -1,11 +1,16 @@
 import sys
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from fbs_runtime.application_context import ApplicationContext, cached_property
+from PyQt5.QtWidgets import QMainWindow
+
+from extractor2 import DataExtractor
+from sensor import Station, Sensor
 
 from extractor2 import DataExtractor
 from my_widgets import *
 from uhslcdesign import Ui_MainWindow
+
 
 # import darkdetect
 
@@ -14,6 +19,7 @@ if is_pyqt5():
 else:
     pass
 
+from matplotlib.figure import Figure
 
 class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
     def run(self):  # 2. Implement run()
