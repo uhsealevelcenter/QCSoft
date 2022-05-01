@@ -98,15 +98,6 @@ class ApplicationWindow(QMainWindow):
             # in_file = open(name[0],'r')
             self.month_count = len(self.file_name[0])
             print('FILENAME', self.file_name[0][0])
-            # self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
-
-            comb_data = np.ndarray(
-                0)  # ndarray of concatonated data for all the months that were loaded for a particular station
-            comb_time_col = []  # combined rows of all time columns for all the months that were loaded for a
-            # particular station
-            # de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
-            line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
-            # loaded for a particular station. Added as an attribute to respective sensor objects
 
             self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
 
@@ -115,53 +106,22 @@ class ApplicationWindow(QMainWindow):
             months = []
             for j in range(self.month_count):
                 month = DataExtractor(self.file_name[0][j])
-                # month_int = month.init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
+                # An empty sensor, used to create "ALL" radio button in the GUI
                 all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
                 month.sensors.add_sensor(all_sensor)
                 # month = Month(month=month_int, sensors=month.sensors)
                 months.append(month)
-            # The reason de[0] is used is because the program only allows to load
-            # multiple months for the same station, so the station name will be the same
-            # station_name = de[0].headers[0][:6]
-            # my_station = Station(station_name, de[0].loc)
-            # comb_headers = []
-            #
-            # # Cycle through all the Sensors
+
             # # The reason de[0] is used is because the program only allows to load
             # # multiple months for the same station, so the station sensors should be the same
             # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-            # sensors = SensorCollection()
-            # for i in range(len(de[0].sensor_ids)):
-            #     # cycle through all the months loaded (ie. DataExtractor objects)
-            #     for d in de:
-            #         comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
-            #         comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
-            #         comb_headers.append(d.headers[i])
-            #
-            #     # Populate new data structures
-            #     sensor = Sensor(de[0].frequencies[i], de[-1].refs[i], de[0].sensor_ids[i][-3:], de[0].init_dates[i],
-            #                     comb_data, comb_time_col, comb_headers,
-            #                     len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
-            #     sensors.add_sensor(sensor)
-            #
-            #     # Empty the combined data
-            #     comb_time_col = []
-            #     comb_data = np.ndarray(0)
-            #     comb_headers = []
-            #     # self.start_screen.sens_objects["ALL"] = {}
-            #
-            # # An empty sensor, used to create "ALL" radio button in the GUI
-            # all_sensor = Sensor(None, None, 'ALL', None, None, None, None, None)
-            # sensors.add_sensor(all_sensor)
-            #
-            # station = Station(de[0].headers[0][3:6], de[0].loc, de[0].headers[0][:3], sensors)
             name = months[0].headers[0][3:6]
             location = months[0].loc
             station_id = months[0].headers[0][:3]
 
             station = Station(name=name, location=location, station_id=station_id, month=months)
             # Todo: pass station here instead of sensors object
-            self.start_screen.sens_objects = station.month_collection[0].sensor_collection.sensors
+            self.start_screen.station = station
             self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 
         except (FileNotFoundError, IndexError) as e:

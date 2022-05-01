@@ -113,7 +113,7 @@ class Start(QMainWindow):
     def __init__(self, parent=None):
         super(Start, self).__init__()
         self.ui = parent
-        self.sens_objects = {}  ## Collection of Sensor objects for station for one month
+        self.station = None
         self.home()
 
     def home(self):
@@ -201,7 +201,7 @@ class Start(QMainWindow):
             self.ui.ref_level_btn.setEnabled(True)
             self.sens_str = btn.text()
             self._update_top_canvas(btn.text())
-            self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+            self.ui.lineEdit.setText(self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
             self.update_graph_values()
 
         # Update residual buttons and graph when the top sensor is changed
@@ -229,7 +229,8 @@ class Start(QMainWindow):
         # we want the sensor data object to point to self.browser.data and not self.browser.data.copy()
         # because when the self.browser.data is modified on the graph
         # the sensor data object will automatically be modified as well
-        self.sens_objects[self.sens_str].data = self.browser.data
+        # self.station[self.sens_str].data = self.browser.data
+        self.station.aggregate_months['data'][self.sens_str] = self.browser.data
 
     def on_residual_sensor_changed(self):
         self._residual_ax.cla()
@@ -252,10 +253,10 @@ class Start(QMainWindow):
 
         if all:
             lineEditText = 'No Header -- Plotting all sensors'
-            sens_objects = self.sens_objects
+            sens_objects = self.station.aggregate_months['data']
             title = 'Relative levels = signal - average over selected period'
         else:
-            lineEditText = self.sens_objects[self.sens_str].header[0]
+            lineEditText = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header
             sens_objects = [self.sens_str]
             title = 'Tide Prediction'
         self.ui.lineEdit.setText(lineEditText)
@@ -266,8 +267,8 @@ class Start(QMainWindow):
             if sens == "ALL":
                 pass
             else:
-                data_flat = self.sens_objects[sens].get_flat_data()
-                time = self.sens_objects[sens].get_time_vector()
+                data_flat = self.station.aggregate_months['data'][sens]
+                time = self.station.aggregate_months['time'][sens]
                 nines_ind = np.where(data_flat == 9999)
                 data_flat[nines_ind] = float('nan')
                 if all:
@@ -305,20 +306,22 @@ class Start(QMainWindow):
         if mode == "Hourly":
             data_obj = {}
 
-            sl_data = self.sens_objects[sens_str1].get_flat_data().copy()
+            sl_data = self.station.aggregate_months["data"][sens_str1].copy()
             sl_data = self.remove_9s(sl_data)
-            sl_data = sl_data - int(self.sens_objects[sens_str1].height)
-            data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.sens_objects[sens_str1].get_time_vector()),
+            sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
+            data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
+                                                                     sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
-            sl_data2 = self.sens_objects[sens_str2].get_flat_data().copy()
+            sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
             sl_data2 = self.remove_9s(sl_data2)
-            sl_data2 = sl_data2 - int(self.sens_objects[sens_str2].height)
-            data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.sens_objects[sens_str2].get_time_vector()),
+            sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
+            data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
+                                                                     sens_str2]),
                                            'station': '014', 'sealevel': sl_data2}
 
-            year = self.sens_objects[sens_str2].date.astype(object).year
-            month = self.sens_objects[sens_str2].date.astype(object).month
+            year = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date
+            month = self.station.month_collection[0].sensor_collection.sensors[sens_str2].month
             data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
                                         filt.datetime(year, month + 1, 1, 0, 0, 0))
 
@@ -341,7 +344,8 @@ class Start(QMainWindow):
             else:
                 resid = newd1 - newd2[:newd1.size]
 
-            time = date_range(self.sens_objects[sens_str1].date, periods=resid.size, freq='1min')
+            time = date_range(self.station.month_collection[0].sensor_collection.sensors[sens_str1].date,
+                              periods=resid.size, freq='1min')
             self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid, sens_str1, sens_str2, "Residual",
                               is_interactive=False)
 
@@ -376,7 +380,7 @@ class Start(QMainWindow):
         self._residual_ax.figure.canvas.draw()
 
     def _update_top_canvas(self, sens):
-        data_flat = self.sens_objects[sens].get_flat_data()
+        data_flat = self.station.aggregate_months['data'][sens]
         nines_ind = np.where(data_flat == 9999)
         # nonines_data = data_flat.copy()
         # nonines_data[nines_ind] = float('nan')
@@ -398,7 +402,7 @@ class Start(QMainWindow):
             self.browser.onDataEnd -= self.show_message
             self.browser.disconnect()
         # time = np.arange(data_flat.size)
-        time = self.sens_objects[sens].get_time_vector()
+        time = self.station.aggregate_months['time'][sens]
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5, lw=0.5, markersize=3)
 
         self._static_ax.set_title('select a point you would like to remove and press "D"')
@@ -416,7 +420,7 @@ class Start(QMainWindow):
 
     def find_outliers(self, t, data, sens):
 
-        channel_freq = self.sens_objects[sens].rate
+        channel_freq = self.station.month_collection[0].sensor_collection.sensors[sens].rate
         _freq = channel_freq + 'min'
 
         nines_ind = np.where(data == 9999)
@@ -488,17 +492,17 @@ class Start(QMainWindow):
         return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
 
     def resample2(self, sens_str):
-        data = self.sens_objects[sens_str].data.copy()
+        data = self.station.aggregate_months['data'][sens_str].copy()
         nines_ind = np.where(data == 9999)
         data[nines_ind] = float('nan')
         ave = np.nanmean(data)
         datas = data[0:-1] - ave  # int(self.sens_objects[sens_str].height)
         datae = data[1:] - ave  # int(self.sens_objects[sens_str].height)
-        yc = (datae - datas) / int(self.sens_objects[sens_str].rate)
+        yc = (datae - datas) / int(self.station.month_collection[0].sensor_collection.sensors[sens_str].rate)
 
         min_data = []
         for j in range(0, len(datas)):
-            for i in range(0, int(self.sens_objects[sens_str].rate)):
+            for i in range(0, int(self.station.month_collection[0].sensor_collection.sensors[sens_str].rate)):
                 min_data.append(float(datas[j] + yc[j]))
         # nan_ind = np.argwhere(np.isnan(min_data))
         # min_data[nan_ind] = 9999
@@ -521,16 +525,20 @@ class Start(QMainWindow):
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
                 if result:
-                    REF_diff = int(str(self.ui.refLevelEdit.text())) - int(self.sens_objects[self.sens_str].height)
-                    new_REF = REF_diff + int(self.sens_objects[self.sens_str].height)
+                    REF_diff = int(str(self.ui.refLevelEdit.text())) - int(
+                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].height)
+                    new_REF = REF_diff + int(
+                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].height)
                     # offset the data
                     self.browser.offset_data(ISOstring, REF_diff)
                     # format the new reference to a 4 character string (i.e add leading zeros if necessary)
                     # update the header
-                    new_header = self.sens_objects[self.sens_str].header[0][:60] + '{:04d}'.format(new_REF) + \
-                                 self.sens_objects[self.sens_str].header[0][64:]
-                    self.sens_objects[self.sens_str].header[0] = new_header
-                    self.ui.lineEdit.setText(self.sens_objects[self.sens_str].header[0])
+                    new_header = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[
+                                 :60] + '{:04d}'.format(new_REF) + \
+                                 self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[64:]
+                    self.station[self.sens_str].month_collection[0].sensor_collection.sensors.header = new_header
+                    self.ui.lineEdit.setText(
+                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
                     print("Succesfully changed to: ", str(self.ui.refLevelEdit.text()))
 
             else:
@@ -554,10 +562,10 @@ class Start(QMainWindow):
 
     def save_to_ts_files(self):
         # Deleting tkey "ALL" from the list of sensors
-        if "ALL" in self.sens_objects:
-            del self.sens_objects["ALL"]
-        if (self.sens_objects):
-            months = len(self.sens_objects["PRD"].line_count)  # amount of months loaded
+        if "ALL" in self.station:
+            del self.station["ALL"]
+        if (self.station):
+            months = len(self.station["PRD"].line_count)  # amount of months loaded
             # print("Amount of months loaded", months)
             assem_data = [[] for j in range(months)]  # initial an empty list of lists with the number of months
             # nan_ind = np.argwhere(np.isnan(self.browser.data))
@@ -572,28 +580,28 @@ class Start(QMainWindow):
             for m in range(months):
                 # Cycle through each month loaded, where key is the sensor name
                 # Use value instead of self.sens_objects[key]?
-                for key, value in self.sens_objects.items():
+                for key, value in self.station.items():
                     # Add header
                     # separate PRD from the rest because it has to be saved on the top file
                     if (key == "PRD"):
-                        prd_list[m].append(self.sens_objects[key].header[m].strip("\n"))
+                        prd_list[m].append(self.station[key].header[m].strip("\n"))
                     else:
-                        assem_data[m].append(self.sens_objects[key].header[m].strip("\n"))
+                        assem_data[m].append(self.station[key].header[m].strip("\n"))
                     # The ugly range is calculating start and end line numbers for each month that was Loaded
                     # so that the data can be saved to separate, monthly files
                     for i in range(
-                            sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:]),
-                            sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:]) +
-                            self.sens_objects[key].line_count[m]):
+                            sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:]),
+                            sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:]) +
+                            self.station[key].line_count[m]):
                         # File formatting is differs based on the sampling rate of a sensor
-                        if (int(self.sens_objects[key].rate) >= 5):
+                        if (int(self.station[key].rate) >= 5):
                             # Get only sealevel reading, without anything else (no time/date etc)
                             data = ''.join('{:5.0f}'.format(e) for e in
-                                           self.sens_objects[key].data.flatten()[i * 12:12 + i * 12].tolist())
+                                           self.station[key].data.flatten()[i * 12:12 + i * 12].tolist())
                             # The columns/rows containing only time/data and no sealevel measurements
-                            it_col_formatted = '  ' + self.sens_objects[key].type + '  ' + \
-                                               self.sens_objects[key].time_info[i][8:12].strip()[-2:] + \
-                                               self.sens_objects[key].time_info[i][12:20]
+                            it_col_formatted = '  ' + self.station[key].type + '  ' + \
+                                               self.station[key].time_info[i][8:12].strip()[-2:] + \
+                                               self.station[key].time_info[i][12:20]
                             # assem_data.append(info_time_col[i][0:]+data)
                             if (key == "PRD"):
                                 prd_list[m].append(''.join(it_col_formatted) + data)
@@ -601,10 +609,10 @@ class Start(QMainWindow):
                                 assem_data[m].append(''.join(it_col_formatted) + data)
                         else:
                             data = ''.join('{:4.0f}'.format(e) for e in
-                                           self.sens_objects[key].data.flatten()[i * 15:15 + i * 15].tolist())
-                            it_col_formatted = '  ' + self.sens_objects[key].type + '  ' + \
-                                               self.sens_objects[key].time_info[i][8:12].strip()[-2:] + \
-                                               self.sens_objects[key].time_info[i][12:20]
+                                           self.station[key].data.flatten()[i * 15:15 + i * 15].tolist())
+                            it_col_formatted = '  ' + self.station[key].type + '  ' + \
+                                               self.station[key].time_info[i][8:12].strip()[-2:] + \
+                                               self.station[key].time_info[i][12:20]
                             # assem_data.append(info_time_col[i][0:]+data)
                             assem_data[m].append(''.join(it_col_formatted) + data)
                     if (key == "PRD"):
@@ -613,12 +621,12 @@ class Start(QMainWindow):
                         assem_data[m].append('9' * 80)
                 del data
                 # find the start date lines of each monp file that was loaded
-                date_str = self.sens_objects[key].time_info[
-                    sum(self.sens_objects[key].line_count[:]) - sum(self.sens_objects[key].line_count[m:])]
+                date_str = self.station[key].time_info[
+                    sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:])]
                 month_int = int(date_str[12:14][-2:])
                 month_str = "{:02}".format(month_int)
                 year_str = date_str[8:12][-2:]
-                station_num = self.sens_objects[key].type[0:-3]
+                station_num = self.station[key].type[0:-3]
                 file_name = 't' + station_num + year_str + month_str
                 file_extension = '.dat'
                 try:
@@ -635,7 +643,7 @@ class Start(QMainWindow):
                 except IOError as e:
                     self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(
                         e) + "\n Please select a different path to save to")
-                self.save_fast_delivery(self.sens_objects)
+                self.save_fast_delivery(self.station)
                 self.save_mat_high_fq(file_name)
             # if result == True:
             #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
@@ -654,11 +662,11 @@ class Start(QMainWindow):
                                      "to be saved. Click save again once selected.")
             return
 
-        for key, value in self.sens_objects.items():
-            sl_data = self.sens_objects[key].get_flat_data().copy()
+        for key, value in self.station.items():
+            sl_data = self.station[key].get_flat_data().copy()
             sl_data = self.remove_9s(sl_data)
-            sl_data = sl_data - int(self.sens_objects[key].height)
-            time = filt.datenum2(self.sens_objects[key].get_time_vector())
+            sl_data = sl_data - int(self.station[key].height)
+            time = filt.datenum2(self.station[key].get_time_vector())
             data_obj = [time, sl_data]
             # transposing the data so that it matches the shape of the UHSLC matlab format
             matlab_obj = {'NNNN': file_name + key.lower(), file_name + key.lower(): np.transpose(data_obj, (1, 0))}

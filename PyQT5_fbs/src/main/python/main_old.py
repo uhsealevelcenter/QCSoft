@@ -1,9 +1,9 @@
-import sys
 import logging
+import sys
 import traceback
 
 from fbs_runtime.application_context import ApplicationContext, cached_property
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, QtGui, is_pyqt5
+from matplotlib.backends.qt_compat import QtGui
 
 from my_widgets import *
 
@@ -164,7 +164,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             # in_file = open(name[0],'r')
             self.month_count = len(self.file_name[0])
             print('FILENAME', self.file_name[0][0])
-            self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
+            self.start_screen.station = {}  # Collection of Sensor objects for station for one month
 
             comb_data = np.ndarray(
                 0)  # ndarray of concatonated data for all the months that were loaded for a particular station
@@ -197,20 +197,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
                     line_count.append(len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
                     comb_headers.append(d.headers[i])
-                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
-                                                                                  de[-1].refs[i], de[0].sensor_ids[i],
-                                                                                  de[0].init_dates[i], comb_data,
-                                                                                  comb_time_col, comb_headers)
-                self.start_screen.sens_objects[
+                self.start_screen.station[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
+                                                                             de[-1].refs[i], de[0].sensor_ids[i],
+                                                                             de[0].init_dates[i], comb_data,
+                                                                             comb_time_col, comb_headers)
+                self.start_screen.station[
                     de[0].sensor_ids[i][-3:]].line_num = line_count  # adding a line_num attribute for each sensor
                 # Empty the combined data
                 comb_time_col = []
                 comb_data = np.ndarray(0)
                 line_count = []
                 comb_headers = []
-                self.start_screen.sens_objects["ALL"] = {}
+                self.start_screen.station["ALL"] = {}
 
-            self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
+            self.start_screen.make_sensor_buttons(self.start_screen.station)
 
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)
