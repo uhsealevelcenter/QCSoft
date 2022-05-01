@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
@@ -9,9 +8,7 @@ import filtering as filt
 import settings as st
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
-
 from sensor import *
-
 
 if is_pyqt5():
     pass
@@ -302,25 +299,12 @@ class Start(QMainWindow):
                 self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
-        # resample_freq = min(int(self.sens_objects[sens_str1].rate), int(self.sens_objects[sens_str2].rate))
-        # _freq = str(resample_freq)+'min'
-        #
-        # # Get a date range to create pandas time Series
-        # # using the sampling frequency of the sensor
-        # rng1 = date_range(self.sens_objects[sens_str1].date, periods = self.sens_objects[sens_str1].data.size, freq=_freq)
-        # ts1 = Series(self.sens_objects[sens_str1].data, rng1)
-        #
-        # rng2 = date_range(self.sens_objects[sens_str2].date, periods = self.sens_objects[sens_str2].data.size, freq=_freq)
-        # ts2 = Series(self.sens_objects[sens_str2].data, rng2)
-
         # resample the data and linearly interpolate the missing values
         # upsampled = ts.resample(_freq)
         # interp = upsampled.interpolate()
         if mode == "Hourly":
             data_obj = {}
-            # data_obj["prd"]={'time':filt.datenum2(self.sens_objects["PRD"].get_time_vector()), 'station':'014', 'sealevel':self.sens_objects["PRD"].get_flat_data().copy()}
-            # for key in self.sens_objects.keys():
-            #     print("KEY", key)
+
             sl_data = self.sens_objects[sens_str1].get_flat_data().copy()
             sl_data = self.remove_9s(sl_data)
             sl_data = sl_data - int(self.sens_objects[sens_str1].height)
@@ -352,15 +336,11 @@ class Start(QMainWindow):
         else:
             newd1 = self.resample2(sens_str1)
             newd2 = self.resample2(sens_str2)
-            # newd1 = ts1.resample(_freq).interpolate()
-            # newd2 = ts2.resample(_freq).interpolate()
-            if (newd1.size > newd2.size):
+            if newd1.size > newd2.size:
                 resid = newd2 - newd1[:newd2.size]
             else:
                 resid = newd1 - newd2[:newd1.size]
 
-            # time = np.array([self.sens_objects[sens_str1].date + np.timedelta64(i*int(1), 'm') for i in range(resid.size)])
-            # time = np.arange(resid.size)
             time = date_range(self.sens_objects[sens_str1].date, periods=resid.size, freq='1min')
             self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid, sens_str1, sens_str2, "Residual",
                               is_interactive=False)
@@ -580,7 +560,7 @@ class Start(QMainWindow):
             months = len(self.sens_objects["PRD"].line_count)  # amount of months loaded
             # print("Amount of months loaded", months)
             assem_data = [[] for j in range(months)]  # initial an empty list of lists with the number of months
-            nan_ind = np.argwhere(np.isnan(self.browser.data))
+            # nan_ind = np.argwhere(np.isnan(self.browser.data))
             # print("NAN INDICES",nan_ind)
             # self.browser.data[nan_ind] = 9999
             # self.sens_objects[self.sens_str].data = self.browser.data
@@ -776,7 +756,7 @@ class Start(QMainWindow):
         # format the date and name strings to match the legacy .dat format
         month_str = str(month).rjust(2, ' ')
         station_name = _data[primary_sensor].name.ljust(7)
-        line_begin_str = f'{station_name}WOC {year}{month_str}'
+        line_begin_str = '{}WOC {}{}'.format(station_name, year, month_str)
         counter = 1
         try:
             with open(daily_filename, 'w') as the_file:

@@ -1,8 +1,11 @@
-import numpy as np
 import re
 
+import numpy as np
 
-class DataExtractor:
+from sensor import SensorCollection, Sensor, Month
+
+
+class DataExtractor(Month):
     """
     Takes a path to the monp dat file
     """
@@ -22,9 +25,13 @@ class DataExtractor:
         self.infos_time_col = {}
         self.prev_date = 0
         self.units = []
-        self.loc = [0,0]
+        self.loc = [0, 0]
 
+        self.sensors = SensorCollection()
         self.parse_file(filename)
+
+        self.month_int = None
+        Month.__init__(self, self.month_int, self.sensors)
 
     def is_header(self, arg):
         """
@@ -189,7 +196,6 @@ class DataExtractor:
                 self.units.append('Imperial')
             else:
                 self.units.append('Metric')
-            
 
             # # Finally, convert the "list of
             # # lists" into a 2D array.
@@ -197,5 +203,14 @@ class DataExtractor:
             self.infos_time_col[self.sensor_ids[sensor][-3:]] = info_time_col
             # self.data_all.append(np.array(data))
             self.data_all[self.sensor_ids[sensor][-3:]] = np.array(data)
+            sensor_type = self.sensor_ids[sensor][-3:]
+            frequency = self.frequencies[sensor]
+            ref_height = self.refs[sensor]
+            header = self.headers[sensor]
 
+            _sensor = Sensor(rate=frequency, height=ref_height, sensor_type=sensor_type,
+                             date=self.init_dates[sensor],
+                             data=np.array(data), time_info=info_time_col, header=header)
+            self.sensors.add_sensor(_sensor)
+        self.month_int = self.init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
         self.in_file.close()

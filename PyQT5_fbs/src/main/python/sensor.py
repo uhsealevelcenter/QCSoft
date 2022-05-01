@@ -10,8 +10,7 @@ class Sensor:
     data   : sea level measurements
     """
 
-    def __init__(self, rate: int, height: int, sensor_type: str, date: str, data: [int], time_info: str, header: str,
-                 line_count: int):
+    def __init__(self, rate: int, height: int, sensor_type: str, date: str, data: [int], time_info: str, header: str):
         self.rate = rate
         self.height = height
         self.type = sensor_type
@@ -19,7 +18,6 @@ class Sensor:
         self.data = data
         self.time_info = time_info
         self.header = header
-        self.line_count = line_count
 
     def get_flat_data(self):
         return self.data.flatten()
@@ -65,14 +63,39 @@ class Station:
         self.location = location
         self.id = station_id
         self.month_collection = month
+        self.aggregate_months = self.combine_months()
+
+    def month_length(self):
+        return len(self.month_collection)
+
+    def combine_months(self):
+        combined_sealevel_data = {}
+        comb_time_vector = {}
+
+        for _month in self.month_collection:
+
+            for key, value in _month.sensor_collection.sensors.items():
+                if 'ALL' not in key:
+                    if key in combined_sealevel_data:
+                        combined_sealevel_data[key] = np.concatenate(
+                            (combined_sealevel_data[key], _month.sensor_collection.sensors[
+                                key].get_flat_data()), axis=0)
+                    else:
+                        combined_sealevel_data[key] = _month.sensor_collection.sensors[key].get_flat_data()
+
+                if 'ALL' not in key:
+                    if key in comb_time_vector:
+                        comb_time_vector[key] = np.concatenate(
+                            (comb_time_vector[key], _month.sensor_collection.sensors[
+                                key].get_time_vector()), axis=0)
+                    else:
+                        comb_time_vector[key] = _month.sensor_collection.sensors[key].get_time_vector()
+        combined = {'data': combined_sealevel_data, 'time': comb_time_vector}
+        return combined
 
 
 class DataCollection:
 
-    def __init__(self, month: Month = None):
-        if month is None:
-            months = []
-        self.months = months
-
-    def add_sensor(self, month: Month):
-        self.months.append(month)
+    def __init__(self, station: Station = None):
+        self.station = station
+        self.sensors = self.combined_months()

@@ -1,16 +1,11 @@
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from fbs_runtime.application_context import ApplicationContext, cached_property
-from PyQt5.QtWidgets import QMainWindow
-
-from extractor2 import DataExtractor
-from sensor import Station, Sensor
 
 from extractor2 import DataExtractor
 from my_widgets import *
 from uhslcdesign import Ui_MainWindow
-
 
 # import darkdetect
 
@@ -19,7 +14,6 @@ if is_pyqt5():
 else:
     pass
 
-from matplotlib.figure import Figure
 
 class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
     def run(self):  # 2. Implement run()
@@ -110,7 +104,7 @@ class ApplicationWindow(QMainWindow):
                 0)  # ndarray of concatonated data for all the months that were loaded for a particular station
             comb_time_col = []  # combined rows of all time columns for all the months that were loaded for a
             # particular station
-            de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
+            # de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
             line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
             # loaded for a particular station. Added as an attribute to respective sensor objects
 
@@ -120,27 +114,11 @@ class ApplicationWindow(QMainWindow):
             # Create DataExtractor for each month that was loaded into program
             months = []
             for j in range(self.month_count):
-                de.append(DataExtractor(self.file_name[0][j]))
-                month_int = de[j].init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
-
-                sensors = SensorCollection()
-                for i in range(len(de[j].sensor_ids)):
-                    sens_rate = de[j].frequencies[i]
-                    height = de[-1].refs[i]
-                    type = de[j].sensor_ids[i][-3:]
-                    date = de[j].init_dates[i]
-                    data = de[j].data_all[type]
-                    time_info_col = de[j].infos_time_col[type]
-                    header = de[j].headers[i]
-                    line_count = len(time_info_col)
-
-                    sensor = Sensor(rate=sens_rate, height=height, sensor_type=type, date=date,
-                                    data=data, time_info=time_info_col, header=header,
-                                    line_count=line_count)
-                    sensors.add_sensor(sensor)
-                all_sensor = Sensor(None, None, 'ALL', None, None, None, None, None)
-                sensors.add_sensor(all_sensor)
-                month = Month(month=month_int, sensors=sensors)
+                month = DataExtractor(self.file_name[0][j])
+                # month_int = month.init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
+                all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
+                month.sensors.add_sensor(all_sensor)
+                # month = Month(month=month_int, sensors=month.sensors)
                 months.append(month)
             # The reason de[0] is used is because the program only allows to load
             # multiple months for the same station, so the station name will be the same
@@ -177,9 +155,9 @@ class ApplicationWindow(QMainWindow):
             # sensors.add_sensor(all_sensor)
             #
             # station = Station(de[0].headers[0][3:6], de[0].loc, de[0].headers[0][:3], sensors)
-            name = de[0].headers[0][3:6]
-            location = de[0].loc
-            station_id = de[0].headers[0][:3]
+            name = months[0].headers[0][3:6]
+            location = months[0].loc
+            station_id = months[0].headers[0][:3]
 
             station = Station(name=name, location=location, station_id=station_id, month=months)
             # Todo: pass station here instead of sensors object
