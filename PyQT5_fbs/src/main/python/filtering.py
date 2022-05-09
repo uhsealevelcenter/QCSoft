@@ -1,9 +1,11 @@
-import os
-import numpy as np
 from datetime import datetime, timedelta
-from utide import solve, reconstruct
+
+import numpy as np
 from scipy import stats
+from utide import solve, reconstruct
+
 import filter_weights as fw
+
 
 def calwts(Tc, S):
     """
@@ -507,20 +509,20 @@ def hr_process_2(_data, yr1, yr2):
     """
     hr_data={}
     for key in _data.keys():
-        if key != 'prd':
-            # compute hourly average
-            [th,xh] = hr_calwts_filt(_data[key]['time'],_data[key]['sealevel'])
+        # if key != 'prd':
+        # compute hourly average
+        [th, xh] = hr_calwts_filt(_data[key]['time'], _data[key]['sealevel'])
 
-            # limit data between yr1 and yr2
-            ky = np.argwhere(np.logical_and(th >= datenum(yr1), th < datenum(yr2)))
-            if len(ky) == 0:
-                continue
-            th = th[ky]
-            xh = xh[ky]
+        # limit data between yr1 and yr2
+        ky = np.argwhere(np.logical_and(th >= datenum(yr1), th < datenum(yr2)))
+        if len(ky) == 0:
+            continue
+        th = th[ky]
+        xh = xh[ky]
 
-            # interpolate predicted tide to hourly time stamp from 15min
-            # pr = np.interp (th, _data['prd']['time'], _data['prd']['sealevel'])
-            hr_data[key] = {'time':th, 'sealevel':xh,'station':_data[key]['station']}
+        # interpolate predicted tide to hourly time stamp from 15min
+        # pr = np.interp (th, _data['prd']['time'], _data['prd']['sealevel'])
+        hr_data[key] = {'time': th, 'sealevel': xh, 'station': _data[key]['station']}
     return hr_data
 
 def day_119filt(_data, _lat):

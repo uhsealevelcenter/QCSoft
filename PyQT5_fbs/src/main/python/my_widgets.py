@@ -216,10 +216,6 @@ class Start(QMainWindow):
     def on_frequency_changed(self, btn):
         print("Frequency changed", btn.text())
         self.mode = btn.text()
-        if (self.mode == "Minute"):
-            self.sensor_dict2["PRD"].setEnabled(True)
-        else:
-            self.sensor_dict2["PRD"].setEnabled(False)
         self.on_residual_sensor_changed()
 
     def update_graph_values(self):
@@ -325,16 +321,10 @@ class Start(QMainWindow):
             data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
                                         filt.datetime(year, month + 1, 1, 0, 0, 0))
 
-            if sens_str1 != "PRD":
-                hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
-                time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
-                self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid, sens_str1, sens_str2,
-                                  "Hourly Residual", is_interactive=False)
-            else:
-                self.show_custom_message("Warning",
-                                         "For hourly residual an actual channel needs to be selected in the top plot.")
-                self.generic_plot(self.ui.mplwidget_bottom.canvas, [0], [0], sens_str1, sens_str2,
-                                  "Choose a channel in the top plot other than PRD", is_interactive=False)
+            hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
+            time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
+            self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid, sens_str1, sens_str2,
+                              "Hourly Residual", is_interactive=False)
 
         else:
             newd1 = self.resample2(sens_str1)
