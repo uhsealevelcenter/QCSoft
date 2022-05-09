@@ -320,8 +320,8 @@ class Start(QMainWindow):
                                                                      sens_str2]),
                                            'station': '014', 'sealevel': sl_data2}
 
-            year = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date
-            month = self.station.month_collection[0].sensor_collection.sensors[sens_str2].month
+            year = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date.astype(object).year
+            month = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date.astype(object).month
             data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
                                         filt.datetime(year, month + 1, 1, 0, 0, 0))
 
@@ -536,7 +536,8 @@ class Start(QMainWindow):
                     new_header = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[
                                  :60] + '{:04d}'.format(new_REF) + \
                                  self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[64:]
-                    self.station[self.sens_str].month_collection[0].sensor_collection.sensors.header = new_header
+                    self.station[self.sens_str].month_collection[0].sensor_collection.sensors[
+                        self.sens_str].header = new_header
                     self.ui.lineEdit.setText(
                         self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
                     print("Succesfully changed to: ", str(self.ui.refLevelEdit.text()))
