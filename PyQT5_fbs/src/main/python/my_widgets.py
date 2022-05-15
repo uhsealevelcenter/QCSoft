@@ -551,6 +551,19 @@ class Start(QMainWindow):
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
+    def save_to_ts_files_NEW(self):
+        # Deleting key "ALL" from the list of sensors
+        if "ALL" in self.station:
+            del self.station["ALL"]
+        if self.station:
+            for month in self.station.month_collection:
+                for sensor, value in month.sensor_collection.sensors:
+                    if sensor == "PRD":
+                        pass
+
+        else:
+            self.show_custom_message("Warning", "You haven't loaded any data.")
+
     def save_to_ts_files(self):
         # Deleting tkey "ALL" from the list of sensors
         if "ALL" in self.station:
