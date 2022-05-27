@@ -129,7 +129,7 @@ class Start(QMainWindow):
         self.toolbar1.update()  # Update the toolbar memory
         # self._residual_fig = self.ui.mplwidget_bottom.canvas.figure
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
-        self.ui.save_btn.clicked.connect(self.save_to_ts_files)
+        self.ui.save_btn.clicked.connect(self.save_to_ts_files_NEW)
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
 
     def make_sensor_buttons(self, sensors):
@@ -552,38 +552,41 @@ class Start(QMainWindow):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
     def save_to_ts_files_NEW(self):
-        # Deleting key "ALL" from the list of sensors
-        if "ALL" in self.station:
-            del self.station["ALL"]
         if self.station:
             for month in self.station.month_collection:
-                for sensor, value in month.sensor_collection.sensors:
-                    id_sens = station.id + sensor
+                for sensor in month.sensor_collection.sensors:
+                    if sensor == "ALL":
+                        return
+                    id_sens = self.station.id + sensor
                     id_sens = id_sens.rjust(8, ' ')
                     year = str(month.sensor_collection.sensors[sensor].date.astype(object).year)[-2:]
                     year = year.rjust(4, ' ')
-                    month = "{:2}".format(month.sensor_collection.sensors[sensor].date.astype(object).month)
-                    day = "{:3}".format(month.sensor_collection.sensors[sensor].date.astype(object).month)
-                    line_num = 0
-                    sl_round_up = np.round(month.sensor_collection.sensors[sensor].data).astype(
-                        int)  # round up sealevel data and convert to int
+                    m = "{:2}".format(month.sensor_collection.sensors[sensor].date.astype(object).month)
+                    day = "{:3}".format(month.sensor_collection.sensors[sensor].date.astype(object).day)
 
-                    # right justify with 5 spaces
-                    sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
                     # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
                     # per row which can be obtained from .data.shape, and divided by the sampling rate. This is true
                     # for all sensors besides PRD. PRD shows the actual hours (increments of 3 per row)
                     if sensor == "PRD":
-                        for line in range(month.sensor_collection.sensors[sensor].data.shape[0]):
-                            line_num = (line % 24*60//month.sensor_collection.sensors[sensor].data.shape[1]//int(month.sensor_collection.sensors[sensor].rate)) * 3
-                            line_num = "{:3}".format(line_num)
-                            line_begin_str = '{}{}{}{}{}'.format(id_sens, year, month, day, line_num)
+                        line_count_multiplier = 3
                     else:
-                        for line in range(month.sensor_collection.sensors[sensor].data.shape[0]):
-                            # the line number resets every so many lines based on the modulo calculation
-                            line_num = line % 24*60//month.sensor_collection.sensors[sensor].data.shape[1]//int(month.sensor_collection.sensors[sensor].rate)
-                            line_num = "{:3}".format(line_num)
-                            line_begin_str = '{}{}{}{}{}'.format(id_sens, year, month, day, line_num)
+                        line_count_multiplier = 1
+                    for row, data_line in month.sensor_collection.sensors[sensor].data:
+                        line_num = (row % 24*60//month.sensor_collection.sensors[sensor].data.shape[1]//int(month.sensor_collection.sensors[sensor].rate)) * line_count_multiplier
+                        line_num = "{:3}".format(line_num)
+                        nan_ind = np.argwhere(np.isnan(data_line))
+                        data_line[nan_ind] = 9999
+                        sl_round_up = np.round(data_line).astype(
+                            int)  # round up sealevel data and convert to int
+
+                        # right justify with 5 spaces
+                        spaces = 4
+                        if int(self.station[key].rate) >= 5:
+                            spaces = 5
+                        data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
+                        line_begin_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
+                        print(line_begin_str)
+
 
                     # Todo:
                     # 1) Add data to the line
