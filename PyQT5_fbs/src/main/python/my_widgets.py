@@ -559,7 +559,7 @@ class Start(QMainWindow):
                 others_text = []
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
-                        return
+                        continue
                     id_sens = self.station.id + key
                     id_sens = id_sens.rjust(8, ' ')
                     year = str(sensor.date.astype(object).year)[-2:]
@@ -572,8 +572,12 @@ class Start(QMainWindow):
                     # for all sensors besides PRD. PRD shows the actual hours (increments of 3 per row)
                     if key == "PRD":
                         line_count_multiplier = 3
+                        prd_text.append(sensor.header)
                     else:
+                        if key == "PRS":
+                            print("ya")
                         line_count_multiplier = 1
+                        others_text.append(sensor.header)
                     for row, data_line in enumerate(sensor.data):
                         line_num = (row % 24 * 60 // sensor.data.shape[1] // int(
                             sensor.rate)) * line_count_multiplier
@@ -590,11 +594,24 @@ class Start(QMainWindow):
                         data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
                         full_line_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
                         print(full_line_str)
+                        if key == "PRD":
+                            prd_text.append(full_line_str + "\n")
+                        else:
+                            others_text.append(full_line_str + "\n")
 
                     # Todo:
-                    # 1) Add data to the line
-                    # 2) Append lines, for each sensor, make sure PRD is at the top
+                    # 2) Assemble sensor data by appending full_line_str, for each sensor, make sure PRD is at the top
                     # 3) Save list to .dat file
+                prd_text.append(80 * '9' + '\n')
+                try:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + 'nemanja_test2022' + '.dat', 'w') as the_file:
+                        for lin in prd_text:
+                            the_file.write(lin)
+                        for lin in others_text:
+                            the_file.write(lin)
+                        the_file.write(80 * '9')
+                except IOError as e:
+                    print(e)
 
 
         else:
