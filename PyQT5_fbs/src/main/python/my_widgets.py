@@ -552,27 +552,31 @@ class Start(QMainWindow):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
     def save_to_ts_files_NEW(self):
+
         if self.station:
             for month in self.station.month_collection:
-                for sensor in month.sensor_collection.sensors:
-                    if sensor == "ALL":
+                prd_text = []
+                others_text = []
+                for key, sensor in month.sensor_collection.items():
+                    if key == "ALL":
                         return
-                    id_sens = self.station.id + sensor
+                    id_sens = self.station.id + key
                     id_sens = id_sens.rjust(8, ' ')
-                    year = str(month.sensor_collection.sensors[sensor].date.astype(object).year)[-2:]
+                    year = str(sensor.date.astype(object).year)[-2:]
                     year = year.rjust(4, ' ')
-                    m = "{:2}".format(month.sensor_collection.sensors[sensor].date.astype(object).month)
-                    day = "{:3}".format(month.sensor_collection.sensors[sensor].date.astype(object).day)
+                    m = "{:2}".format(sensor.date.astype(object).month)
+                    day = "{:3}".format(sensor.date.astype(object).day)
 
                     # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
                     # per row which can be obtained from .data.shape, and divided by the sampling rate. This is true
                     # for all sensors besides PRD. PRD shows the actual hours (increments of 3 per row)
-                    if sensor == "PRD":
+                    if key == "PRD":
                         line_count_multiplier = 3
                     else:
                         line_count_multiplier = 1
-                    for row, data_line in month.sensor_collection.sensors[sensor].data:
-                        line_num = (row % 24*60//month.sensor_collection.sensors[sensor].data.shape[1]//int(month.sensor_collection.sensors[sensor].rate)) * line_count_multiplier
+                    for row, data_line in enumerate(sensor.data):
+                        line_num = (row % 24 * 60 // sensor.data.shape[1] // int(
+                            sensor.rate)) * line_count_multiplier
                         line_num = "{:3}".format(line_num)
                         nan_ind = np.argwhere(np.isnan(data_line))
                         data_line[nan_ind] = 9999
@@ -581,12 +585,11 @@ class Start(QMainWindow):
 
                         # right justify with 5 spaces
                         spaces = 4
-                        if int(self.station[key].rate) >= 5:
+                        if int(sensor.rate) >= 5:
                             spaces = 5
                         data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
-                        line_begin_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
-                        print(line_begin_str)
-
+                        full_line_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
+                        print(full_line_str)
 
                     # Todo:
                     # 1) Add data to the line

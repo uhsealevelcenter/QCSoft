@@ -39,6 +39,21 @@ class SensorCollection:
     def add_sensor(self, sensor: Sensor):
         self.sensors[sensor.type] = sensor
 
+    def __getitem__(self, name):
+        return self.sensors[name]
+
+    def __iter__(self):
+        return iter(self.sensors)
+
+    def keys(self):
+        return self.sensors.keys()
+
+    def items(self):
+        return self.sensors.items()
+
+    def values(self):
+        return self.sensors.values()
+
 
 class Month:
 
