@@ -566,25 +566,26 @@ class Start(QMainWindow):
                     year = str(sensor.date.astype(object).year)[-2:]
                     year = year.rjust(4, ' ')
                     m = "{:2}".format(sensor.date.astype(object).month)
-                    day = "{:3}".format(sensor.date.astype(object).day)
+                    # day = "{:3}".format(sensor.date.astype(object).day)
 
                     # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
                     # per row which can be obtained from .data.shape, and divided by the sampling rate. The number
-                    # given by that calculation tells after how many rows to reset the counter. This is true
-                    # for all sensors besides PRD. PRD shows the actual hours (increments of 3 per row)
+                    # given by that calculation tells after how many rows to reset the counter, that is how many rows of
+                    # data per day. This is true for all sensors besides PRD. PRD shows the actual hours (increments of
+                    # 3 per row)
                     # TODO: ask Fee if there are any other sensors that have 15 minute sampling rate and check the
                     # monp file if there is
                     if key == "PRD":
                         line_count_multiplier = 3
                         prd_text.append(sensor.header)
                     else:
-                        if key == "PRS":
-                            print("ya")
                         line_count_multiplier = 1
                         others_text.append(sensor.header)
                     for row, data_line in enumerate(sensor.data):
-                        line_num = (row % (24 * 60 // sensor.data.shape[1] // int(
-                            sensor.rate))) * line_count_multiplier
+                        rows_per_day = 24 * 60 // sensor.data.shape[1] // int(sensor.rate)
+                        line_num = (row % rows_per_day) * line_count_multiplier
+                        day = 1 + (row // rows_per_day)
+                        day = "{:3}".format(day)
                         line_num = "{:3}".format(line_num)
                         nan_ind = np.argwhere(np.isnan(data_line))
                         data_line[nan_ind] = 9999
@@ -597,7 +598,7 @@ class Start(QMainWindow):
                             spaces = 5
                         data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
                         full_line_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
-                        print(full_line_str)
+
                         if key == "PRD":
                             prd_text.append(full_line_str + "\n")
                         else:
@@ -607,8 +608,14 @@ class Start(QMainWindow):
                     if others_text:
                         others_text.append(80 * '9' + '\n')
                 prd_text.append(80 * '9' + '\n')
+
+                month_int = 5
+                month_str = "{:02}".format(month_int)
+                year_str = "15"
+                station_num = self.station.id
+                file_name = 't' + station_num + year_str + month_str
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/' + 'nemanja_test2022' + '.dat', 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name + '.dat', 'w') as the_file:
                         for lin in prd_text:
                             the_file.write(lin)
                         for lin in others_text:

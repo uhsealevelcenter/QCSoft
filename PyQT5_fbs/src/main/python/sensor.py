@@ -122,7 +122,6 @@ class Station:
             for key, value in _month.sensor_collection.sensors.items():
                 if 'ALL' not in key:
                     if key in combined_data:
-                        # TODO: some magic sauce to get the appropriate months/sensors data from all data
                         data_size = _month.sensor_collection.sensors[key].data.size
                         data_shape = _month.sensor_collection.sensors[key].data.shape
                         _month.sensor_collection.sensors[key].data = np.reshape(combined_data[key][i:data_size],
