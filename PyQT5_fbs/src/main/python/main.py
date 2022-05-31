@@ -120,7 +120,6 @@ class ApplicationWindow(QMainWindow):
             station_id = months[0].headers[0][:3]
 
             station = Station(name=name, location=location, station_id=station_id, month=months)
-            # Todo: pass station here instead of sensors object
             self.start_screen.station = station
             self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 

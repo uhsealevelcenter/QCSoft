@@ -84,6 +84,10 @@ class Station:
         return len(self.month_collection)
 
     def combine_months(self):
+        """
+        Combines sealevel data for multiple months for each sensor
+        """
+
         combined_sealevel_data = {}
         comb_time_vector = {}
 
@@ -107,6 +111,22 @@ class Station:
                         comb_time_vector[key] = _month.sensor_collection.sensors[key].get_time_vector()
         combined = {'data': combined_sealevel_data, 'time': comb_time_vector}
         return combined
+
+    def back_propagate_changes(self, combined_data):
+        """
+        Because we combine multiple months of data, we need the ability to split the data back to individual months as
+        we are making changes to data (during cleaning) and we need to save those changes.
+        :param combined_data: an object comprised of sensors keys holding sea level data
+        """
+        for i, _month in enumerate(self.month_collection):
+            for key, value in _month.sensor_collection.sensors.items():
+                if 'ALL' not in key:
+                    if key in combined_data:
+                        # TODO: some magic sauce to get the appropriate months/sensors data from all data
+                        data_size = _month.sensor_collection.sensors[key].data.size
+                        data_shape = _month.sensor_collection.sensors[key].data.shape
+                        _month.sensor_collection.sensors[key].data = np.reshape(combined_data[key][i:data_size],
+                                                                                data_shape)
 
 
 class DataCollection:

@@ -554,6 +554,7 @@ class Start(QMainWindow):
     def save_to_ts_files_NEW(self):
 
         if self.station:
+            self.station.back_propagate_changes(self.station.aggregate_months['data'])
             for month in self.station.month_collection:
                 prd_text = []
                 others_text = []
@@ -568,8 +569,11 @@ class Start(QMainWindow):
                     day = "{:3}".format(sensor.date.astype(object).day)
 
                     # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
-                    # per row which can be obtained from .data.shape, and divided by the sampling rate. This is true
+                    # per row which can be obtained from .data.shape, and divided by the sampling rate. The number
+                    # given by that calculation tells after how many rows to reset the counter. This is true
                     # for all sensors besides PRD. PRD shows the actual hours (increments of 3 per row)
+                    # TODO: ask Fee if there are any other sensors that have 15 minute sampling rate and check the
+                    # monp file if there is
                     if key == "PRD":
                         line_count_multiplier = 3
                         prd_text.append(sensor.header)
@@ -579,8 +583,8 @@ class Start(QMainWindow):
                         line_count_multiplier = 1
                         others_text.append(sensor.header)
                     for row, data_line in enumerate(sensor.data):
-                        line_num = (row % 24 * 60 // sensor.data.shape[1] // int(
-                            sensor.rate)) * line_count_multiplier
+                        line_num = (row % (24 * 60 // sensor.data.shape[1] // int(
+                            sensor.rate))) * line_count_multiplier
                         line_num = "{:3}".format(line_num)
                         nan_ind = np.argwhere(np.isnan(data_line))
                         data_line[nan_ind] = 9999
@@ -599,9 +603,9 @@ class Start(QMainWindow):
                         else:
                             others_text.append(full_line_str + "\n")
 
-                    # Todo:
-                    # 2) Assemble sensor data by appending full_line_str, for each sensor, make sure PRD is at the top
-                    # 3) Save list to .dat file
+                    # If there is data for sensor other than PRD append 9s at the nd
+                    if others_text:
+                        others_text.append(80 * '9' + '\n')
                 prd_text.append(80 * '9' + '\n')
                 try:
                     with open(st.get_path(st.SAVE_KEY) + '/' + 'nemanja_test2022' + '.dat', 'w') as the_file:
@@ -612,8 +616,6 @@ class Start(QMainWindow):
                         the_file.write(80 * '9')
                 except IOError as e:
                     print(e)
-
-
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
