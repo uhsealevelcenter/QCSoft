@@ -118,14 +118,21 @@ class Station:
         we are making changes to data (during cleaning) and we need to save those changes.
         :param combined_data: an object comprised of sensors keys holding sea level data
         """
+
         for i, _month in enumerate(self.month_collection):
             for key, value in _month.sensor_collection.sensors.items():
                 if 'ALL' not in key:
+                    # We need to keep track of the previous data size so we can slide the index for each new month
                     if key in combined_data:
+                        if i == 0:
+                            previous_data_size = 0
+                        else:
+                            previous_data_size = self.month_collection[i - 1].sensor_collection.sensors[key].data.size
                         data_size = _month.sensor_collection.sensors[key].data.size
                         data_shape = _month.sensor_collection.sensors[key].data.shape
-                        _month.sensor_collection.sensors[key].data = np.reshape(combined_data[key][i:data_size],
-                                                                                data_shape)
+                        _month.sensor_collection.sensors[key].data = np.reshape(
+                            combined_data[key][previous_data_size * i:data_size + previous_data_size * i],
+                            data_shape)
 
 
 class DataCollection:
