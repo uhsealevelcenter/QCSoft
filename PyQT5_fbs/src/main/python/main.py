@@ -112,7 +112,7 @@ class ApplicationWindow(QMainWindow):
                 # month = Month(month=month_int, sensors=month.sensors)
                 months.append(month)
 
-            # # The reason de[0] is used is because the program only allows to load
+            # # The reason months[0] is used is because the program only allows to load
             # # multiple months for the same station, so the station sensors should be the same
             # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
             name = months[0].headers[0][3:6]

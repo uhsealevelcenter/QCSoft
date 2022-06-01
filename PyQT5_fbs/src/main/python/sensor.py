@@ -57,10 +57,10 @@ class SensorCollection:
 
 class Month:
 
-    def __init__(self, month: int, sensors: SensorCollection):
+    def __init__(self, month: int, year: int, sensors: SensorCollection):
         self.month = month
-        self.name = 'january'  # Todo: this is a placeholder, the month name should ne calculated based on the
-        # integer 1 through 12
+        self.year = year
+        self.name = 'january'  # Todo: this is a placeholder, the month name should be mapped to integers 1 through 12
         self.sensor_collection = sensors
 
 

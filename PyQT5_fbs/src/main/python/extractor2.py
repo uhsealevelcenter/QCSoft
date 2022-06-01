@@ -30,8 +30,9 @@ class DataExtractor(Month):
         self.sensors = SensorCollection()
         self.parse_file(filename)
 
-        self.month_int = None
-        Month.__init__(self, self.month_int, self.sensors)
+        self.month_int = int(filename.split('.dat')[0][-2:])
+        self.year = int(filename.split('.dat')[0][-4:-2])
+        Month.__init__(self, self.month_int, self.year, self.sensors)
 
     def is_header(self, arg):
         """
@@ -50,10 +51,10 @@ class DataExtractor(Month):
         return sorted(set(range(start, end + 1)).difference(L))
 
     def extract_lat(self, header):
-        NorS = header[25] # Extract a character to see if it is North or South
+        NorS = header[25]  # Extract a character to see if it is North or South
         lat_deg = header[18:20]
         lat_min = header[21:23]
-        lat_dec_deg = int(lat_deg) + int(lat_min)/60
+        lat_dec_deg = int(lat_deg) + int(lat_min) / 60
 
         return -lat_dec_deg if NorS == "S" else lat_dec_deg
 
@@ -61,7 +62,7 @@ class DataExtractor(Month):
         WorE = header[40]  # West or East (W or E)
         long_deg = header[32:35]
         long_min = header[36:38]
-        long_dec_deg = int(long_deg) + int(long_min)/60
+        long_dec_deg = int(long_deg) + int(long_min) / 60
 
         return -long_dec_deg if WorE == "W" else long_dec_deg
 
@@ -190,7 +191,7 @@ class DataExtractor(Month):
                 # And add this row to the
                 # entire data set.
                 data.append(row_data)
-                
+
             # Data prior to Spet 2015 was stored in Imperial units.
             if init_date < np.datetime64('2015-09-01'):
                 self.units.append('Imperial')
@@ -212,5 +213,4 @@ class DataExtractor(Month):
                              date=self.init_dates[sensor],
                              data=np.array(data), time_info=info_time_col, header=header)
             self.sensors.add_sensor(_sensor)
-        self.month_int = self.init_dates[0].astype('datetime64[M]').astype(int) % 12 + 1
         self.in_file.close()

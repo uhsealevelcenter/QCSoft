@@ -609,9 +609,10 @@ class Start(QMainWindow):
                         others_text.append(80 * '9' + '\n')
                 prd_text.append(80 * '9' + '\n')
 
-                month_int = 5
+                # Todo: Make filename change dynamic based on the month and year of data loaded
+                month_int = month.month
                 month_str = "{:02}".format(month_int)
-                year_str = "15"
+                year_str = "{:02}".format(month.year)
                 station_num = self.station.id
                 file_name = 't' + station_num + year_str + month_str
                 try:
