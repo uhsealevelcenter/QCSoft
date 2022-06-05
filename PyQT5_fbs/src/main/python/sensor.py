@@ -139,20 +139,26 @@ class Station:
         :param combined_data: an object comprised of sensors keys holding sea level data
         """
 
+        so_far_index = {}  # Keeps track of data sizes for each sensor for each month so that we can separate it
+        # properly by each month
         for i, _month in enumerate(self.month_collection):
             for key, value in _month.sensor_collection.sensors.items():
                 if 'ALL' not in key:
                     # We need to keep track of the previous data size so we can slide the index for each new month
                     if key in combined_data:
                         if i == 0:
-                            previous_data_size = 0
+                            so_far_index[key] = 0
                         else:
                             previous_data_size = self.month_collection[i - 1].sensor_collection.sensors[key].data.size
+                            so_far_index[key] = so_far_index[key] + previous_data_size
                         data_size = _month.sensor_collection.sensors[key].data.size
                         data_shape = _month.sensor_collection.sensors[key].data.shape
-                        _month.sensor_collection.sensors[key].data = np.reshape(
-                            combined_data[key][previous_data_size * i:data_size + previous_data_size * i],
-                            data_shape)
+                        try:
+                            _month.sensor_collection.sensors[key].data = np.reshape(
+                                combined_data[key][so_far_index[key]:data_size + so_far_index[key]],
+                                data_shape)
+                        except ValueError as e:
+                            print(e, "i: {}, month: {}, sensor:{}".format(i, _month.month, key))
 
 
 class DataCollection:
