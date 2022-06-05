@@ -57,11 +57,32 @@ class SensorCollection:
 
 class Month:
 
-    def __init__(self, month: int, year: int, sensors: SensorCollection):
+    def __init__(self, month: int, year: int, sensors: SensorCollection, st_id: str):
         self.month = month
         self.year = year
         self.name = 'january'  # Todo: this is a placeholder, the month name should be mapped to integers 1 through 12
         self.sensor_collection = sensors
+        self.station_id = st_id
+
+    def assemble_root_filename(self):
+        month_int = self.month
+        month_str = "{:02}".format(month_int)
+        year_str = "{:02}".format(self.year)
+        station_num = self.station_id
+        root_filename = '{}{}{}'.format(station_num, year_str, month_str)
+        return root_filename
+
+    def get_ts_filename(self):
+        file_name = '{}{}{}'.format('t', self.assemble_root_filename(), '.dat')
+        return file_name
+
+    def get_mat_filename(self):
+        sensor_file = {}
+        for key, sensor in self.sensor_collection.items():
+            file_name = '{}{}{}'.format(self.assemble_root_filename(), key.lower(), '.mat')
+            sensor_file[key] = file_name
+
+        return sensor_file
 
 
 # It should be like this: Each Station has a Month/Months associated with it, and then each Month has one or more
@@ -73,10 +94,9 @@ class Month:
 # and each month has its own Sensors with their own data.
 
 class Station:
-    def __init__(self, name: str, location: [float, float], station_id: str, month: [Month]):
+    def __init__(self, name: str, location: [float, float], month: [Month]):
         self.name = name
         self.location = location
-        self.id = station_id
         self.month_collection = month
         self.aggregate_months = self.combine_months()
 

@@ -561,7 +561,7 @@ class Start(QMainWindow):
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
                         continue
-                    id_sens = self.station.id + key
+                    id_sens = month.station_id + key
                     id_sens = id_sens.rjust(8, ' ')
                     year = str(sensor.date.astype(object).year)[-2:]
                     year = year.rjust(4, ' ')
@@ -608,15 +608,9 @@ class Start(QMainWindow):
                     if others_text:
                         others_text.append(80 * '9' + '\n')
                 prd_text.append(80 * '9' + '\n')
-
-                # Todo: Make filename change dynamic based on the month and year of data loaded
-                month_int = month.month
-                month_str = "{:02}".format(month_int)
-                year_str = "{:02}".format(month.year)
-                station_num = self.station.id
-                file_name = 't' + station_num + year_str + month_str
+                file_name = month.get_ts_filename()
                 try:
-                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name + '.dat', 'w') as the_file:
+                    with open(st.get_path(st.SAVE_KEY) + '/' + file_name, 'w') as the_file:
                         for lin in prd_text:
                             the_file.write(lin)
                         for lin in others_text:
@@ -624,6 +618,7 @@ class Start(QMainWindow):
                         the_file.write(80 * '9')
                 except IOError as e:
                     print(e)
+            self.save_mat_high_fq()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
@@ -718,7 +713,7 @@ class Start(QMainWindow):
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
     # this function is called for every month of data loaded
-    def save_mat_high_fq(self, file_name):
+    def save_mat_high_fq(self):
         import scipy.io as sio
         if st.get_path(st.HF_PATH):
             save_path = st.get_path(st.HF_PATH)
@@ -728,24 +723,46 @@ class Start(QMainWindow):
                                      "frequency matlab data "
                                      "to be saved. Click save again once selected.")
             return
+        for month in self.station.month_collection:
+            for key, sensor in month.sensor_collection.items():
+                if key == "ALL":
+                    continue
+                sl_data = sensor.get_flat_data().copy()
+                sl_data = self.remove_9s(sl_data)
+                sl_data = sl_data - int(sensor.height)
+                time = filt.datenum2(sensor.get_time_vector())
+                data_obj = [time, sl_data]
 
-        for key, value in self.station.items():
-            sl_data = self.station[key].get_flat_data().copy()
-            sl_data = self.remove_9s(sl_data)
-            sl_data = sl_data - int(self.station[key].height)
-            time = filt.datenum2(self.station[key].get_time_vector())
-            data_obj = [time, sl_data]
-            # transposing the data so that it matches the shape of the UHSLC matlab format
-            matlab_obj = {'NNNN': file_name + key.lower(), file_name + key.lower(): np.transpose(data_obj, (1, 0))}
-            try:
-                sio.savemat(save_path + '/' + file_name + key.lower() + '.mat', matlab_obj)
-                self.show_custom_message("Success",
-                                         "Success \n" + file_name + key.lower() + '.mat' + " Saved to " + st.get_path(
-                                             st.HF_PATH) + "\n")
-            except IOError as e:
-                self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
-                    st.HF_PATH) + "\n" + str(
-                    e) + "\n Please select a different path to save to")
+                file_name = month.get_mat_filename()[key]
+                # transposing the data so that it matches the shape of the UHSLC matlab format
+                matlab_obj = {'NNNN': file_name, file_name: np.transpose(data_obj, (1, 0))}
+                try:
+                    sio.savemat(save_path + '/' + file_name, matlab_obj)
+                    self.show_custom_message("Success",
+                                             "Success \n" + file_name + " Saved to " + st.get_path(
+                                                 st.HF_PATH) + "\n")
+                except IOError as e:
+                    self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
+                        st.HF_PATH) + "\n" + str(
+                        e) + "\n Please select a different path to save to")
+
+        # for key, value in self.station.items():
+        #     sl_data = self.station[key].get_flat_data().copy()
+        #     sl_data = self.remove_9s(sl_data)
+        #     sl_data = sl_data - int(self.station[key].height)
+        #     time = filt.datenum2(self.station[key].get_time_vector())
+        #     data_obj = [time, sl_data]
+        #     # transposing the data so that it matches the shape of the UHSLC matlab format
+        #     matlab_obj = {'NNNN': file_name + key.lower(), file_name + key.lower(): np.transpose(data_obj, (1, 0))}
+        #     try:
+        #         sio.savemat(save_path + '/' + file_name + key.lower() + '.mat', matlab_obj)
+        #         self.show_custom_message("Success",
+        #                                  "Success \n" + file_name + key.lower() + '.mat' + " Saved to " + st.get_path(
+        #                                      st.HF_PATH) + "\n")
+        #     except IOError as e:
+        #         self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
+        #             st.HF_PATH) + "\n" + str(
+        #             e) + "\n Please select a different path to save to")
 
     def save_fast_delivery(self, _data):
         import scipy.io as sio

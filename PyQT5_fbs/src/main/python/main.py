@@ -117,9 +117,8 @@ class ApplicationWindow(QMainWindow):
             # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
             name = months[0].headers[0][3:6]
             location = months[0].loc
-            station_id = months[0].headers[0][:3]
 
-            station = Station(name=name, location=location, station_id=station_id, month=months)
+            station = Station(name=name, location=location, month=months)
             self.start_screen.station = station
             self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 
