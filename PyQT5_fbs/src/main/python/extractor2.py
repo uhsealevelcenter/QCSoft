@@ -26,6 +26,7 @@ class DataExtractor(Month):
         self.prev_date = 0
         self.units = []
         self.loc = [0, 0]
+        self.string_location = None
 
         self.sensors = SensorCollection()
         self.parse_file(filename)
@@ -66,6 +67,9 @@ class DataExtractor(Month):
 
         return -long_dec_deg if WorE == "W" else long_dec_deg
 
+    def extract_string_location(self, header):
+        return header[14:41]
+
     def parse_file(self, filename):
         list_of_lists = []
         a_list = []
@@ -92,6 +96,7 @@ class DataExtractor(Month):
             self.sensor_ids.append(station_num + header[6:9])
 
         self.loc = [self.extract_lat(self.headers[0]), self.extract_long(self.headers[0])]
+        self.string_location = self.extract_string_location(self.headers[0])
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted

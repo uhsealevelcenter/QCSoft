@@ -618,7 +618,7 @@ class Start(QMainWindow):
                         the_file.write(80 * '9')
                 except IOError as e:
                     print(e)
-            self.save_mat_high_fq()
+            # self.save_mat_high_fq()
             self.save_fast_delivery()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
@@ -791,6 +791,7 @@ class Start(QMainWindow):
                                                 'station': station_num, 'sealevel': sl_data}
 
             year = _data[primary_sensor].date.astype(object).year
+            two_digit_year = str(year)[-2:]
             # month = _data[primary_sensor].date.astype(object).month
 
             #  Filter to hourly
@@ -810,8 +811,10 @@ class Start(QMainWindow):
             data_day = filt.day_119filt(hourly_merged, self.station.location[0])
 
             month_str = "{:02}".format(month.month)
-            hourly_filename = save_path + '/' + 'th' + str(station_num) + str(year)[-2:] + month_str + '.mat'
-            daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.mat'
+            hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str + '.mat'
+            daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str + '.mat'
+
+            # Save .mat
             sio.savemat(hourly_filename, data_hr)
             sio.savemat(daily_filename, data_day)
             self.show_custom_message("Success",
@@ -828,7 +831,7 @@ class Start(QMainWindow):
 
             daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
 
-            # format the date and name strings to match the legacy .dat format
+            # format the date and name strings to match the legacy daily .dat format
             month_str = str(month.month).rjust(2, ' ')
             station_name = month.station_id + self.station.name
             line_begin_str = '{}WOC {}{}'.format(station_name.ljust(7), year, month_str)
@@ -847,3 +850,15 @@ class Start(QMainWindow):
             except IOError as e:
                 self.show_custom_message("Error", "Cannot Save to " + daily_filename + "\n" + str(
                     e) + "\n Please select a different path to save to")
+
+            # Save to legacy .dat hourly format
+            metadata_header = '{}{}FSL{}  {} TMZONE=GMT    REF=00000 60 {} {} M {}'. \
+                format(month.station_id,
+                       self.station.name[0:3],
+                       primary_sensor,
+                       month.string_location,
+                       month.name.upper(),
+                       two_digit_year,
+                       str(month.day_count))
+
+            print(metadata_header)

@@ -1,3 +1,5 @@
+import calendar
+
 import numpy as np
 
 
@@ -60,9 +62,10 @@ class Month:
     def __init__(self, month: int, year: int, sensors: SensorCollection, st_id: str):
         self.month = month
         self.year = year
-        self.name = 'january'  # Todo: this is a placeholder, the month name should be mapped to integers 1 through 12
+        self.name = calendar.month_abbr[month]
         self.sensor_collection = sensors
         self.station_id = st_id
+        self.day_count = calendar.monthrange(year, month)[1]
 
     def assemble_root_filename(self):
         month_int = self.month
