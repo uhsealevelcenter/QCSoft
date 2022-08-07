@@ -836,6 +836,7 @@ class Start(QMainWindow):
             sl_hr_str = [str(x).rjust(5, ' ') for x in sl_hr_round_up]  # convert data to string
 
             daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
+            hourly_filename = save_path + '/' + 'th' + str(station_num) + str(year)[-2:] + month_str + '.dat'
 
             # format the date and name strings to match the legacy daily .dat format
             month_str = str(month.month).rjust(2, ' ')
@@ -866,3 +867,27 @@ class Start(QMainWindow):
                        month.name.upper(),
                        two_digit_year,
                        str(month.day_count))
+            line_begin = '{}{} {} {}{}'.format(month.station_id,
+                                               self.station.name[0:3],
+                                               primary_sensor,
+                                               str(year),
+                                               str(month.month).rjust(2))
+
+            day = 1
+            counter = 0
+            try:
+                with open(hourly_filename, 'w') as the_file:
+                    the_file.write(metadata_header + "\n")
+                    for i, sl in enumerate(sl_hr_str):
+                        if i != 0 and i % 24 == 0:
+                            counter = 0
+                            day += 1
+                        if i % 12 == 0:
+                            counter += 1
+                            line_str = line_begin + str(day).rjust(2) + str(counter) + ''.join(
+                                sl_hr_str[i:i + 12]).rjust(5)
+                            the_file.write(line_str + "\n")
+
+            except IOError as e:
+                self.show_custom_message("Error", "Cannot Save to " + hourly_filename + "\n" + str(
+                    e) + "\n Please select a different path to save to")
