@@ -44,6 +44,34 @@ class TestDatFileSave(unittest.TestCase):
                 with io.open(output_filename) as ref_f:
                     self.assertListEqual(list(tst_f), list(ref_f))
 
+        # Repeating all of the above but this time processing multiple months
+        file1 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
+        file2 = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
+        file3 = os.path.join(dirname, 'test_data/monp/ssaba1811.dat')
+
+        truth_file1 = os.path.join(dirname, 'test_data/ts_file_truth/t1231809.dat')
+        truth_file2 = os.path.join(dirname, 'test_data/ts_file_truth/t1231810.dat')
+        truth_file3 = os.path.join(dirname, 'test_data/ts_file_truth/t1231811.dat')
+
+        station_data = load_station_data([file1, file2, file3])
+        station_data_truth = load_station_data([truth_file1, truth_file2, truth_file3])
+
+        data_as_text = assemble_ts_text(station_data)
+        # data_as_text_truth = assemble_ts_text(station_data_truth)
+
+        # Compare the saved file to the ground truth file
+        with tempfile.TemporaryDirectory() as tmp:
+            save_ts_files(data_as_text, tmp)
+            with io.open(tmp + '/' + 't1231809.dat') as tst_f1:
+                with io.open(truth_file1) as ref_f:
+                    self.assertListEqual(list(tst_f1), list(ref_f))
+            with io.open(tmp + '/' + 't1231810.dat') as tst_f2:
+                with io.open(truth_file2) as ref_f:
+                    self.assertListEqual(list(tst_f2), list(ref_f))
+            with io.open(tmp + '/' + 't1231811.dat') as tst_f3:
+                with io.open(truth_file3) as ref_f:
+                    self.assertListEqual(list(tst_f3), list(ref_f))
+
 
 if __name__ == '__main__':
     unittest.main()
