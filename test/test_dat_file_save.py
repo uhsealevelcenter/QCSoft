@@ -7,7 +7,7 @@ from extractor2 import DataExtractor
 from sensor import Station, Sensor
 
 dirname = os.path.dirname(__file__)
-input_filename = os.path.join(dirname, 'test_data/ssaba1810.dat')
+input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
 tmp_dir = os.path.join(dirname, 'test_data/ts_file_tmp')
 # The ground truth output file. Produced by an earlier, better tested software version (0.6)
 # Todo: Ask Fee to produce a ts, hourly, and daily file for an arbitrary station (without cleaning it) and use that output file as the ground truth
