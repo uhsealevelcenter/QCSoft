@@ -167,6 +167,19 @@ def assemble_ts_text(station: Station):
     return months
 
 
+def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
+    # text collection here refers to multiple text files for each month loaded
+    for text_file in text_collection:
+        file_name = text_file[0].get_ts_filename()
+        try:
+            with open(path + '/' + file_name, 'w') as the_file:
+                for lin in text_file[1]:
+                    the_file.write(lin)
+                the_file.write(80 * '9' + '\n')
+        except IOError as e:
+            print(e)
+
+
 class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
@@ -611,24 +624,12 @@ class Start(QMainWindow):
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
-    def save_to_files(self, text_collection, path=st.get_path(st.SAVE_KEY)):
-        # text collection here refers to multiple text files in case we loaded multiple months
-        for text_file in text_collection:
-            file_name = text_file[0].get_ts_filename()
-            try:
-                with open(path + '/' + file_name, 'w') as the_file:
-                    for lin in text_file[1]:
-                        the_file.write(lin)
-                    the_file.write(80 * '9')
-            except IOError as e:
-                print(e)
-
     def save_button(self):
         if self.station:
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = assemble_ts_text(self.station)
-            self.save_to_files(text_data)
+            save_ts_files(text_data)
             self.save_mat_high_fq()
             self.save_fast_delivery()
         else:
