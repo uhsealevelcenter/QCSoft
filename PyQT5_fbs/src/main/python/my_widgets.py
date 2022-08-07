@@ -551,8 +551,8 @@ class Start(QMainWindow):
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
-    def save_to_files(self, station: Station):
-
+    def assemble_ts_text(self, station: Station):
+        months = []
         for month in station.month_collection:
             prd_text = []
             others_text = []
@@ -606,24 +606,30 @@ class Start(QMainWindow):
                 if others_text:
                     others_text.append(80 * '9' + '\n')
             prd_text.append(80 * '9' + '\n')
-            file_name = month.get_ts_filename()
+            prd_text.extend(others_text)
+            months.append([month, prd_text])
+        return months
+
+    def save_to_files(self, text_collection, path=st.get_path(st.SAVE_KEY)):
+        # text collection here refers to multiple text files in case we loaded multiple months
+        for text_file in text_collection:
+            file_name = text_file[0].get_ts_filename()
             try:
-                with open(st.get_path(st.SAVE_KEY) + '/' + file_name, 'w') as the_file:
-                    for lin in prd_text:
-                        the_file.write(lin)
-                    for lin in others_text:
+                with open(path + '/' + file_name, 'w') as the_file:
+                    for lin in text_file[1]:
                         the_file.write(lin)
                     the_file.write(80 * '9')
             except IOError as e:
                 print(e)
-        self.save_mat_high_fq()
-        self.save_fast_delivery()
 
     def save_button(self):
         if self.station:
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
-            self.save_to_files(self.station)
+            text_data = self.assemble_ts_text(self.station)
+            self.save_to_files(text_data)
+            # self.save_mat_high_fq()
+            # self.save_fast_delivery()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
