@@ -618,7 +618,7 @@ class Start(QMainWindow):
                         the_file.write(80 * '9')
                 except IOError as e:
                     print(e)
-            # self.save_mat_high_fq()
+            self.save_mat_high_fq()
             self.save_fast_delivery()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")

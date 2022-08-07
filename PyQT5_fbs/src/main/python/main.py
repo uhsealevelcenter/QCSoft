@@ -34,6 +34,34 @@ class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
         return ApplicationWindow()
 
 
+def load_station_data(file_names):
+    """
+
+    :param file_names: An array of data files to be loaded
+    :return: Station instance with all the data needed for further processing
+    """
+
+    # Create DataExtractor for each month that was loaded into program
+    months = []
+    for file_name in file_names:
+        month = DataExtractor(file_name)
+        # An empty sensor, used to create "ALL" radio button in the GUI
+        all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
+        month.sensors.add_sensor(all_sensor)
+        # month = Month(month=month_int, sensors=month.sensors)
+        months.append(month)
+
+    # # The reason months[0] is used is because the program only allows to load
+    # # multiple months for the same station, so the station sensors should be the same
+    # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
+    name = months[0].headers[0][3:6]
+    location = months[0].loc
+
+    station = Station(name=name, location=location, month=months)
+
+    return station
+
+
 class ApplicationWindow(QMainWindow):
     def __init__(self):
         super(ApplicationWindow, self).__init__()
@@ -96,29 +124,12 @@ class ApplicationWindow(QMainWindow):
 
         try:
             # in_file = open(name[0],'r')
-            self.month_count = len(self.file_name[0])
-            print('FILENAME', self.file_name[0][0])
+            # self.file_name[0] is an array of filenames loaded
+            month_count = len(self.file_name[0])
+            self.ui.lineEdit_2.setText("Loaded: " + str(month_count) + " months")
 
-            self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
+            station = load_station_data(self.file_name[0])
 
-            # data_collection = DataCollection()
-            # Create DataExtractor for each month that was loaded into program
-            months = []
-            for j in range(self.month_count):
-                month = DataExtractor(self.file_name[0][j])
-                # An empty sensor, used to create "ALL" radio button in the GUI
-                all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
-                month.sensors.add_sensor(all_sensor)
-                # month = Month(month=month_int, sensors=month.sensors)
-                months.append(month)
-
-            # # The reason months[0] is used is because the program only allows to load
-            # # multiple months for the same station, so the station sensors should be the same
-            # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-            name = months[0].headers[0][3:6]
-            location = months[0].loc
-
-            station = Station(name=name, location=location, month=months)
             self.start_screen.station = station
             self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 
