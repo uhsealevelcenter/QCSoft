@@ -107,6 +107,66 @@ class HelpScreen(QMainWindow):
             pass
 
 
+def assemble_ts_text(station: Station):
+    months = []
+    for month in station.month_collection:
+        prd_text = []
+        others_text = []
+        for key, sensor in month.sensor_collection.items():
+            if key == "ALL":
+                continue
+            id_sens = month.station_id + key
+            id_sens = id_sens.rjust(8, ' ')
+            year = str(sensor.date.astype(object).year)[-2:]
+            year = year.rjust(4, ' ')
+            m = "{:2}".format(sensor.date.astype(object).month)
+            # day = "{:3}".format(sensor.date.astype(object).day)
+
+            # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
+            # per row which can be obtained from .data.shape, and divided by the sampling rate. The number
+            # given by that calculation tells after how many rows to reset the counter, that is how many rows of
+            # data per day. This is true for all sensors besides PRD. PRD shows the actual hours (increments of
+            # 3 per row)
+            # TODO: ask Fee if there are any other sensors that have 15 minute sampling rate and check the
+            # monp file if there is
+            if key == "PRD":
+                line_count_multiplier = 3
+                prd_text.append(sensor.header)
+            else:
+                line_count_multiplier = 1
+                others_text.append(sensor.header)
+            for row, data_line in enumerate(sensor.data):
+                rows_per_day = 24 * 60 // sensor.data.shape[1] // int(sensor.rate)
+                line_num = (row % rows_per_day) * line_count_multiplier
+                day = 1 + (row // rows_per_day)
+                day = "{:3}".format(day)
+                line_num = "{:3}".format(line_num)
+                nan_ind = np.argwhere(np.isnan(data_line))
+                data_line[nan_ind] = 9999
+                sl_round_up = np.round(data_line).astype(
+                    int)  # round up sealevel data and convert to int
+
+                # right justify with 5 spaces
+                spaces = 4
+                if int(sensor.rate) >= 5:
+                    spaces = 5
+                data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
+                full_line_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
+
+                if key == "PRD":
+                    prd_text.append(full_line_str + "\n")
+                else:
+                    others_text.append(full_line_str + "\n")
+
+            # If there is data for sensor other than PRD append 9s at the nd
+            if others_text:
+                others_text.append(80 * '9' + '\n')
+        prd_text.append(80 * '9' + '\n')
+        prd_text.extend(others_text)
+        months.append([month, prd_text])
+    return months
+
+
 class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
@@ -551,65 +611,6 @@ class Start(QMainWindow):
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
-    def assemble_ts_text(self, station: Station):
-        months = []
-        for month in station.month_collection:
-            prd_text = []
-            others_text = []
-            for key, sensor in month.sensor_collection.items():
-                if key == "ALL":
-                    continue
-                id_sens = month.station_id + key
-                id_sens = id_sens.rjust(8, ' ')
-                year = str(sensor.date.astype(object).year)[-2:]
-                year = year.rjust(4, ' ')
-                m = "{:2}".format(sensor.date.astype(object).month)
-                # day = "{:3}".format(sensor.date.astype(object).day)
-
-                # To get the line counter, it is 60 minutes per hour x 24 hours in a day divided by data points
-                # per row which can be obtained from .data.shape, and divided by the sampling rate. The number
-                # given by that calculation tells after how many rows to reset the counter, that is how many rows of
-                # data per day. This is true for all sensors besides PRD. PRD shows the actual hours (increments of
-                # 3 per row)
-                # TODO: ask Fee if there are any other sensors that have 15 minute sampling rate and check the
-                # monp file if there is
-                if key == "PRD":
-                    line_count_multiplier = 3
-                    prd_text.append(sensor.header)
-                else:
-                    line_count_multiplier = 1
-                    others_text.append(sensor.header)
-                for row, data_line in enumerate(sensor.data):
-                    rows_per_day = 24 * 60 // sensor.data.shape[1] // int(sensor.rate)
-                    line_num = (row % rows_per_day) * line_count_multiplier
-                    day = 1 + (row // rows_per_day)
-                    day = "{:3}".format(day)
-                    line_num = "{:3}".format(line_num)
-                    nan_ind = np.argwhere(np.isnan(data_line))
-                    data_line[nan_ind] = 9999
-                    sl_round_up = np.round(data_line).astype(
-                        int)  # round up sealevel data and convert to int
-
-                    # right justify with 5 spaces
-                    spaces = 4
-                    if int(sensor.rate) >= 5:
-                        spaces = 5
-                    data_str = ''.join([str(x).rjust(spaces, ' ') for x in sl_round_up])  # convert data to string
-                    full_line_str = '{}{}{}{}{}{}'.format(id_sens, year, m, day, line_num, data_str)
-
-                    if key == "PRD":
-                        prd_text.append(full_line_str + "\n")
-                    else:
-                        others_text.append(full_line_str + "\n")
-
-                # If there is data for sensor other than PRD append 9s at the nd
-                if others_text:
-                    others_text.append(80 * '9' + '\n')
-            prd_text.append(80 * '9' + '\n')
-            prd_text.extend(others_text)
-            months.append([month, prd_text])
-        return months
-
     def save_to_files(self, text_collection, path=st.get_path(st.SAVE_KEY)):
         # text collection here refers to multiple text files in case we loaded multiple months
         for text_file in text_collection:
@@ -626,10 +627,10 @@ class Start(QMainWindow):
         if self.station:
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
-            text_data = self.assemble_ts_text(self.station)
+            text_data = assemble_ts_text(self.station)
             self.save_to_files(text_data)
-            # self.save_mat_high_fq()
-            # self.save_fast_delivery()
+            self.save_mat_high_fq()
+            self.save_fast_delivery()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
