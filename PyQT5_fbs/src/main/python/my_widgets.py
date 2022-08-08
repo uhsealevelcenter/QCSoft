@@ -179,10 +179,10 @@ def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
                     the_file.write(lin)
                 the_file.write(80 * '9' + '\n')
                 success.append({'title': "Success", 'message': "Success \n" + file_name + " Saved to " +
-                                                               st.get_path(st.SAVE_KEY) + "\n"})
+                                                               path + "\n"})
         except IOError as e:
             failure.append({'title': "Error", 'message': "Cannot Save to " +
-                                                         st.get_path(st.SAVE_KEY) + "\n" + str(e) +
+                                                         path + "\n" + str(e) +
                                                          "\n Please select a different path to save to"})
     return success, failure
 
