@@ -169,6 +169,8 @@ def assemble_ts_text(station: Station):
 
 def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
     # text collection here refers to multiple text files for each month loaded
+    success = []
+    failure = []
     for text_file in text_collection:
         file_name = text_file[0].get_ts_filename()
         try:
@@ -176,8 +178,13 @@ def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
                 for lin in text_file[1]:
                     the_file.write(lin)
                 the_file.write(80 * '9' + '\n')
+                success.append({'title': "Success", 'message': "Success \n" + file_name + " Saved to " +
+                                                               st.get_path(st.SAVE_KEY) + "\n"})
         except IOError as e:
-            print(e)
+            failure.append({'title': "Error", 'message': "Cannot Save to " +
+                                                         st.get_path(st.SAVE_KEY) + "\n" + str(e) +
+                                                         "\n Please select a different path to save to"})
+    return success, failure
 
 
 class Start(QMainWindow):
@@ -629,7 +636,13 @@ class Start(QMainWindow):
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = assemble_ts_text(self.station)
-            save_ts_files(text_data)
+            success, failure = save_ts_files(text_data)
+            if success:
+                for m in success:
+                    self.show_custom_message(m['title'], m['message'])
+            if failure:
+                for m in failure:
+                    self.show_custom_message(m['title'], m['message'])
             self.save_mat_high_fq()
             self.save_fast_delivery()
         else:
