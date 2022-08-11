@@ -6,6 +6,7 @@ import unittest
 import numpy as np
 import scipy.io as sio
 
+import filtering as filt
 from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq
 
 dirname = os.path.dirname(__file__)
@@ -92,21 +93,26 @@ class TestDatFileSave(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_mat_high_fq(station, tmp_dir, callback=None)
             for month in station.month_collection:
+                # Compare every sensor (one file per sensor)
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
                         continue
                     file_name = month.get_mat_filename()[key]
                     data = sio.loadmat(os.path.join(tmp_dir, file_name))
                     data_trans = data[data['NNNN'][0]].transpose((1, 0))
-                    time_vector = data_trans[0]
-                    sl_data = sensor.get_flat_data().copy()
+                    time_vector_mat = data_trans[0]
+                    time_vector = filt.datenum2(sensor.get_time_vector())
+
+                    sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data
-                    sea_level = data_trans[1] + int(sensor.height)
+                    sea_level_mat = data_trans[1] + int(sensor.height)
                     # Replace back nan data with 9999s
-                    nan_ind = np.argwhere(np.isnan(sea_level))
-                    sea_level[nan_ind] = 9999
-                    # Compare every sensor
-                    self.assertListEqual(sea_level.tolist(), sl_data.tolist())
+                    nan_ind = np.argwhere(np.isnan(sea_level_mat))
+                    sea_level_mat[nan_ind] = 9999
+                    # Compare sea level data
+                    self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
+                    # Compare time vector
+                    self.assertListEqual(time_vector_mat.tolist(), time_vector)
 
 
 if __name__ == '__main__':
