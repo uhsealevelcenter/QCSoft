@@ -1,4 +1,5 @@
 import os
+from typing import Callable
 
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
@@ -167,7 +168,7 @@ def assemble_ts_text(station: Station):
     return months
 
 
-def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
+def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY), callback: Callable = None):
     # text collection here refers to multiple text files for each month loaded
     success = []
     failure = []
@@ -184,6 +185,8 @@ def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY)):
             failure.append({'title': "Error", 'message': "Cannot Save to " +
                                                          path + "\n" + str(e) +
                                                          "\n Please select a different path to save to"})
+    if callback:
+        callback(success, failure)
     return success, failure
 
 
@@ -636,119 +639,34 @@ class Start(QMainWindow):
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = assemble_ts_text(self.station)
-            success, failure = save_ts_files(text_data)
-            if success:
-                for m in success:
-                    self.show_custom_message(m['title'], m['message'])
-            if failure:
-                for m in failure:
-                    self.show_custom_message(m['title'], m['message'])
-            self.save_mat_high_fq()
+            save_ts_files(text_data, callback=self.file_saving_notifications)
+            if st.get_path(st.HF_PATH):
+                save_path = st.get_path(st.HF_PATH)
+            else:
+                self.show_custom_message("Warning",
+                                         "Please select a location where you would like your high "
+                                         "frequency matlab data "
+                                         "to be saved. Click save again once selected.")
+                return
+            self.save_mat_high_fq(self.station, save_path, callback=self.file_saving_notifications)
             self.save_fast_delivery()
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
-    # def save_to_ts_files(self):
-    #     # Deleting tkey "ALL" from the list of sensors
-    #     if "ALL" in self.station:
-    #         del self.station["ALL"]
-    #     if (self.station):
-    #         months = len(self.station["PRD"].line_count)  # amount of months loaded
-    #         # print("Amount of months loaded", months)
-    #         assem_data = [[] for j in range(months)]  # initial an empty list of lists with the number of months
-    #         # nan_ind = np.argwhere(np.isnan(self.browser.data))
-    #         # print("NAN INDICES",nan_ind)
-    #         # self.browser.data[nan_ind] = 9999
-    #         # self.sens_objects[self.sens_str].data = self.browser.data
-    #         # separate PRD from the rest because it has to be saved on the top file
-    #         # Because dictionaries are unordered
-    #         prd_list = [[] for j in range(months)]
-    #
-    #         # Cycle through each month loaded
-    #         for m in range(months):
-    #             # Cycle through each month loaded, where key is the sensor name
-    #             # Use value instead of self.sens_objects[key]?
-    #             for key, value in self.station.items():
-    #                 # Add header
-    #                 # separate PRD from the rest because it has to be saved on the top file
-    #                 if (key == "PRD"):
-    #                     prd_list[m].append(self.station[key].header[m].strip("\n"))
-    #                 else:
-    #                     assem_data[m].append(self.station[key].header[m].strip("\n"))
-    #                 # The ugly range is calculating start and end line numbers for each month that was Loaded
-    #                 # so that the data can be saved to separate, monthly files
-    #                 for i in range(
-    #                         sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:]),
-    #                         sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:]) +
-    #                         self.station[key].line_count[m]):
-    #                     # File formatting is differs based on the sampling rate of a sensor
-    #                     if (int(self.station[key].rate) >= 5):
-    #                         # Get only sealevel reading, without anything else (no time/date etc)
-    #                         data = ''.join('{:5.0f}'.format(e) for e in
-    #                                        self.station[key].data.flatten()[i * 12:12 + i * 12].tolist())
-    #                         # The columns/rows containing only time/data and no sealevel measurements
-    #                         it_col_formatted = '  ' + self.station[key].type + '  ' + \
-    #                                            self.station[key].time_info[i][8:12].strip()[-2:] + \
-    #                                            self.station[key].time_info[i][12:20]
-    #                         # assem_data.append(info_time_col[i][0:]+data)
-    #                         if (key == "PRD"):
-    #                             prd_list[m].append(''.join(it_col_formatted) + data)
-    #                         else:
-    #                             assem_data[m].append(''.join(it_col_formatted) + data)
-    #                     else:
-    #                         data = ''.join('{:4.0f}'.format(e) for e in
-    #                                        self.station[key].data.flatten()[i * 15:15 + i * 15].tolist())
-    #                         it_col_formatted = '  ' + self.station[key].type + '  ' + \
-    #                                            self.station[key].time_info[i][8:12].strip()[-2:] + \
-    #                                            self.station[key].time_info[i][12:20]
-    #                         # assem_data.append(info_time_col[i][0:]+data)
-    #                         assem_data[m].append(''.join(it_col_formatted) + data)
-    #                 if (key == "PRD"):
-    #                     prd_list[m].append('9' * 80)
-    #                 else:
-    #                     assem_data[m].append('9' * 80)
-    #             del data
-    #             # find the start date lines of each monp file that was loaded
-    #             date_str = self.station[key].time_info[
-    #                 sum(self.station[key].line_count[:]) - sum(self.station[key].line_count[m:])]
-    #             month_int = int(date_str[12:14][-2:])
-    #             month_str = "{:02}".format(month_int)
-    #             year_str = date_str[8:12][-2:]
-    #             station_num = self.station[key].type[0:-3]
-    #             file_name = 't' + station_num + year_str + month_str
-    #             file_extension = '.dat'
-    #             try:
-    #                 with open(st.get_path(st.SAVE_KEY) + '/' + file_name + file_extension, 'w') as the_file:
-    #                     for lin in prd_list[m]:
-    #                         the_file.write(lin + "\n")
-    #                     for line in assem_data[m]:
-    #                         the_file.write(line + "\n")
-    #                     # Each file ends with two lines of 80 9s that's why adding an additional one
-    #                     the_file.write('9' * 80 + "\n")
-    #                 self.show_custom_message("Success",
-    #                                          "Success \n" + file_name + file_extension + " Saved to " + st.get_path(
-    #                                              st.SAVE_KEY) + "\n")
-    #             except IOError as e:
-    #                 self.show_custom_message("Error", "Cannot Save to " + st.get_path(st.SAVE_KEY) + "\n" + str(
-    #                     e) + "\n Please select a different path to save to")
-    #             self.save_fast_delivery(self.station)
-    #             self.save_mat_high_fq(file_name)
-    #         # if result == True:
-    #         #     print("Succesfully changed to: ", str(self.refLevelEdit.text()))
-    #     else:
-    #         self.show_custom_message("Warning", "You haven't loaded any data.")
+    def file_saving_notifications(self, success, failure):
+        if success:
+            for m in success:
+                self.show_custom_message(m['title'], m['message'])
+        if failure:
+            for m in failure:
+                self.show_custom_message(m['title'], m['message'])
 
-    def save_mat_high_fq(self):
+    def save_mat_high_fq(self, station: Station, path: str, callback: Callable = None):
         import scipy.io as sio
-        if st.get_path(st.HF_PATH):
-            save_path = st.get_path(st.HF_PATH)
-        else:
-            self.show_custom_message("Warning",
-                                     "Please select a location where you would like your high "
-                                     "frequency matlab data "
-                                     "to be saved. Click save again once selected.")
-            return
-        for month in self.station.month_collection:
+
+        success = []
+        failure = []
+        for month in station.month_collection:
             for key, sensor in month.sensor_collection.items():
                 if key == "ALL":
                     continue
@@ -762,14 +680,16 @@ class Start(QMainWindow):
                 # transposing the data so that it matches the shape of the UHSLC matlab format
                 matlab_obj = {'NNNN': file_name, file_name: np.transpose(data_obj, (1, 0))}
                 try:
-                    sio.savemat(save_path + '/' + file_name, matlab_obj)
-                    self.show_custom_message("Success",
-                                             "Success \n" + file_name + " Saved to " + st.get_path(
-                                                 st.HF_PATH) + "\n")
+                    sio.savemat(path + '/' + file_name, matlab_obj)
+                    success.append(
+                        {'title': "Success", 'message': "Success \n" + file_name + " Saved to " + path + "\n"})
                 except IOError as e:
-                    self.show_custom_message("Error", "Cannot Save to high frequency (.mat) data to" + st.get_path(
-                        st.HF_PATH) + "\n" + str(
-                        e) + "\n Please select a different path to save to")
+                    failure.append({'title': "Error",
+                                    'message': "Cannot Save to high frequency (.mat) data to" + path + "\n" + str(
+                                        e) + "\n Please select a different path to save to"})
+        if callback:
+            callback(success, failure)
+        return success, failure
 
     def save_fast_delivery(self):
         import scipy.io as sio

@@ -24,7 +24,7 @@ class TestDatFileSave(unittest.TestCase):
         # delete all temp files here
         pass
 
-    def test_ts_file_assembly(self):
+    def test_ts_file_assembly_and_save(self):
         # 1) Load the ground truth ts file (the one you get from Fee)
         # 2) Load the monp file for the same station and month
         # 3) Save the monp file to ts (without any cleaning)
@@ -81,6 +81,9 @@ class TestDatFileSave(unittest.TestCase):
             with io.open(tmp + '/' + 't1231811.dat') as tst_f3:
                 with io.open(truth_file3) as ref_f:
                     self.assertListEqual(list(tst_f3), list(ref_f))
+
+    def test_mat_files(self):
+        pass
 
 
 if __name__ == '__main__':
