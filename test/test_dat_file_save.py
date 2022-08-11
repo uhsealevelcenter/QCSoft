@@ -3,7 +3,10 @@ import os
 import tempfile
 import unittest
 
-from main import load_station_data, assemble_ts_text, save_ts_files
+import numpy as np
+import scipy.io as sio
+
+from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -82,8 +85,28 @@ class TestDatFileSave(unittest.TestCase):
                 with io.open(truth_file3) as ref_f:
                     self.assertListEqual(list(tst_f3), list(ref_f))
 
-    def test_mat_files(self):
-        pass
+    def test_mat_hq_files(self):
+        # Test saving data to high frequency .mat format
+        station = self.input_data
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_mat_high_fq(station, tmp_dir, callback=None)
+            for month in station.month_collection:
+                for key, sensor in month.sensor_collection.items():
+                    if key == "ALL":
+                        continue
+                    file_name = month.get_mat_filename()[key]
+                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data_trans = data[data['NNNN'][0]].transpose((1, 0))
+                    time_vector = data_trans[0]
+                    sl_data = sensor.get_flat_data().copy()
+                    # Add the reference height back to .mat data
+                    sea_level = data_trans[1] + int(sensor.height)
+                    # Replace back nan data with 9999s
+                    nan_ind = np.argwhere(np.isnan(sea_level))
+                    sea_level[nan_ind] = 9999
+                    # Compare every sensor
+                    self.assertListEqual(sea_level.tolist(), sl_data.tolist())
 
 
 if __name__ == '__main__':

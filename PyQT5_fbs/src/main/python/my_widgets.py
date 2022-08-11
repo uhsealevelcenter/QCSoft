@@ -190,6 +190,174 @@ def save_ts_files(text_collection, path=st.get_path(st.SAVE_KEY), callback: Call
     return success, failure
 
 
+def remove_9s(data):
+    nines_ind = np.where(data == 9999)
+    data[nines_ind] = float('nan')
+    return data
+
+
+def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
+    import scipy.io as sio
+
+    success = []
+    failure = []
+    for month in station.month_collection:
+        for key, sensor in month.sensor_collection.items():
+            if key == "ALL":
+                continue
+            sl_data = sensor.get_flat_data().copy()
+            sl_data = remove_9s(sl_data)
+            sl_data = sl_data - int(sensor.height)
+            time = filt.datenum2(sensor.get_time_vector())
+            data_obj = [time, sl_data]
+
+            file_name = month.get_mat_filename()[key]
+            # transposing the data so that it matches the shape of the UHSLC matlab format
+            matlab_obj = {'NNNN': file_name, file_name: np.transpose(data_obj, (1, 0))}
+            try:
+                sio.savemat(path + '/' + file_name, matlab_obj)
+                success.append(
+                    {'title': "Success", 'message': "Success \n" + file_name + " Saved to " + path + "\n"})
+            except IOError as e:
+                failure.append({'title': "Error",
+                                'message': "Cannot Save to high frequency (.mat) data to" + path + "\n" + str(
+                                    e) + "\n Please select a different path to save to"})
+    if callback:
+        callback(success, failure)
+    return success, failure
+
+
+def save_fast_delivery(station: Station, save_path: str, din_path: str, callback: Callable = None):
+    # Todo: Refactor this into at least two more functions, one for daily fast deivery and one for hourly,
+    #  each saving to both .mat and .dat
+    import scipy.io as sio
+    success = []
+    failure = []
+    for month in station.month_collection:
+        data_obj = {}
+        _data = month.sensor_collection.sensors
+        station_num = month.station_id
+        primary_sensor = filt.get_channel_priority(din_path, station_num)[
+            0].upper()  # returns multiple sensor in order of importance
+        if primary_sensor not in month.sensor_collection:
+            failure.append({'title': "Error", 'message': "Your .din file says that {} "
+                                                         "is the primary sensor but the file you have loaded does "
+                                                         "not contain that sensor. Hourly and daily data will not be saved.".format(
+                primary_sensor)})
+            return
+        sl_data = _data[primary_sensor].get_flat_data().copy()
+        sl_data = remove_9s(sl_data)
+        sl_data = sl_data - int(_data[primary_sensor].height)
+        data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
+                                            'station': station_num, 'sealevel': sl_data}
+
+        year = _data[primary_sensor].date.astype(object).year
+        two_digit_year = str(year)[-2:]
+        # month = _data[primary_sensor].date.astype(object).month
+
+        #  Filter to hourly
+        data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month.month, 1, 0, 0, 0),
+                                    filt.datetime(year, month.month + 1, 1, 0, 0, 0))
+
+        # for channel parameters see filt.channel_merge function
+        # We are not actually merging channels here (not needed for fast delivery)
+        # But we still need to run the data through the merge function, even though we are only using one channel
+        # in order to get the correct output data format suitable for the daily filter
+        ch_params = [{primary_sensor.lower(): 0}]
+        hourly_merged = filt.channel_merge(data_hr, ch_params)
+
+        # Note that hourly merged returns a channel attribute which is an array of integers representing channel type.
+        # used for a particular day of data. In Fast delivery, all the number should be the same because no merge
+        # int -> channel name mapping is inside of filtering.py var_flag function
+        data_day = filt.day_119filt(hourly_merged, station.location[0])
+
+        month_str = "{:02}".format(month.month)
+        hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str
+        daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str
+
+        monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
+        # Remove nans, replace with 9999 to match the legacy files
+        nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
+        data_day['sealevel'][nan_ind] = 9999
+        hr_flat = np.concatenate(data_hr[primary_sensor.lower()]['sealevel'], axis=0)
+        nan_ind_hr = np.argwhere(np.isnan(hr_flat))
+        hr_flat[nan_ind_hr] = 9999
+        sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
+        sl_hr_round_up = np.round(hr_flat).astype(
+            int)  # round up sealevel data and convert to int
+
+        # right justify with 5 spaces
+        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
+        sl_hr_str = [str(x).rjust(5, ' ') for x in sl_hr_round_up]  # convert data to string
+
+        # format the date and name strings to match the legacy daily .dat format
+        month_str = str(month.month).rjust(2, ' ')
+        station_name = month.station_id + station.name
+        line_begin_str = '{}WOC {}{}'.format(station_name.ljust(7), year, month_str)
+        counter = 1
+        try:
+            sio.savemat(daily_filename + '.mat', data_day)
+            with open(daily_filename + '.dat', 'w') as the_file:
+                for i, sl in enumerate(sl_str):
+                    if i % 11 == 0:
+                        line_str = line_begin_str + str(counter) + " " + ''.join(sl_str[i:i + 11])
+                        if counter == 3:
+                            line_str = line_str.ljust(75)
+                            final_str = line_str[:-(len(str(monthly_mean)) + 1)] + str(monthly_mean)
+                            line_str = final_str
+                        the_file.write(line_str + "\n")
+                        counter += 1
+            success.append({'title': "Success",
+                            'message': "Success \n Daily Date Saved to " + st.get_path(
+                                st.FD_PATH) + "\n"})
+        except IOError as e:
+            failure.append({'title': "Error",
+                            'message': "Cannot Save Daily Data to " + daily_filename + "\n" + str(
+                                e) + "\n Please select a different path to save to"})
+
+        # Save to legacy .dat hourly format
+        metadata_header = '{}{}FSL{}  {} TMZONE=GMT    REF=00000 60 {} {} M {}'. \
+            format(month.station_id,
+                   station.name[0:3],
+                   primary_sensor,
+                   month.string_location,
+                   month.name.upper(),
+                   two_digit_year,
+                   str(month.day_count))
+        line_begin = '{}{} {} {}{}'.format(month.station_id,
+                                           station.name[0:3],
+                                           primary_sensor,
+                                           str(year),
+                                           str(month.month).rjust(2))
+
+        day = 1
+        counter = 0
+        # Save hourly
+        try:
+            sio.savemat(hourly_filename + '.mat', data_hr)
+            with open(hourly_filename + '.dat', 'w') as the_file:
+                the_file.write(metadata_header + "\n")
+                for i, sl in enumerate(sl_hr_str):
+                    if i != 0 and i % 24 == 0:
+                        counter = 0
+                        day += 1
+                    if i % 12 == 0:
+                        counter += 1
+                        line_str = line_begin + str(day).rjust(2) + str(counter) + ''.join(
+                            sl_hr_str[i:i + 12]).rjust(5)
+                        the_file.write(line_str + "\n")
+            success.append({'title': "Success",
+                            'message': "Success \n Hourly Data Saved to " + st.get_path(
+                                st.FD_PATH) + "\n"})
+        except IOError as e:
+            failure.append({'title': "Error",
+                            'message': "Cannot Save Hourly Data to " + hourly_filename + "\n" + str(
+                                e) + "\n Please select a different path to save to"})
+    if callback:
+        callback(success, failure)
+    return success, failure
+
+
 class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
@@ -386,14 +554,14 @@ class Start(QMainWindow):
             data_obj = {}
 
             sl_data = self.station.aggregate_months["data"][sens_str1].copy()
-            sl_data = self.remove_9s(sl_data)
+            sl_data = remove_9s(sl_data)
             sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
             data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
-            sl_data2 = self.remove_9s(sl_data2)
+            sl_data2 = remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
             data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str2]),
@@ -626,11 +794,6 @@ class Start(QMainWindow):
         except ValueError:
             return False
 
-    def remove_9s(self, data):
-        nines_ind = np.where(data == 9999)
-        data[nines_ind] = float('nan')
-        return data
-
     def show_custom_message(self, title, descrip):
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
@@ -648,7 +811,7 @@ class Start(QMainWindow):
                                          "frequency matlab data "
                                          "to be saved. Click save again once selected.")
                 return
-            self.save_mat_high_fq(self.station, save_path, callback=self.file_saving_notifications)
+            save_mat_high_fq(self.station, save_path, callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
@@ -672,7 +835,7 @@ class Start(QMainWindow):
                                          "to be saved. Click save again once selected.")
                 return
 
-            self.save_fast_delivery(self.station, save_path, din_path, self.file_saving_notifications)
+            save_fast_delivery(self.station, save_path, din_path, self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
@@ -683,161 +846,3 @@ class Start(QMainWindow):
         if failure:
             for m in failure:
                 self.show_custom_message(m['title'], m['message'])
-
-    def save_mat_high_fq(self, station: Station, path: str, callback: Callable = None):
-        import scipy.io as sio
-
-        success = []
-        failure = []
-        for month in station.month_collection:
-            for key, sensor in month.sensor_collection.items():
-                if key == "ALL":
-                    continue
-                sl_data = sensor.get_flat_data().copy()
-                sl_data = self.remove_9s(sl_data)
-                sl_data = sl_data - int(sensor.height)
-                time = filt.datenum2(sensor.get_time_vector())
-                data_obj = [time, sl_data]
-
-                file_name = month.get_mat_filename()[key]
-                # transposing the data so that it matches the shape of the UHSLC matlab format
-                matlab_obj = {'NNNN': file_name, file_name: np.transpose(data_obj, (1, 0))}
-                try:
-                    sio.savemat(path + '/' + file_name, matlab_obj)
-                    success.append(
-                        {'title': "Success", 'message': "Success \n" + file_name + " Saved to " + path + "\n"})
-                except IOError as e:
-                    failure.append({'title': "Error",
-                                    'message': "Cannot Save to high frequency (.mat) data to" + path + "\n" + str(
-                                        e) + "\n Please select a different path to save to"})
-        if callback:
-            callback(success, failure)
-        return success, failure
-
-    def save_fast_delivery(self, station: Station, save_path: str, din_path: str, callback: Callable = None):
-        import scipy.io as sio
-        success = []
-        failure = []
-        for month in station.month_collection:
-            data_obj = {}
-            _data = month.sensor_collection.sensors
-            station_num = month.station_id
-            primary_sensor = filt.get_channel_priority(din_path, station_num)[
-                0].upper()  # returns multiple sensor in order of importance
-            if primary_sensor not in month.sensor_collection:
-                failure.append({'title': "Error", 'message': "Your .din file says that {} "
-                                                             "is the primary sensor but the file you have loaded does "
-                                                             "not contain that sensor. Hourly and daily data will not be saved.".format(
-                    primary_sensor)})
-                return
-            sl_data = _data[primary_sensor].get_flat_data().copy()
-            sl_data = self.remove_9s(sl_data)
-            sl_data = sl_data - int(_data[primary_sensor].height)
-            data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
-                                                'station': station_num, 'sealevel': sl_data}
-
-            year = _data[primary_sensor].date.astype(object).year
-            two_digit_year = str(year)[-2:]
-            # month = _data[primary_sensor].date.astype(object).month
-
-            #  Filter to hourly
-            data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month.month, 1, 0, 0, 0),
-                                        filt.datetime(year, month.month + 1, 1, 0, 0, 0))
-
-            # for channel parameters see filt.channel_merge function
-            # We are not actually merging channels here (not needed for fast delivery)
-            # But we still need to run the data through the merge function, even though we are only using one channel
-            # in order to get the correct output data format suitable for the daily filter
-            ch_params = [{primary_sensor.lower(): 0}]
-            hourly_merged = filt.channel_merge(data_hr, ch_params)
-
-            # Note that hourly merged returns a channel attribute which is an array of integers representing channel type.
-            # used for a particular day of data. In Fast delivery, all the number should be the same because no merge
-            # int -> channel name mapping is inside of filtering.py var_flag function
-            data_day = filt.day_119filt(hourly_merged, station.location[0])
-
-            month_str = "{:02}".format(month.month)
-            hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str
-            daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str
-
-            monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
-            # Remove nans, replace with 9999 to match the legacy files
-            nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
-            data_day['sealevel'][nan_ind] = 9999
-            hr_flat = np.concatenate(data_hr[primary_sensor.lower()]['sealevel'], axis=0)
-            nan_ind_hr = np.argwhere(np.isnan(hr_flat))
-            hr_flat[nan_ind_hr] = 9999
-            sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
-            sl_hr_round_up = np.round(hr_flat).astype(
-                int)  # round up sealevel data and convert to int
-
-            # right justify with 5 spaces
-            sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
-            sl_hr_str = [str(x).rjust(5, ' ') for x in sl_hr_round_up]  # convert data to string
-
-            # format the date and name strings to match the legacy daily .dat format
-            month_str = str(month.month).rjust(2, ' ')
-            station_name = month.station_id + station.name
-            line_begin_str = '{}WOC {}{}'.format(station_name.ljust(7), year, month_str)
-            counter = 1
-            try:
-                sio.savemat(daily_filename + '.mat', data_day)
-                with open(daily_filename + '.dat', 'w') as the_file:
-                    for i, sl in enumerate(sl_str):
-                        if i % 11 == 0:
-                            line_str = line_begin_str + str(counter) + " " + ''.join(sl_str[i:i + 11])
-                            if counter == 3:
-                                line_str = line_str.ljust(75)
-                                final_str = line_str[:-(len(str(monthly_mean)) + 1)] + str(monthly_mean)
-                                line_str = final_str
-                            the_file.write(line_str + "\n")
-                            counter += 1
-                success.append({'title': "Success",
-                                'message': "Success \n Daily Date Saved to " + st.get_path(
-                                    st.FD_PATH) + "\n"})
-            except IOError as e:
-                failure.append({'title': "Error",
-                                'message': "Cannot Save Daily Data to " + daily_filename + "\n" + str(
-                                    e) + "\n Please select a different path to save to"})
-
-            # Save to legacy .dat hourly format
-            metadata_header = '{}{}FSL{}  {} TMZONE=GMT    REF=00000 60 {} {} M {}'. \
-                format(month.station_id,
-                       station.name[0:3],
-                       primary_sensor,
-                       month.string_location,
-                       month.name.upper(),
-                       two_digit_year,
-                       str(month.day_count))
-            line_begin = '{}{} {} {}{}'.format(month.station_id,
-                                               station.name[0:3],
-                                               primary_sensor,
-                                               str(year),
-                                               str(month.month).rjust(2))
-
-            day = 1
-            counter = 0
-            # Save hourly
-            try:
-                sio.savemat(hourly_filename + '.mat', data_hr)
-                with open(hourly_filename + '.dat', 'w') as the_file:
-                    the_file.write(metadata_header + "\n")
-                    for i, sl in enumerate(sl_hr_str):
-                        if i != 0 and i % 24 == 0:
-                            counter = 0
-                            day += 1
-                        if i % 12 == 0:
-                            counter += 1
-                            line_str = line_begin + str(day).rjust(2) + str(counter) + ''.join(
-                                sl_hr_str[i:i + 12]).rjust(5)
-                            the_file.write(line_str + "\n")
-                success.append({'title': "Success",
-                                'message': "Success \n Hourly Data Saved to " + st.get_path(
-                                    st.FD_PATH) + "\n"})
-            except IOError as e:
-                failure.append({'title': "Error",
-                                'message': "Cannot Save Hourly Data to " + hourly_filename + "\n" + str(
-                                    e) + "\n Please select a different path to save to"})
-        if callback:
-            callback(success, failure)
-        return success, failure
