@@ -649,7 +649,30 @@ class Start(QMainWindow):
                                          "to be saved. Click save again once selected.")
                 return
             self.save_mat_high_fq(self.station, save_path, callback=self.file_saving_notifications)
-            self.save_fast_delivery()
+
+            # 1. Check if the .din file was added and that it still exist at that path
+            #       b) also check that a save folder is set up
+            # 2. If it does. load in the primary channel for our station
+            # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved
+            # 4. Perform filtering and save
+            if st.get_path(st.DIN_PATH):
+                din_path = st.get_path(st.DIN_PATH)
+            else:
+                self.show_custom_message("Warning",
+                                         "The fast delivery data cannot be processed because you haven't selected"
+                                         "the .din file location. Press F1 to access the menu to select it. And "
+                                         "then click the save button again.")
+                return
+
+            if st.get_path(st.FD_PATH):
+                save_path = st.get_path(st.FD_PATH)
+            else:
+                self.show_custom_message("Warning",
+                                         "Please select a location where you would like your hourly and daily data"
+                                         "to be saved. Click save again once selected.")
+                return
+
+            self.save_fast_delivery(self.station, save_path, din_path, self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
@@ -691,43 +714,21 @@ class Start(QMainWindow):
             callback(success, failure)
         return success, failure
 
-    def save_fast_delivery(self):
+    def save_fast_delivery(self, station: Station, save_path: str, din_path: str, callback: Callable = None):
         import scipy.io as sio
-        # 1. Check if the .din file was added and that it still exist at that path
-        #       b) also check that a save folder is set up
-        # 2. If it does. load in the primary channel for our station
-        # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved
-        # 4. Perform filtering and save
-        din_path = None
-        save_path = None
-        if st.get_path(st.DIN_PATH):
-            din_path = st.get_path(st.DIN_PATH)
-        else:
-            self.show_custom_message("Warning",
-                                     "The fast delivery data cannot be processed because you haven't selected"
-                                     "the .din file location. Press F1 to access the menu to select it. And "
-                                     "then click the save button again.")
-            return
-
-        if st.get_path(st.FD_PATH):
-            save_path = st.get_path(st.FD_PATH)
-        else:
-            self.show_custom_message("Warning",
-                                     "Please select a location where you would like your hourly and daily data"
-                                     "to be saved. Click save again once selected.")
-            return
-
-        for month in self.station.month_collection:
+        success = []
+        failure = []
+        for month in station.month_collection:
             data_obj = {}
             _data = month.sensor_collection.sensors
             station_num = month.station_id
             primary_sensor = filt.get_channel_priority(din_path, station_num)[
                 0].upper()  # returns multiple sensor in order of importance
             if primary_sensor not in month.sensor_collection:
-                self.show_custom_message("Error", "Your .din file says that {} "
-                                                  "is the primary sensor but the file you have loaded does "
-                                                  "not contain that sensor. Hourly and daily data will not be saved.".format(
-                    primary_sensor))
+                failure.append({'title': "Error", 'message': "Your .din file says that {} "
+                                                             "is the primary sensor but the file you have loaded does "
+                                                             "not contain that sensor. Hourly and daily data will not be saved.".format(
+                    primary_sensor)})
                 return
             sl_data = _data[primary_sensor].get_flat_data().copy()
             sl_data = self.remove_9s(sl_data)
@@ -753,17 +754,11 @@ class Start(QMainWindow):
             # Note that hourly merged returns a channel attribute which is an array of integers representing channel type.
             # used for a particular day of data. In Fast delivery, all the number should be the same because no merge
             # int -> channel name mapping is inside of filtering.py var_flag function
-            data_day = filt.day_119filt(hourly_merged, self.station.location[0])
+            data_day = filt.day_119filt(hourly_merged, station.location[0])
 
             month_str = "{:02}".format(month.month)
-            hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str + '.mat'
-            daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str + '.mat'
-
-            # Save .mat
-            sio.savemat(hourly_filename, data_hr)
-            sio.savemat(daily_filename, data_day)
-            self.show_custom_message("Success",
-                                     "Success \n Hourly and Daily Date Saved to " + st.get_path(st.FD_PATH) + "\n")
+            hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str
+            daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str
 
             monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
             # Remove nans, replace with 9999 to match the legacy files
@@ -780,16 +775,14 @@ class Start(QMainWindow):
             sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
             sl_hr_str = [str(x).rjust(5, ' ') for x in sl_hr_round_up]  # convert data to string
 
-            daily_filename = save_path + '/' + 'da' + str(station_num) + str(year)[-2:] + month_str + '.dat'
-            hourly_filename = save_path + '/' + 'th' + str(station_num) + str(year)[-2:] + month_str + '.dat'
-
             # format the date and name strings to match the legacy daily .dat format
             month_str = str(month.month).rjust(2, ' ')
-            station_name = month.station_id + self.station.name
+            station_name = month.station_id + station.name
             line_begin_str = '{}WOC {}{}'.format(station_name.ljust(7), year, month_str)
             counter = 1
             try:
-                with open(daily_filename, 'w') as the_file:
+                sio.savemat(daily_filename + '.mat', data_day)
+                with open(daily_filename + '.dat', 'w') as the_file:
                     for i, sl in enumerate(sl_str):
                         if i % 11 == 0:
                             line_str = line_begin_str + str(counter) + " " + ''.join(sl_str[i:i + 11])
@@ -799,29 +792,35 @@ class Start(QMainWindow):
                                 line_str = final_str
                             the_file.write(line_str + "\n")
                             counter += 1
+                success.append({'title': "Success",
+                                'message': "Success \n Daily Date Saved to " + st.get_path(
+                                    st.FD_PATH) + "\n"})
             except IOError as e:
-                self.show_custom_message("Error", "Cannot Save to " + daily_filename + "\n" + str(
-                    e) + "\n Please select a different path to save to")
+                failure.append({'title': "Error",
+                                'message': "Cannot Save Daily Data to " + daily_filename + "\n" + str(
+                                    e) + "\n Please select a different path to save to"})
 
             # Save to legacy .dat hourly format
             metadata_header = '{}{}FSL{}  {} TMZONE=GMT    REF=00000 60 {} {} M {}'. \
                 format(month.station_id,
-                       self.station.name[0:3],
+                       station.name[0:3],
                        primary_sensor,
                        month.string_location,
                        month.name.upper(),
                        two_digit_year,
                        str(month.day_count))
             line_begin = '{}{} {} {}{}'.format(month.station_id,
-                                               self.station.name[0:3],
+                                               station.name[0:3],
                                                primary_sensor,
                                                str(year),
                                                str(month.month).rjust(2))
 
             day = 1
             counter = 0
+            # Save hourly
             try:
-                with open(hourly_filename, 'w') as the_file:
+                sio.savemat(hourly_filename + '.mat', data_hr)
+                with open(hourly_filename + '.dat', 'w') as the_file:
                     the_file.write(metadata_header + "\n")
                     for i, sl in enumerate(sl_hr_str):
                         if i != 0 and i % 24 == 0:
@@ -832,7 +831,13 @@ class Start(QMainWindow):
                             line_str = line_begin + str(day).rjust(2) + str(counter) + ''.join(
                                 sl_hr_str[i:i + 12]).rjust(5)
                             the_file.write(line_str + "\n")
-
+                success.append({'title': "Success",
+                                'message': "Success \n Hourly Data Saved to " + st.get_path(
+                                    st.FD_PATH) + "\n"})
             except IOError as e:
-                self.show_custom_message("Error", "Cannot Save to " + hourly_filename + "\n" + str(
-                    e) + "\n Please select a different path to save to")
+                failure.append({'title': "Error",
+                                'message': "Cannot Save Hourly Data to " + hourly_filename + "\n" + str(
+                                    e) + "\n Please select a different path to save to"})
+        if callback:
+            callback(success, failure)
+        return success, failure
