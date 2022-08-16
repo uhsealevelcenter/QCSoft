@@ -212,8 +212,9 @@ def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
             data_obj = [time, sl_data]
 
             file_name = month.get_mat_filename()[key]
+            variable = file_name.split('.')[0]
             # transposing the data so that it matches the shape of the UHSLC matlab format
-            matlab_obj = {'NNNN': file_name, file_name: np.transpose(data_obj, (1, 0))}
+            matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
             try:
                 sio.savemat(path + '/' + file_name, matlab_obj)
                 success.append(

@@ -82,7 +82,7 @@ class Month:
     def get_mat_filename(self):
         sensor_file = {}
         for key, sensor in self.sensor_collection.items():
-            file_name = '{}{}{}'.format(self.assemble_root_filename(), key.lower(), '.mat')
+            file_name = 't{}{}{}'.format(self.assemble_root_filename(), key.lower(), '.mat')
             sensor_file[key] = file_name
 
         return sensor_file

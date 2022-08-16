@@ -99,7 +99,7 @@ class TestDatFileSave(unittest.TestCase):
                         continue
                     file_name = month.get_mat_filename()[key]
                     data = sio.loadmat(os.path.join(tmp_dir, file_name))
-                    data_trans = data[data['NNNN'][0]].transpose((1, 0))
+                    data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
                     time_vector = filt.datenum2(sensor.get_time_vector())
 
