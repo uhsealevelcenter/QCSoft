@@ -1,0 +1,320 @@
+station number & name  Primary, secondary, etc Primary, secondary 
+|                      channel for analysis    channel for time
+|                      |                       |
+001Ponape              HOU PRS                 PRS HOU                 1903 1904
+002Betio               HOU PRS                 PRS HOU                 1903 1904
+003Baltra              ENC RAD PRS             RAD PRS ENC             1903 1904
+004Nauru               HOU                     HOU                     1902 1904
+005Majuro              HOU PRS                 PRS HOU                 1903 1904
+007Malakal             RA2 RAD PRS             PRS RAD RA2             1903 1904
+008Yap                 RAD ENC PRS             RAD ENC PRS             1903 1904
+009Honiara             HOU                     HOU                     1902 1904
+011Christmas           RA2 RAD PRS             RA2 RAD PRS             1902 1904
+013Kanton              ENB RAD PRS ENC         ENB PRS RAD             1903 1904
+014French Fr Sh        RAD BUB RA2 PRS         RAD RA2 BUB PRS         1809 1810
+015Papeete             RAD RA2 PRS             PRS RAD RA2             1812 1902
+016Rikitea             RAD ENC PRS             RAD PRS ENC             1812 1902
+017Hiva Oa             PR2 PRS                 PR2 PRS                 1812 1902   
+018Suva                HOU                     HOU                     1902 1904
+019Noumea              PRS HOU                 PRS HOU                 1901 1903 
+021Juan Fernandez      RAD PRS                 RAD PRS                 1902 1904
+022Easter              RAD PRS                 RAD PRS                 1902 1904
+023Rarotonga           HOU PRS                 PRS HOU                 1903 1904
+024Penrhyn             RAD PRS                 RAD PRS                 1902 1904
+025Funafuti            HOU                     HOU                     1902 1904
+028Saipan              RAD PRS BUB             RAD PRS BUB             1902 1904
+029Kapingamarangi      RAD ENC ENB BUB PRS     RAD BUB PRS ENC ENB     1903 1904
+030Santa Cruz          RAD ENC PRS             RAD PRS ENC             1903 1904
+031Nuku Hiva           RA2 BUB RAD PRS         RAD RA2 BUB PRS         1812 1902
+033Bitung              RAD ENC PRS             RAD ENC PRS             1902 1904
+034Cabo San Lucas      ENB                     ENB                     1408 1409 
+035San Felix           RAD PRS                 PRS RAD                 1902 1904  
+038Nuku'alofa          HOU                     HOU                     1902 1904
+039Kokiak              PWI                     PWI                     1902 1904
+040Adak                PWI                     PWI                     1902 1904
+041Dutch Harbor        PWI                     PWI                     1902 1904
+043Palmyra             RAD BUB PRS             RAD PRS BUB             1901 1903
+046Port Villa          HOU                     HOU                     1902 1904
+047Chichijima          HOU                     HOU                     1902 1903 
+049Minamitorishima     HOU PRS                 HOU PRS                 1902 1903 
+050Midway              PWI                     PWI                     1902 1904
+051Wake                PWI                     PWI                     1902 1904
+052Johnston            RAD ENC PRS             RAD PRS ENC             1902 1904
+053Guam                PWI                     PWI                     1903 1904
+055Kwajalein           PWI                     PWI                     1903 1904
+056Pago Pago           PWI                     PWI                     1903 1904
+057Honolulu            PWI                     PWI                     1903 1904
+058Nawiliwili          PWI                     PWI                     1903 1904
+059Kahului             PWI                     PWI                     1903 1904
+060Hilo                PWI                     PWI                     1903 1904
+061Mokuoloe            PWI                     PWI                     1903 1904
+552Kawaihae            PWI                     PWI                     1903 1904
+071Wellington          HOU                     HOU                     1902 1904
+072Bluff               HOU                     HOU                     1902 1904
+079Chatham Isl         PRS                     PRS                     1601 1602
+080Antofagasta         RAD PRS                 RAD PRS                 1901 1903
+081Valparaiso          RAD PRS                 RAD PRS                 1902 1904
+082Acajutra            RAD BUB                 RAD BUB                 1901 1903
+083Arica               RAD PRS                 RAD PRS                 1902 1904
+084Lobos               ENC SDR                 ENC SDR                 0703 0704
+087Quepos              RA2 RAD PRS             RA2 RAD PRS             1902 1904
+088Caldera             RAD PRS                 RAD PRS                 1902 1904
+091La Libertad         RAD ENC PRS             RAD PRS ENC             1902 1904 
+092Talara              RAD PRS                 RAD PRS                 1901 1903 
+093Callao              RAD ENC PRS             RAD PRS ENC             1902 1904 
+094Matarani            RAD PRS ENC             RAD PRS ENC             1901 1903
+101Mombasa             RAD RA2 PRS             RAD PRS RA2             1902 1904
+103Port Louis          RAD ENC PRS             PRS RAD ENC             1902 1904
+104Diego Garcia        RAD ENC PRS             PRS RAD ENC             1901 1903
+105Rodrigues           RAD ENB ENC             RAD ENC ENB             1902 1904
+107Paddng              RAD ENC PRS             RAD PRS ENC             1901 1903 
+108Hulhule, Male       RAD ENC PRS             PRS RAD ENC             1902 1904
+109Gan                 RAD ENC PRS             RAD PRS ENC             1901 1903
+110Muscat              RAD PRS ENC             RAD PRS ENC             1901 1903
+113Masirah             ENC RA2 RAD ENB         RAD RA2 ENB ENC         1901 1903
+114Salalah             RAD ENC PRS ENB         RAD PRS ENB ENC         1804 1805
+115Colombo             RA2 RAD PRS             RAD RA2 PRS             1902 1904
+117Hanimaadhoo         RA2 RAD PRS             RA2 PRS RAD             1901 1903 
+118Ko Miang            PRS                     PRS                     0610 0611
+119Djibouti            RAD PRS                 RAD PRS                 1607 1608 
+121Point La Rue        RAD ENC RA2 PRS         RAD PRS RA2 ENC         1902 1904  
+122Siboga              ENC RAD PRS             RAD PRS ENC             1902 1904 
+123Sabang              RAD ENC PRS             RAD PRS ENC             1902 1904 
+124Chittagong          RAD ENC PRS             RAD ENC PRS             1902 1904
+125Prigi               RAD ENC PRS             RAD ENC PRS             1901 1903    
+126Jask                RAD PR2                 RAD PR2                 1706 1707
+127Syowa               HOU                     HOU                     0710 0711
+128Thevenard           HOU                     HOU                     1902 1904
+129Portland, Aust      HOU                     HOU                     1902 1904
+130Casey Isl.          HOU                     HOU                     0610 0611
+133Ambon               RAD ENC PRS             RAD PRS ENC             1901 1903
+142Langkawi            RAD PRS ENC             RAD PRS ENC             1901 1903
+147Karachi             RAD PR2                 RAD PR2                 1901 1903
+148Ko-Tapao-Noi        HOU                     HOU                     1812 1902
+149Lamu                RAD ENC                 RAD ENC                 1901 1903
+151Zanzibar            ENC RAD                 ENC RAD                 1901 1903 
+153Minicoy             PRS                     PRS                     1709 1711
+155Dzaoudzi            HOU RAD                 HOU RAD                 1901 1903
+157Vishakhapatnam      PRS                     PRS                     1901 1903
+162Cilacap             RA2 RAd PRS             RA2 RAd PRS             1901 1903
+163Benoa               RAD PRS ENC             RAD PRS ENC             1901 1903
+164Pont des Galets     HOU RAD                 HOU RAD                 1901 1903    
+166Broome              HOU                     HOU                     1902 1904
+167Carnarvon           HOU                     HOU                     0512 0512
+168Darwin              HOU                     HOU                     1902 1904
+169Port Headland       HOU                     HOU                     0703 0707
+170Christmas Island    HOU PRS                 HOU PRS                 1902 1904
+171Cocos Island        HOU                     HOU                     1902 1904
+172Aden                RAD PR2 PRS             RAD PRS RS2             1810 1811      
+173Davis               HOU                     HOU                     0610 0610
+174Cochin              PRS                     PRS                     1902 1903
+175Fremantle           HOU                     HOU                     1902 1904
+176Esperence           HOU                     HOU                     1902 1904
+177Mawson              HOU                     HOU                     0612 0612
+178Crozet Isl          HOU                     HOU                     0106 0107
+179St. Paul            HOU                     HOU                     0611 0612
+180Kerguelen           HOU                     HOU                     1212 1306
+
+181Durban              HOU RAD                 HOU RAD                 1809 1810
+184Port Elizabeth      HOU                     HOU                     1809 1810  
+185Mossel Bay          HOU                     HOU                     1809 1810
+186Knysna              HOU                     HOU                     1809 1810
+187East London         HOU                     HOU                     1809 1810
+188Richard Bay         HOU                     HOU                     1809 1810
+189Dumont d'Urville    HOU                     HOU                     1006 1008  
+192Pemba               RAD PRS                 RAD PRS                 1108 1108
+207Ceuta               PRS HOU                 HOU PRS                 1902 1903
+209Cascais             PRS                     PRS                     1805 1806
+210Flores              HOU                     HOU                     0401 0704
+211Ponta DelGada       RAD ENC PRS             RAD PRS ENC             1902 1903
+217Las Palmas          HOU PRS                 HOU PRS                 1902 1903
+218Funchal             HOU                     HOU                     0601 0705
+220Walvis Bay          HOU RAD                 RAD HOU                 1512 1602
+221Simon Bay           HOU                     HOU                     1809 1810
+223Dakar               RAD RA2 PRS             RAD PRS RA2             1902 1903     
+224Lome                HOU                     HOU                     9310 9311
+225Sao Tome            HOU PRS                 HOU PRS                 1007 1008
+227Cayenne/Iles du Sal HOU                     HOU                     1110 1112
+231Takoradi            RAD PRS PR2             RAD PRS PR2             1208 1209
+233Lagos               RAD PRS PR2             RAD PRS PR2             0905 0906 
+234Pointe Noire        RAD PRS                 RAD PRS                 1305 1406  
+235Palmeira            RAD BUB PRS             RAD PRS BUB             1902 1903
+242Key West            PWI                     PWI                     1902 1903
+245San Juan            PWI                     PWI                     1902 1903 
+253NewPort, RI         PWI                     PWI                     1902 1903
+257Settlement Point    RAD ECS RA2 PRS         RAD RA2 ECS PRS         1902 1903
+259Bermuda, Esso       PWI                     PWI                     1902 1903
+260Duck Pier           PWI                     PWI                     1902 1903
+261Charleston          PWI                     PWI                     1902 1903
+264Atlantic City       PWI                     PWI                     1902 1903
+266LimonB/Cristobal    HOU                     HOU                     1305 1306
+268Limon               RAD RA2 PRS             RAD PRS RA2             1902 1903
+271Fort de France      PRS HOU                 PRS HOU                 1902 1903
+273Basques             HOU                     HOU                     1902 1903
+274Churchill           HOU                     HOU                     1902 1903
+275Halifax             HOU                     HOU                     1902 1903
+276St. John's          HOU                     HOU                     1902 1903
+280Riode-Janelo        HOU                     HOU                     1210 1304
+281Cananeia            HOU                     HOU                     0607 0704
+283Fortaleza           RAD ENC                 RAD ENC                 1902 1903
+286Puerto Deseado      RAD ENC PRS             RAD PRS ENC             1902 1903     
+288Reykjavik           PRS HOU                 PRS HOU                 1902 1903
+289Gibraltar           RAD PRS                 RAD PRS                 1902 1903
+290Port Stanley        RAD PRS                 RAD PRS                 1704 1705
+291Ascension           RAD PRS                 RAD PRS                 1703 1705
+292St. Helena          HOU                     HOU                     0401 0612
+293Lerwick             HOU                     HOU                     1309 1311
+294Newlyn              HOU                     HOU                     1309 1311
+295Stornoway           HOU                     HOU                     1309 1311
+299Qaqortoq            HOU                     HOU                     1811 1812
+302Balboa              HOU                     HOU                     1212 1301
+305Cedros Island       ECS                     ECS                     0908 0909
+316Acapulco            RAD PRS                 RAD PRS                 1103 1104
+317Ensenada            PRS                     PRS                     0908 0909
+328Ko-Lak              HOU                     HOU                     1812 1902
+329Hon Kong            HOU                     HOU                     1903 1904 
+331Brisbaine           HOU                     HOU                     1902 1904
+332Bundaberg           HOU                     HOU                     1902 1904
+333Sydney,FortDenison  HOU                     HOU                     1902 1904
+334Townsville          HOU                     HOU                     1902 1904
+335Spring Bay          HOU                     HOU                     1902 1904
+336Booby Isl.          HOU                     HOU                     1902 1904
+340Kaoshiung           HOU                     HOU                     1603 1604
+341Keelong             HOU                     HOU                     1603 1604
+345Nakanosima          PRS                     PRS                     1902 1903
+347Abashiri            HOU                     HOU                     1902 1903
+348Hamada              HOU                     HOU                     1902 1903
+349Toyama              HOU                     HOU                     1902 1903
+350Kushiro             HOU                     HOU                     1902 1903
+351Ofunato             HOU                     HOU                     1902 1903
+352Mera                HOU                     HOU                     1902 1903
+353Kushimoto           HOU                     HOU                     1902 1903
+354Aburatsu            HOU                     HOU                     1902 1903
+355Naha                HOU PRS                 HOU PRS                 1902 1903
+356Maisaka             HOU                     HOU                     1902 1903
+359Nase                PRS                     PRS                     1902 1903
+360Wakkanai            HOU                     HOU                     1902 1903
+362Nagasaki            HOU                     HOU                     1902 1903
+363Nishinoomote        PRS                     PRS                     1902 1903 
+364Hakodate            HOU                     HOU                     1902 1903
+365Ishigaki            HOU PRS                 HOU PRS                 1902 1903
+370Manila              RAD PRS BUB             RAD BUB PRS             1902 1903
+371Legaspi             RAD ENC PRS             RAD PRS ENC             1902 1903 
+     data looks bad.. level shift.   not updated into FD sataset
+372Davao               RAD RA2 PRS             RAD RA2 PRS             1902 1903
+381Qui-Nhon            RAD ENC PRS             RAD ENC PRS             1902 1903
+382Subic Bay           RAD RA2 PRS             RAD PRS RA2             1902 1903
+383Vung Tau            RAD ENC PRS             RAD PRS ENC             1902 1903
+392Cocos Island        RAD PRS                 RAD PRS                 1902 1904
+395Manzanillo          RAD PRS                 RAD PRS                 0705 1309
+399Lord-Howe           HOU                     HOU                     0606 0606
+400Lombrum             HOU                     HOU                     1902 1904
+401Apia                HOU                     HOU                     1805 1807
+402Lautoka             HOU                     HOU                     1902 1904
+403Jackson             HOU                     HOU                     1202 1312    
+416Tanjung Lesung      RAD PR2 PRS             RAD PR2 PRS             1212 1301
+417Sadeng              RAD PRS                 RAD PRS                 1603 1604
+418Waikelo             RAD PRS                 PRS RAD                 1902 1903
+419Lembar              RAD ENC PRS             RAD PRS ENC             1902 1903
+420Saumlaki            RAD PRS ENC             RAD PRS ENC             1902 1903 
+540Prince Repurt       HOU                     HOU                     1902 1903
+541Bamfield            HOU                     HOU                     1902 1903
+542Tofino              HOU                     HOU                     1902 1903
+547Barbars Point       RAD PRS                 RAD PRS                 1902 1903 
+548Kaumalapau          RAD PRS                 RAD PRS                 1501 1503 removed  
+551San Francisco       PWI                     PWI                     1903 1904
+554La Jolla            PWI                     PWI                     1902 1903
+556C4escent City       PWI                     PWI                     1902 1903
+558Neah Bay            PWI                     PWI                     1903 1904
+559sitka               PWI                     PWI                     1902 1903
+560Seward              PWI                     PWI                     1902 1903
+569San Diego           PWI                     PWI                     1903 1904 
+570Yakutat             PWI                     PWI                     1902 1903
+571Ketchikan           PWI                     PWI                     1902 1903
+574Sand Point          PWI                     PWI                     1902 1903
+579Prudhoe Bya AK      PWI                     PWI                     1902 1903
+592South Beach         PWI                     PWI                     1902 1903
+595Nome, AK            PWI                     PWI                     1902 1903
+599Diego Ramiez        PRS                     PRS                     9810 9811
+600Ushuaia             RAD RA2                 RAD RA2                 1812 1902
+601Esperanza           PRS                     PRS                     0402 0402
+654Currimao            RAD ENC PRS             RAD PRS ENC             1902 1903
+655Lubang              RAD ENC PRS             RAD PRS ENC             1902 1903
+680Macquarie Isl.      HOU                     HOU                     0712 0807
+684Puerto Montt        RAD PRS                 PRS RAD                 1902 1903
+699Tanjong             HOU                     HOU                     1403 1602
+700Faraday             PRS PR2                 PRS PR2                 1902 1903
+701Port Nolloth        HOU                     HOU                     1604 1605
+702Luderitz            HOU                     HOU                     1509 1510
+703Saldanha Bay        HOU                     HOU                     1809 1810
+704Cape Town           HOU                     HOU                     1809 1810
+708Salvado             RAD ENC                 RAD ENC                 1902 1903
+729Mar del Plata       RA2 RAD ENC             RAD RA2 ENC             1902 1903
+731Puerto Madryn       RAD RA2 PRS             RAD RA2 PRS             1902 1903
+737San Andres          BUB RAD PRS             RAD PRS BUB             1902 1903
+738Santa Marta         RAD BUB PRS             RAD BUB PRS             1902 1903
+739El Porvenir         RAD BUB PRS             RAD BUB PRS             1902 1903
+752Fort Pulaski, GA    PWI                     PWI                     1902 1903
+755Virginia, FL        PWI                     PWI                     1902 1903
+762Pensacola, FL       PWI                     PWI                     1902 1903
+767Galveston           PWI                     PWI                     1707 1708
+775Galveston(Pier21)   PWI                     PWI                     1902 1903
+776Punta Cana          RA2 RAD PRS             RAD RA2 PRS             1902 1903
+777Puer6o Plata        RA2 RAD PRS             RAD RA2 PRS             1902 1903
+786Roseau              RAD BUB PRS             RAD BUB PRS             1902 1903
+789Prickley Bay        RAD BUB PRS             RAD BUB PRS             1902 1903
+799Port Au Prince      RAD BUB PRS             RAD BUB PRS             1902 1903
+800Andenes             HOU RAD                 HOU RAD                 1901 1904
+801Honningsvarg        HOU RAD                 HOU RAD                 1901 1904
+802Maloy               HOU RAD                 HOU RAD                 1901 1904
+803Rorvik              HOU                     HOU RAD                 1901 1904
+804Tregde              HOU                     HOU                     1901 1904
+805Vardo               HOU                     HOU                     1901 1904
+806Nouakchott          RAD PR2                 RAD PR2                 1501 1502
+807Alexandria          RAD PRS                 RAD PRS                 1512 1601
+808Thule (Pituffix)    HOU                     HOU                     1812 1902
+809Scoresbysund        HOU                     HOU                     1902 1903 
+816Port Sonara         PRS RAD                 PRS RAD                 1106 1307
+818Smogen              HOU RAD                 HOU RAD                 1902 1903
+819Gothenburg          HOU RAD                 HOU RAD                 1902 1903
+820Nuuk                HOU                     HOU                     1902 1903
+822Brest               RAD HOU                 RAD HOU                 1902 1903
+824Marseille           HOU RAD                 HOU RAD                 1902 1903
+825Cuxhaven            RAD HOU                 RAD HOU                 1901 1904
+826Stockholm           RAD HOU                 RAD HOU                 1902 1903
+829Trieste(Sartorio)   RAD HOU                 RAD HOU                 1902 1903
+830La Coruna           HOU PRS                 HOU PRS                 1902 1903
+833Nain                ENC                     ENC                     1902 1903
+834Malin Head          PRS                     PRS                     1902 1903      
+835Castletownsend      PRS                     PRS                     1902 1903
+836Alert               HOU                     HOU                     1902 1903
+878Bullen Bay          RAD BUB PRS             RAD BUB PRS             1902 1903
+900Inhambane           RAD PRS                 RAD PRS                 1409 1410
+901Blue Bay            RAD PRS                 RAD PRS                 1806 1808
+902Agalega             RAD                     RAD                     1604 1711
+903Denis Island        RAD                     RAD                     1212 1301
+906Moulmein            RAD PRS ENC             RAD PRS ENC             1902 1903
+907sittwe(Akyab)       RA2 RAD ENC PRS         RA2 RAD PRS ENC         1902 1903
+908Port Blair          PRS                     PRS                     1902 1903 level??
+913Telukdalam (TEDA)   PRS RAD PR2             PRS RAD PR2             1808 1809
+914Meulaboh            RAD PRS                 RAD PRS                 1608 1609
+915Chabahar            RAD PRS                 RAD PRS                 1902 1903
+920Marion              RAD                     RAD                     1902 1903
+922Mtwara              RAD PR2                 RAD PR2                 1902 1903
+
+ 655Lubang           added June 2010                                  
+ 776Punta Cana   
+ 777Puerto Plata 
+ 082Acajutra    Nikolai's visit
+ 807Alexandria  added  jan 2011
+ 786 Roseau, Dominica     added May 2011
+ 789 Prickley Bay, Grenada
+ 418 Waikelo     added  in new gloss list
+ 153 Minicoy          added Dec. 2011
+ 157 Vishakhapatnam
+ 174 Cochin
+ 908 Port Blair
+ 799 Port Au Prince  
+ 737 San Andres     added Nov. 2012
+ 738 Santa Marta 
+ 029 Kapinga Marangi, station visted 06/2014 up..

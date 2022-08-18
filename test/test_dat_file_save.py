@@ -7,13 +7,16 @@ import numpy as np
 import scipy.io as sio
 
 import filtering as filt
-from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq
+from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq, save_fast_delivery
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
 # The ground truth output file. Produced by an earlier, better tested software version (0.6)
 # Todo: Ask Fee to produce a ts, hourly, and daily file for an arbitrary station (without cleaning it) and use that output file as the ground truth
 output_filename = os.path.join(dirname, 'test_data/ts_file_truth/t1231810.dat')
+HOURLY_PATH = os.path.join(dirname, 'test_data/hourly_truth/')
+SSABA1809 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
+DIN = os.path.join(dirname, 'test_data/din/tmp.din')
 
 
 class TestDatFileSave(unittest.TestCase):
@@ -113,6 +116,35 @@ class TestDatFileSave(unittest.TestCase):
                     self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
                     # Compare time vector
                     self.assertListEqual(time_vector_mat.tolist(), time_vector)
+
+    def test_save_fast_delivery(self):
+        """
+        Loads a truth hourly matlab file for th1231809.mat produced by matlab
+        and produces python version of the same file and compares the resul
+        """
+
+        data_truth = sio.loadmat(os.path.join(HOURLY_PATH, 'th1231809.mat'))
+        data_truth_trans = data_truth['rad'].transpose((1, 0))
+        # time_vector_truth = data_truth_trans[0]
+        sea_level_truth = data_truth_trans['sealevel'][0][0]
+        nan_ind = np.argwhere(np.isnan(sea_level_truth))
+        sea_level_truth[nan_ind] = 9999
+        sea_level_truth = np.concatenate(sea_level_truth, axis=0)
+
+        station = load_station_data([SSABA1809])
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                save_fast_delivery(station, tmp_dir, DIN, callback=None)
+                data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
+                data_trans = data['rad'].transpose((1, 0))
+                sea_level = data_trans['sealevel'][0][0]
+                nan_ind = np.argwhere(np.isnan(sea_level))
+                sea_level[nan_ind] = 9999
+                sea_level = np.concatenate(sea_level, axis=0)
+                # Check the difference to 6 decimal places (because the data was run in matlab and python we allow
+                # for tiny differences
+                self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
 
 
 if __name__ == '__main__':
