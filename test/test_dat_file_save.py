@@ -15,6 +15,7 @@ input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
 # Todo: Ask Fee to produce a ts, hourly, and daily file for an arbitrary station (without cleaning it) and use that output file as the ground truth
 output_filename = os.path.join(dirname, 'test_data/ts_file_truth/t1231810.dat')
 HOURLY_PATH = os.path.join(dirname, 'test_data/hourly_truth/')
+DAILY_PATH = os.path.join(dirname, 'test_data/daily_truth/')
 SSABA1809 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
 DIN = os.path.join(dirname, 'test_data/din/tmp.din')
 
@@ -144,7 +145,18 @@ class TestDatFileSave(unittest.TestCase):
             sea_level = np.concatenate(sea_level, axis=0)
             # Check the difference to 6 decimal places (because the data was run in matlab and python we allow
             # for tiny differences
-            self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
+            # Hourly test
+            # self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
+            np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
+
+            # daily test
+            data_truth = sio.loadmat(os.path.join(DAILY_PATH, 'da1231809.mat'))
+            sea_level_truth = np.concatenate(data_truth['data_day']['sealevel'][0][0], axis=0)
+            data = sio.loadmat(os.path.join(tmp_dir, 'da1231809.mat'))
+            sea_level = data['sealevel'][0]
+            # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
+            # slightly different so we don't need the results to be exactly the same
+            np.testing.assert_almost_equal(sea_level_truth, sea_level, 1)
 
 
 if __name__ == '__main__':
