@@ -532,7 +532,6 @@ def hr_process_2(_data, yr1, yr2):
 
 
 def day_119filt(_data, _lat):
-    filt_wts = []
     data_day = {}
     # with open("filt_wts.txt", "r") as file:
     #     for line in file:
@@ -606,7 +605,6 @@ def day_119filt(_data, _lat):
 
         kg = np.where(~np.isnan(xx))[0]
         xout[j] = zero_division(sum(xx[kg] * ww[kg]), sum(ww[kg]))
-        # TODO: calculate cout
         cout[j] = np.round(zero_division(sum(cc[kg] * ww[kg]), sum(ww[kg])))
 
         kb = np.where(np.isnan(xx))[0]

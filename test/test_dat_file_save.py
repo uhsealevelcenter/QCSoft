@@ -127,6 +127,7 @@ class TestDatFileSave(unittest.TestCase):
         data_truth_trans = data_truth['rad'].transpose((1, 0))
         # time_vector_truth = data_truth_trans[0]
         sea_level_truth = data_truth_trans['sealevel'][0][0]
+        # Need to remove NaNs because Nan is not equal Nan
         nan_ind = np.argwhere(np.isnan(sea_level_truth))
         sea_level_truth[nan_ind] = 9999
         sea_level_truth = np.concatenate(sea_level_truth, axis=0)
