@@ -134,17 +134,16 @@ class TestDatFileSave(unittest.TestCase):
         station = load_station_data([SSABA1809])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                save_fast_delivery(station, tmp_dir, DIN, callback=None)
-                data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
-                data_trans = data['rad'].transpose((1, 0))
-                sea_level = data_trans['sealevel'][0][0]
-                nan_ind = np.argwhere(np.isnan(sea_level))
-                sea_level[nan_ind] = 9999
-                sea_level = np.concatenate(sea_level, axis=0)
-                # Check the difference to 6 decimal places (because the data was run in matlab and python we allow
-                # for tiny differences
-                self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
+            save_fast_delivery(station, tmp_dir, DIN, callback=None)
+            data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
+            data_trans = data['rad'].transpose((1, 0))
+            sea_level = data_trans['sealevel'][0][0]
+            nan_ind = np.argwhere(np.isnan(sea_level))
+            sea_level[nan_ind] = 9999
+            sea_level = np.concatenate(sea_level, axis=0)
+            # Check the difference to 6 decimal places (because the data was run in matlab and python we allow
+            # for tiny differences
+            self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
 
 
 if __name__ == '__main__':
