@@ -277,18 +277,13 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
         daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str
 
         monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
-        # Remove nans, replace with 9999 to match the legacy files
-        nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
-        data_day['sealevel'][nan_ind] = 9999
+
         hr_flat = np.concatenate(data_hr[primary_sensor.lower()]['sealevel'], axis=0)
         nan_ind_hr = np.argwhere(np.isnan(hr_flat))
         hr_flat[nan_ind_hr] = 9999
-        sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
         sl_hr_round_up = np.round(hr_flat).astype(
             int)  # round up sealevel data and convert to int
 
-        # right justify with 5 spaces
-        sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
         sl_hr_str = [str(x).rjust(5, ' ') for x in sl_hr_round_up]  # convert data to string
 
         # format the date and name strings to match the legacy daily .dat format
@@ -298,6 +293,12 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
         counter = 1
         try:
             sio.savemat(daily_filename + '.mat', data_day)
+            # Remove nans, replace with 9999 to match the legacy files
+            nan_ind = np.argwhere(np.isnan(data_day['sealevel']))
+            data_day['sealevel'][nan_ind] = 9999
+            sl_round_up = np.round(data_day['sealevel']).astype(int)  # round up sealevel data and convert to int
+            # right justify with 5 spaces
+            sl_str = [str(x).rjust(5, ' ') for x in sl_round_up]  # convert data to string
             with open(daily_filename + '.dat', 'w') as the_file:
                 for i, sl in enumerate(sl_str):
                     if i % 11 == 0:
