@@ -110,6 +110,8 @@ class TestDatFileSave(unittest.TestCase):
                     sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data
                     sea_level_mat = data_trans[1] + int(sensor.height)
+                    # Make sure all 9999s are taken out from the final .mat file
+                    self.assertNotIn(9999, sea_level_mat)
                     # Replace back nan data with 9999s
                     nan_ind = np.argwhere(np.isnan(sea_level_mat))
                     sea_level_mat[nan_ind] = 9999
@@ -137,15 +139,20 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_fast_delivery(station, tmp_dir, DIN, callback=None)
+
+            # Hourly test
             data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
             data_trans = data['rad'].transpose((1, 0))
             sea_level = data_trans['sealevel'][0][0]
+            sea_level = np.concatenate(sea_level, axis=0)
+            # Make sure all 9999s are taken out from the final .mat file
+            self.assertNotIn(9999, sea_level)
             nan_ind = np.argwhere(np.isnan(sea_level))
             sea_level[nan_ind] = 9999
-            sea_level = np.concatenate(sea_level, axis=0)
+
             # Check the difference to 6 decimal places (because the data was run in matlab and python we allow
             # for tiny differences
-            # Hourly test
+
             # self.assertListEqual(sea_level_truth.round(decimals=6).tolist(), sea_level.round(6).tolist())
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
 
@@ -154,6 +161,8 @@ class TestDatFileSave(unittest.TestCase):
             sea_level_truth = np.concatenate(data_truth['data_day']['sealevel'][0][0], axis=0)
             data = sio.loadmat(os.path.join(tmp_dir, 'da1231809.mat'))
             sea_level = data['sealevel'][0]
+            # Make sure all 9999s are taken out from the final .mat file
+            self.assertNotIn(9999, sea_level)
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
             # slightly different so we don't need the results to be exactly the same
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 1)
