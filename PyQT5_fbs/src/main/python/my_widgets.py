@@ -766,7 +766,7 @@ class Start(QMainWindow):
             self.show_custom_message("Error!", "Data needs to be loaded first.")
             return
         else:
-            if (self.is_digit(str(self.ui.refLevelEdit.text()))):
+            if self.is_digit(str(self.ui.refLevelEdit.text())):
                 # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
@@ -779,10 +779,14 @@ class Start(QMainWindow):
                     self.browser.offset_data(ISOstring, REF_diff)
                     # format the new reference to a 4 character string (i.e add leading zeros if necessary)
                     # update the header
+                    # TODO: All instances of self.station.month_collection[0] need to be replaces with a specific index
+                    #  instead of 0 so that the data for the correct month is updated as opposed to only updating data
+                    #  for the first month loaded. Haven't thought this trough, but in this case the index would have
+                    #  correspond to the month in which the reference level was changed
                     new_header = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[
                                  :60] + '{:04d}'.format(new_REF) + \
                                  self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[64:]
-                    self.station[self.sens_str].month_collection[0].sensor_collection.sensors[
+                    self.station.month_collection[0].sensor_collection.sensors[
                         self.sens_str].header = new_header
                     self.ui.lineEdit.setText(
                         self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
