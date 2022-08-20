@@ -119,11 +119,41 @@ class TestDatFileSave(unittest.TestCase):
                     self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
                     # Compare time vector
                     self.assertListEqual(time_vector_mat.tolist(), time_vector)
+        # Now clean the data and then save it
+        # Checks if cleaning is consistent between both .mat and ts files
+
+        self.station.back_propagate_changes(self.station.aggregate_months['data'])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for month in station.month_collection:
+                # Compare every sensor (one file per sensor)
+                for key, sensor in month.sensor_collection.items():
+                    if key == "ALL":
+                        continue
+                    outliers_idx = find
+                    file_name = month.get_mat_filename()[key]
+                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data_trans = data[file_name.split('.')[0]].transpose((1, 0))
+                    time_vector_mat = data_trans[0]
+                    time_vector = filt.datenum2(sensor.get_time_vector())
+
+                    sea_level = sensor.get_flat_data().copy()
+                    # Add the reference height back to .mat data
+                    sea_level_mat = data_trans[1] + int(sensor.height)
+                    # Make sure all 9999s are taken out from the final .mat file
+                    self.assertNotIn(9999, sea_level_mat)
+                    # Replace back nan data with 9999s
+                    nan_ind = np.argwhere(np.isnan(sea_level_mat))
+                    sea_level_mat[nan_ind] = 9999
+                    # Compare sea level data
+                    self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
+                    # Compare time vector
+                    self.assertListEqual(time_vector_mat.tolist(), time_vector)
+            save_mat_high_fq(station, tmp_dir, callback=None)
 
     def test_save_fast_delivery(self):
         """
         Loads a truth hourly matlab file for th1231809.mat produced by matlab
-        and produces python version of the same file and compares the resul
+        and produces python version of the same file and compares the results
         """
 
         data_truth = sio.loadmat(os.path.join(HOURLY_PATH, 'th1231809.mat'))

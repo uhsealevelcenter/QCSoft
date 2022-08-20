@@ -360,6 +360,80 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
     return success, failure
 
 
+def moving_average(data, window_size):
+    """ Computes moving average using discrete linear convolution of two one dimensional sequences.
+    Args:
+    -----
+            data (pandas.Series): independent variable
+            window_size (int): rolling window size
+
+    Returns:
+    --------
+            ndarray of linear convolution
+
+    References:
+    ------------
+    [1] Wikipedia, "Convolution", http://en.wikipedia.org/wiki/Convolution.
+    [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
+
+    """
+    # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
+    filtered_data = data.copy()
+    # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
+    # my_mean=np.nanmean(filtered_data)
+
+    my_mean = np.nanmean(filtered_data)
+    my_std = np.nanstd(filtered_data)
+
+    # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
+    itemindex = np.where(((filtered_data > my_mean + 3 * my_std) | (filtered_data < my_mean - 3 * my_std)))
+    filtered_data[itemindex] = np.nanmean(filtered_data)
+    # Fix boundary effects by adding prepending and appending values to the data
+    filtered_data = np.insert(filtered_data, 0, np.ones(window_size) * np.nanmean(filtered_data[:window_size // 2]))
+    filtered_data = np.insert(filtered_data, filtered_data.size,
+                              np.ones(window_size) * np.nanmean(filtered_data[-window_size // 2:]))
+    window = np.ones(int(window_size)) / float(window_size)
+    # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
+    return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
+
+
+def find_outliers(station, t, data, sens):
+    channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
+    _freq = channel_freq + 'min'
+
+    nines_ind = np.where(data == 9999)
+    nonines_data = data.copy()
+    nonines_data[nines_ind] = float('nan')
+    # Get a date range to create pandas time Series
+    # using the sampling frequency of the sensor
+    rng = date_range(t[0], t[-1], freq=_freq)
+    ts = Series(nonines_data, rng)
+
+    # resample the data and linearly interpolate the missing values
+    upsampled = ts.resample(_freq)
+    interp = upsampled.interpolate()
+
+    # calculate a window size for moving average routine so the window
+    # size is always 60 minutes long
+    window_size = 60 // int(channel_freq)
+
+    # calculate moving average including the interolated data
+    # moving_average removes big outliers before calculating moving average
+    y_av = moving_average(np.asarray(interp.tolist()), window_size)
+    # y_av = self.moving_average(data, 30)
+    # missing=np.argwhere(np.isnan(y_av))
+    # y_av[missing] = np.nanmean(y_av)
+
+    # calculate the residual between the actual data and the moving average
+    # and then find the data that lies outside of sigma*std
+    residual = nonines_data - y_av
+    std = np.nanstd(residual)
+    sigma = 3.0
+
+    itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
+    return itemindex
+
+
 class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
@@ -610,7 +684,7 @@ class Start(QMainWindow):
 
         if (is_interactive):
             self.browser = PointBrowser(x, y, self._residual_ax, line, self._residual_fig,
-                                        self.find_outliers(x, y, sens1))
+                                        find_outliers(self.station, x, y, sens1))
             self.browser.onDataEnd += self.show_message
             canvas.mpl_connect('pick_event', self.browser.onpick)
             canvas.mpl_connect('key_press_event', self.browser.onpress)
@@ -652,7 +726,7 @@ class Start(QMainWindow):
 
         self._static_ax.set_title('select a point you would like to remove and press "D"')
         self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig,
-                                    self.find_outliers(time, data_flat, sens))
+                                    find_outliers(self.station, time, data_flat, sens))
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
         # update event ids so that they can be disconnect on next sensor change
@@ -662,79 +736,6 @@ class Start(QMainWindow):
         self.toolbar1.update()
         self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.ui.mplwidget_top.canvas.setFocus()
-
-    def find_outliers(self, t, data, sens):
-
-        channel_freq = self.station.month_collection[0].sensor_collection.sensors[sens].rate
-        _freq = channel_freq + 'min'
-
-        nines_ind = np.where(data == 9999)
-        nonines_data = data.copy()
-        nonines_data[nines_ind] = float('nan')
-        # Get a date range to create pandas time Series
-        # using the sampling frequency of the sensor
-        rng = date_range(t[0], t[-1], freq=_freq)
-        ts = Series(nonines_data, rng)
-
-        # resample the data and linearly interpolate the missing values
-        upsampled = ts.resample(_freq)
-        interp = upsampled.interpolate()
-
-        # calculate a window size for moving average routine so the window
-        # size is always 60 minutes long
-        window_size = 60 // int(channel_freq)
-
-        # calculate moving average including the interolated data
-        # moving_average removes big outliers before calculating moving average
-        y_av = self.moving_average(np.asarray(interp.tolist()), window_size)
-        # y_av = self.moving_average(data, 30)
-        # missing=np.argwhere(np.isnan(y_av))
-        # y_av[missing] = np.nanmean(y_av)
-
-        # calculate the residual between the actual data and the moving average
-        # and then find the data that lies outside of sigma*std
-        residual = nonines_data - y_av
-        std = np.nanstd(residual)
-        sigma = 3.0
-
-        itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
-        return itemindex
-
-    def moving_average(self, data, window_size):
-        """ Computes moving average using discrete linear convolution of two one dimensional sequences.
-        Args:
-        -----
-                data (pandas.Series): independent variable
-                window_size (int): rolling window size
-
-        Returns:
-        --------
-                ndarray of linear convolution
-
-        References:
-        ------------
-        [1] Wikipedia, "Convolution", http://en.wikipedia.org/wiki/Convolution.
-        [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
-
-        """
-        # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
-        filtered_data = data.copy()
-        # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
-        # my_mean=np.nanmean(filtered_data)
-
-        my_mean = np.nanmean(filtered_data)
-        my_std = np.nanstd(filtered_data)
-
-        # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
-        itemindex = np.where(((filtered_data > my_mean + 3 * my_std) | (filtered_data < my_mean - 3 * my_std)))
-        filtered_data[itemindex] = np.nanmean(filtered_data)
-        # Fix boundary effects by adding prepending and appending values to the data
-        filtered_data = np.insert(filtered_data, 0, np.ones(window_size) * np.nanmean(filtered_data[:window_size // 2]))
-        filtered_data = np.insert(filtered_data, filtered_data.size,
-                                  np.ones(window_size) * np.nanmean(filtered_data[-window_size // 2:]))
-        window = np.ones(int(window_size)) / float(window_size)
-        # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
-        return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
 
     def resample2(self, sens_str):
         data = self.station.aggregate_months['data'][sens_str].copy()
