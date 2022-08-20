@@ -432,10 +432,12 @@ class Start(QMainWindow):
         # radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
         # radio_btn_HF.setChecked(True)
         self.mode = self.ui.radioButton_Minute.text()
+        # Makes sure we default back to default on new file load
+        self.ui.radioButton_Minute.setChecked(True)
 
         self.sensor_dict["PRD"].setChecked(True)
         self.sens_str = "PRD"
-        # self.sensor_dict2["PRD"].setEnabled(False)
+        self.sensor_dict2["PRD"].setEnabled(False)
         self.sensor_dict2["ALL"].setEnabled(False)
         self.plot(all=False)
         self.ui.buttonGroup_data.buttonClicked.connect(self.on_sensor_changed)

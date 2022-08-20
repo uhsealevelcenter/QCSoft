@@ -139,7 +139,7 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_fast_delivery(station, tmp_dir, DIN, callback=None)
-
+            # .mat files test
             # Hourly test
             data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
             data_trans = data['rad'].transpose((1, 0))
