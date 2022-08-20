@@ -8,6 +8,7 @@ import scipy.io as sio
 
 import filtering as filt
 from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq, save_fast_delivery
+from my_widgets import find_outliers
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -119,17 +120,31 @@ class TestDatFileSave(unittest.TestCase):
                     self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
                     # Compare time vector
                     self.assertListEqual(time_vector_mat.tolist(), time_vector)
-        # Now clean the data and then save it
-        # Checks if cleaning is consistent between both .mat and ts files
 
-        self.station.back_propagate_changes(self.station.aggregate_months['data'])
+        # Now clean the data and then save it
+        # Checks if cleaning is consistent between both .mat and ts files after cleaning
+        # Does not really check if the cleaning is "correct" because there is really no perfect way to clean the data
+
+        clean_station = load_station_data([input_filename])
+        for month in clean_station.month_collection:
+            # Clean every sensor
+            for key, sensor in month.sensor_collection.items():
+                if key == "ALL":
+                    continue
+                sea_level = sensor.get_flat_data().copy()
+                if key != "PRD":
+                    outliers_idx = find_outliers(clean_station, sensor.get_time_vector(), sea_level, key)
+                    # Clean the data (change outliers to 9999)
+                    clean_station.aggregate_months['data'][key][outliers_idx] = 9999
+
         with tempfile.TemporaryDirectory() as tmp_dir:
-            for month in station.month_collection:
+            clean_station.back_propagate_changes(clean_station.aggregate_months['data'])
+            save_mat_high_fq(clean_station, tmp_dir, callback=None)
+            for month in clean_station.month_collection:
                 # Compare every sensor (one file per sensor)
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
                         continue
-                    outliers_idx = find
                     file_name = month.get_mat_filename()[key]
                     data = sio.loadmat(os.path.join(tmp_dir, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
@@ -148,7 +163,14 @@ class TestDatFileSave(unittest.TestCase):
                     self.assertListEqual(sea_level_mat.tolist(), sea_level.tolist())
                     # Compare time vector
                     self.assertListEqual(time_vector_mat.tolist(), time_vector)
-            save_mat_high_fq(station, tmp_dir, callback=None)
+        # simple check to make sure the data got cleaned
+        # Note that this is a really primitive step and checks this for only one month and for only one sensor
+        clean_prs_sum = np.sum(clean_station.month_collection[0].sensor_collection['PRS'].get_flat_data())
+        not_clean_prs_sum = np.sum(station.month_collection[0].sensor_collection['PRS'].get_flat_data())
+        self.assertNotEqual(clean_prs_sum, not_clean_prs_sum)
+        # Also leave sums so that if we ever make changes to the current outlier algorithm this test will fail
+        self.assertEqual(clean_prs_sum, 48519306)
+        self.assertEqual(not_clean_prs_sum, 48326678)
 
     def test_save_fast_delivery(self):
         """
