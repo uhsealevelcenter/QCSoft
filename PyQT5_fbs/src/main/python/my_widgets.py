@@ -782,7 +782,8 @@ class Start(QMainWindow):
                     # TODO: All instances of self.station.month_collection[0] need to be replaces with a specific index
                     #  instead of 0 so that the data for the correct month is updated as opposed to only updating data
                     #  for the first month loaded. Haven't thought this trough, but in this case the index would have
-                    #  correspond to the month in which the reference level was changed
+                    #  correspond to the month in which the reference level was changed plus all the months that were
+                    #  loaded that came after
                     new_header = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[
                                  :60] + '{:04d}'.format(new_REF) + \
                                  self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[64:]
