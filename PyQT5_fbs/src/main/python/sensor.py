@@ -28,6 +28,27 @@ class Sensor:
         return np.array(
             [self.date + np.timedelta64(i * int(self.rate), 'm') for i in range(self.get_flat_data().size)])
 
+    def update_header_ref(self, reference_level):
+        """
+        Upates this sensor's header with a new reference level
+        :return:
+         New header as a string
+        """
+        new_header = self.header[:60] + '{:04d}'.format(reference_level) + self.header[64:]
+        self.header = new_header
+        return self.header
+
+    def get_reference_difference(self, new_reference):
+        """
+        Giver the new reference level, return the difference between the new and the old one.
+        It is used for offsetting the sealevel data
+        :param new_reference:
+        :return:
+            the int difference
+        """
+        diff = new_reference - self.height
+        return diff
+
     def __repr__(self):
         return self.type
 

@@ -214,7 +214,7 @@ class DataExtractor(Month):
             ref_height = self.refs[sensor]
             header = self.headers[sensor]
 
-            _sensor = Sensor(rate=frequency, height=ref_height, sensor_type=sensor_type,
+            _sensor = Sensor(rate=frequency, height=int(ref_height), sensor_type=sensor_type,
                              date=self.init_dates[sensor],
                              data=np.array(data), time_info=info_time_col, header=header)
             self.sensors.add_sensor(_sensor)

@@ -360,6 +360,10 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
     return success, failure
 
 
+def date_time_to_isostring(date, time):
+    return date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
+
+
 def moving_average(data, window_size):
     """ Computes moving average using discrete linear convolution of two one dimensional sequences.
     Args:
@@ -769,30 +773,27 @@ class Start(QMainWindow):
             if self.is_digit(str(self.ui.refLevelEdit.text())):
                 # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
                 date, time, result = DateDialog.getDateTime(self)
-                ISOstring = date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
+                ISOstring = date_time_to_isostring(date, time)
                 if result:
-                    REF_diff = int(str(self.ui.refLevelEdit.text())) - int(
-                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].height)
-                    new_REF = REF_diff + int(
-                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].height)
-                    # offset the data
-                    self.browser.offset_data(ISOstring, REF_diff)
-                    # format the new reference to a 4 character string (i.e add leading zeros if necessary)
-                    # update the header
-                    # TODO: All instances of self.station.month_collection[0] need to be replaces with a specific index
-                    #  instead of 0 so that the data for the correct month is updated as opposed to only updating data
-                    #  for the first month loaded. Haven't thought this trough, but in this case the index would have
-                    #  correspond to the month in which the reference level was changed plus all the months that were
-                    #  loaded that came after
-                    new_header = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[
-                                 :60] + '{:04d}'.format(new_REF) + \
-                                 self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header[64:]
-                    self.station.month_collection[0].sensor_collection.sensors[
-                        self.sens_str].header = new_header
-                    self.ui.lineEdit.setText(
-                        self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
-                    print("Succesfully changed to: ", str(self.ui.refLevelEdit.text()))
+                    new_REF = int(str(self.ui.refLevelEdit.text()))
 
+                    months_updated = 0
+                    for month in self.station.month_collection:
+                        # Todo: This should catch all months, even if the loaded months wrap into a new
+                        #  year, ie. we loaded month 11, 12, 1
+                        if month.month >= date.month() or month.sensor_collection[self.sens_str].date.astype(
+                                object).year >= date.year():
+                            months_updated += 1
+                            ref_diff = month.sensor_collection.sensors[
+                                self.sens_str].get_reference_difference(new_REF)
+                            new_header = month.sensor_collection.sensors[
+                                self.sens_str].update_header_ref(new_REF)
+                            self.ui.lineEdit.setText(new_header)
+                    # offset the data
+                    if months_updated == 0:
+                        self.show_custom_message("Warning!", "The date picked is not within the available range")
+                    else:
+                        self.browser.offset_data(ISOstring, ref_diff)
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")
                 return
