@@ -1,6 +1,8 @@
+import datetime
 import os
 import unittest
 
+import PyQt5
 import matplotlib.pyplot as plt
 
 from interactive_plot import PointBrowser
@@ -22,7 +24,16 @@ class TestInteractiveBrowser(unittest.TestCase):
         self.assertFalse(self.station.is_sampling_inconsistent())
 
     def test_reference_level_change(self):
-        pass
+        date = PyQt5.QtCore.QDate(2015, 7, 22)
+
+        self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 783)
+        # Change reference height
+        months_updated, ref_diff, new_header = self.station.update_header_reference_level(date, 5555, 'PRS')
+
+        self.assertEqual(months_updated, 1)
+        self.assertEqual(ref_diff, 4772)
+        self.assertEqual(new_header,'123sabPRS    PLAT=05 53.3N LONG=095 18.9E TMZONE=GMT    REF=5555  2 NOV 18  030 \n')
+        self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 5555)
 
     def test_something(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
