@@ -1,4 +1,6 @@
 import sys
+from collections import defaultdict
+from itertools import groupby
 
 from PyQt5 import QtWidgets
 from fbs_runtime.application_context import ApplicationContext, cached_property
@@ -58,7 +60,6 @@ def load_station_data(file_names):
     location = months[0].loc
 
     station = Station(name=name, location=location, month=months)
-
     return station
 
 

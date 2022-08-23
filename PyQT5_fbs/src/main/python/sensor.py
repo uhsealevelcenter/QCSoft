@@ -1,4 +1,6 @@
 import calendar
+from collections import defaultdict
+from itertools import groupby
 
 import numpy as np
 
@@ -40,7 +42,7 @@ class Sensor:
 
     def get_reference_difference(self, new_reference):
         """
-        Giver the new reference level, return the difference between the new and the old one.
+        Given the new reference level, return the difference between the new and the old one.
         It is used for offsetting the sealevel data
         :param new_reference:
         :return:
@@ -48,6 +50,9 @@ class Sensor:
         """
         diff = new_reference - self.height
         return diff
+
+    def set_reference_height(self, new_reference):
+        self.height = new_reference
 
     def __repr__(self):
         return self.type
@@ -184,6 +189,31 @@ class Station:
                         except ValueError as e:
                             print(e, "i: {}, month: {}, sensor:{}".format(i, _month.month, key))
 
+    def all_equal(self, iterable):
+        "Returns True if all the elements are equal to each other"
+        g = groupby(iterable)
+        return next(g, True) and not next(g, False)
+
+    def get_sampling_rates(self):
+        """
+        Ensure that the sampling rate between sensors for different months is the same
+        """
+
+        # Collect all rates for each sensor for all months
+        rates = defaultdict(list)
+        for month in self.month_collection:
+            for key, sensor in month.sensor_collection.sensors.items():
+                if key != "ALL":
+                    rates[key].append(sensor.rate)
+        # Check if rates for each sensor are equal
+        result = {}
+        for sensor, rate in rates.items():
+            result[sensor] = self.all_equal(rate)
+
+        return result
+
+    def is_sampling_inconsistent(self):
+        return False in self.get_sampling_rates().values()
 
 class DataCollection:
 

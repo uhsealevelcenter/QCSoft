@@ -464,6 +464,12 @@ class Start(QMainWindow):
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
 
     def make_sensor_buttons(self, sensors):
+        if self.station.is_sampling_inconsistent():
+            self.show_custom_message("Error", "It appears that the sampling rate for one of the sensors differs "
+                                              "between two different months. This is not allowed. Please process "
+                                              "each of the months individually")
+            self.station = None
+            return
         # Remove all sensor checkbox widgets from the layout
         # every time new data is loaded
         for i in range(self.ui.verticalLayout_left_top.count()):
@@ -780,7 +786,7 @@ class Start(QMainWindow):
                     months_updated = 0
                     for month in self.station.month_collection:
                         # Todo: This should catch all months, even if the loaded months wrap into a new
-                        #  year, ie. we loaded month 11, 12, 1
+                        #  year, ie. we loaded month 11, 12, 1. But write a test for it
                         if month.month >= date.month() or month.sensor_collection[self.sens_str].date.astype(
                                 object).year >= date.year():
                             months_updated += 1
@@ -788,11 +794,17 @@ class Start(QMainWindow):
                                 self.sens_str].get_reference_difference(new_REF)
                             new_header = month.sensor_collection.sensors[
                                 self.sens_str].update_header_ref(new_REF)
+                            month.sensor_collection.sensors[
+                                self.sens_str].set_reference_height(new_REF)
                             self.ui.lineEdit.setText(new_header)
                     # offset the data
                     if months_updated == 0:
                         self.show_custom_message("Warning!", "The date picked is not within the available range")
                     else:
+                        # TODO: We could now maybe offset the data directly on sensor object as opposed ot offsetting
+                        #  it through the matplotlib widget by writing a new method on sensor similar to the two new
+                        #  methods added. This method would just take the new_ref (from which it calculates ref_diff)
+                        #  and ISOstring
                         self.browser.offset_data(ISOstring, ref_diff)
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")

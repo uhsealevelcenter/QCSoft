@@ -7,7 +7,8 @@ from interactive_plot import PointBrowser
 from main import load_station_data, find_outliers
 
 dirname = os.path.dirname(__file__)
-input_filename = os.path.join(dirname, 'monp/ssaba1809.dat')
+input_filename = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
+input_filename2 = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
 
 
 class TestInteractiveBrowser(unittest.TestCase):
