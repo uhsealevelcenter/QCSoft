@@ -215,6 +215,19 @@ class Station:
     def is_sampling_inconsistent(self):
         return False in self.get_sampling_rates().values()
 
+    def update_header_reference_level(self, date, new_level, sens):
+        months_updated = 0
+        for month in self.month_collection:
+            # Todo: This should catch all months, even if the loaded months wrap into a new
+            #  year, ie. we loaded month 11, 12, 1. But write a test for it
+            if month.month >= date.month() or month.sensor_collection[sens].date.astype(
+                    object).year > date.year():
+                months_updated += 1
+                ref_diff = month.sensor_collection.sensors[sens].get_reference_difference(new_level)
+                new_header = month.sensor_collection.sensors[sens].update_header_ref(new_level)
+                month.sensor_collection.sensors[sens].set_reference_height(new_level)
+        return months_updated, ref_diff, new_header
+
 class DataCollection:
 
     def __init__(self, station: Station = None):

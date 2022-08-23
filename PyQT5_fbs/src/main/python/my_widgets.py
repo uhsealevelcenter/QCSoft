@@ -769,7 +769,14 @@ class Start(QMainWindow):
         # choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
         self.show_custom_message(*args, *args)
 
+
     def show_ref_dialog(self):
+        if len(self.station.month_collection) > 1:
+            self.show_custom_message("Warning","Adjusting reference level for multiple months is not tested "
+                                               "and could produce unwanted behaviour. Please load one month only "
+                                               "to change the level")
+            return
+
         try:
             self.browser
         except AttributeError:
@@ -782,21 +789,8 @@ class Start(QMainWindow):
                 ISOstring = date_time_to_isostring(date, time)
                 if result:
                     new_REF = int(str(self.ui.refLevelEdit.text()))
-
-                    months_updated = 0
-                    for month in self.station.month_collection:
-                        # Todo: This should catch all months, even if the loaded months wrap into a new
-                        #  year, ie. we loaded month 11, 12, 1. But write a test for it
-                        if month.month >= date.month() or month.sensor_collection[self.sens_str].date.astype(
-                                object).year >= date.year():
-                            months_updated += 1
-                            ref_diff = month.sensor_collection.sensors[
-                                self.sens_str].get_reference_difference(new_REF)
-                            new_header = month.sensor_collection.sensors[
-                                self.sens_str].update_header_ref(new_REF)
-                            month.sensor_collection.sensors[
-                                self.sens_str].set_reference_height(new_REF)
-                            self.ui.lineEdit.setText(new_header)
+                    months_updated, ref_diff, new_header = self.station.update_header_reference_level(date, new_REF, self.sens_str)
+                    self.ui.lineEdit.setText(new_header)
                     # offset the data
                     if months_updated == 0:
                         self.show_custom_message("Warning!", "The date picked is not within the available range")

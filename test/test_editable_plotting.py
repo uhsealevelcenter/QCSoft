@@ -7,13 +7,22 @@ from interactive_plot import PointBrowser
 from main import load_station_data, find_outliers
 
 dirname = os.path.dirname(__file__)
-input_filename = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
-input_filename2 = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
+file1 = os.path.join(dirname, 'test_data/monp/ssaba1811.dat')
+file2 = os.path.join(dirname, 'test_data/monp/ssaba1812.dat')
+file3 = os.path.join(dirname, 'test_data/monp/ssaba1901.dat')
 
 
 class TestInteractiveBrowser(unittest.TestCase):
     def setUp(self) -> None:
-        self.station = load_station_data([input_filename])
+        self.station = load_station_data([file1])
+        self.station_multi = load_station_data([file1, file2, file3]) # multi months loaded
+
+    def test_inconsistent_sampling_rate(self):
+        self.assertTrue(self.station_multi.is_sampling_inconsistent())
+        self.assertFalse(self.station.is_sampling_inconsistent())
+
+    def test_reference_level_change(self):
+        pass
 
     def test_something(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
