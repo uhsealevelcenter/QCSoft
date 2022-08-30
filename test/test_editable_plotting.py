@@ -1,5 +1,6 @@
 import datetime
 import os
+import numpy as np
 import unittest
 
 import PyQt5
@@ -46,6 +47,21 @@ class TestInteractiveBrowser(unittest.TestCase):
 
         browser = PointBrowser(time_prs, data_prs, ax, line, fig,
                                outliers)
+
+        # This are just dump assertion to making sure thaat the outliers are being detected
+        # and that the data is modified and also that offset works
+        self.assertEqual(len(browser.deleted), 0)
+        self.assertEqual(np.sum(browser.data), 139694623)
+        for idx in outliers[0]:
+            browser.ondelete(idx)
+            browser.ys[idx] = 9999
+        # 265 is the true for the current testing file and the current outliers methodology
+        self.assertEqual(len(browser.deleted), 265)
+        self.assertEqual(np.sum(browser.data), 141643093)
+
+        date_time = '2018-11-20T20:58'
+        browser.offset_data(date_time, 1500)
+        self.assertEqual(np.sum(browser.data), 155278093)
 
         # Todo:
         #  1) Refactor show_ref_dialog so that time formatting is its own function and write a test for it
