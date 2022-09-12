@@ -36,7 +36,7 @@ class TestInteractiveBrowser(unittest.TestCase):
         self.assertEqual(new_header,'123sabPRS    PLAT=05 53.3N LONG=095 18.9E TMZONE=GMT    REF=5555  2 NOV 18  030 \n')
         self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 5555)
 
-    def test_something(self):
+    def test_plot_value_edit(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
         time_prs = self.station.month_collection[0].sensor_collection['PRS'].get_time_vector()
         outliers = find_outliers(self.station, time_prs, data_prs, 'PRS')
@@ -48,7 +48,7 @@ class TestInteractiveBrowser(unittest.TestCase):
         browser = PointBrowser(time_prs, data_prs, ax, line, fig,
                                outliers)
 
-        # This are just dump assertion to making sure thaat the outliers are being detected
+        # These are just dumb assertion to make sure that the outliers are being detected
         # and that the data is modified and also that offset works
         self.assertEqual(len(browser.deleted), 0)
         self.assertEqual(np.sum(browser.data), 139694623)
@@ -64,11 +64,6 @@ class TestInteractiveBrowser(unittest.TestCase):
         self.assertEqual(np.sum(browser.data), 155278093)
 
         # Todo:
-        #  1) Refactor show_ref_dialog so that time formatting is its own function and write a test for it
-        #  2) Crate a function that calculates new reference point based on the newly supplied one
-        #  3) Write a function that constructs a new header (this and the one above could method of the Sensor object)
-        #  4) Write test for all of those function above
-        #  5) Offset the value using some arbitrary new offset at a certain date and write a test for it
         #  6) See Todo in show_ref_dialog on how to better handle multiple month reference level change and implement it
         #  7)  Write a test for the above implementation
 
