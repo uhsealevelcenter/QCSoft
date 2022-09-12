@@ -548,9 +548,13 @@ def day_119filt(_data, _lat):
     # 2) Calculate residual
     # 3) Center data on noon
 
-    coef = solve(_data["time"].flatten(), _data["sealevel"].flatten(), lat=_lat, nodal=True, epoch="matlab")
+    coef = solve(_data["time"].flatten(), _data["sealevel"].flatten(), lat=_lat, nodal=False, trend=False, epoch="matlab")
     # freq = coef["aux"]["frq"]
     # name = coef["name"]
+    coef.slope = 0
+    coef.mean = 0
+    # coef.name[np.where(coef.aux.frq < 1 / 30)] = np.ndarray([], dtype=object)
+    # tide = reconstruct(_data["time"].flatten(), coef, epoch="matlab")
     tide = reconstruct(_data["time"].flatten(), coef, constit=coef.name[np.where(coef.aux.frq >= 1 / 30)],
                        epoch="matlab")
 
