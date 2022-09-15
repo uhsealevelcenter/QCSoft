@@ -217,7 +217,7 @@ class TestDatFileSave(unittest.TestCase):
             self.assertNotIn(9999, sea_level)
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
             # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
-            np.testing.assert_almost_equal(sea_level_truth, sea_level, 0)
+            np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
 
 
 if __name__ == '__main__':
