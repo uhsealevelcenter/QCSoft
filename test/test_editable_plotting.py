@@ -1,5 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
 import os
 import numpy as np
 import unittest
@@ -10,7 +8,6 @@ import matplotlib.pyplot as plt
 from interactive_plot import PointBrowser
 from main import load_station_data, find_outliers
 
-
 dirname = os.path.dirname(__file__)
 file1 = os.path.join(dirname, 'test_data/monp/ssaba1811.dat')
 file2 = os.path.join(dirname, 'test_data/monp/ssaba1812.dat')
@@ -20,7 +17,7 @@ file3 = os.path.join(dirname, 'test_data/monp/ssaba1901.dat')
 class TestInteractiveBrowser(unittest.TestCase):
     def setUp(self) -> None:
         self.station = load_station_data([file1])
-        self.station_multi = load_station_data([file1, file2, file3]) # multi months loaded
+        self.station_multi = load_station_data([file1, file2, file3])  # multi months loaded
 
     def test_inconsistent_sampling_rate(self):
         self.assertTrue(self.station_multi.is_sampling_inconsistent())
@@ -35,9 +32,11 @@ class TestInteractiveBrowser(unittest.TestCase):
 
         self.assertEqual(months_updated, 1)
         self.assertEqual(ref_diff, 4772)
-        self.assertEqual(new_header,'123sabPRS    PLAT=05 53.3N LONG=095 18.9E TMZONE=GMT    REF=5555  2 NOV 18  030 \n')
+        self.assertEqual(new_header,
+                         '123sabPRS    PLAT=05 53.3N LONG=095 18.9E TMZONE=GMT    REF=5555  2 NOV 18  030 \n')
         self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 5555)
 
+    @unittest.skipIf("CIRCLE_BUILD_NUM" in os.environ)
     def test_plot_value_edit(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
         time_prs = self.station.month_collection[0].sensor_collection['PRS'].get_time_vector()
