@@ -1,13 +1,13 @@
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
+from collections import defaultdict
+from itertools import groupby
+
+from PyQt5 import QtWidgets
 from fbs_runtime.application_context import ApplicationContext, cached_property
-from PyQt5.QtWidgets import QMainWindow
 
 from extractor2 import DataExtractor
-from sensor import Station, Sensor
-from uhslcdesign import Ui_MainWindow
-
 from my_widgets import *
+from uhslcdesign import Ui_MainWindow
 
 # import darkdetect
 
@@ -15,7 +15,6 @@ if is_pyqt5():
     pass
 else:
     pass
-from matplotlib.figure import Figure
 
 
 class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
@@ -35,6 +34,33 @@ class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
     @cached_property
     def window(self):
         return ApplicationWindow()
+
+
+def load_station_data(file_names):
+    """
+
+    :param file_names: An array of data files to be loaded
+    :return: Station instance with all the data needed for further processing
+    """
+
+    # Create DataExtractor for each month that was loaded into program
+    months = []
+    for file_name in file_names:
+        month = DataExtractor(file_name)
+        # An empty sensor, used to create "ALL" radio button in the GUI
+        all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
+        month.sensors.add_sensor(all_sensor)
+        # month = Month(month=month_int, sensors=month.sensors)
+        months.append(month)
+
+    # # The reason months[0] is used is because the program only allows to load
+    # # multiple months for the same station, so the station sensors should be the same
+    # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
+    name = months[0].headers[0][3:6]
+    location = months[0].loc
+
+    station = Station(name=name, location=location, month=months)
+    return station
 
 
 class ApplicationWindow(QMainWindow):
@@ -62,7 +88,6 @@ class ApplicationWindow(QMainWindow):
         opents_file = self.ui.actionOpen_TS
         opents_file.triggered.connect(self.open_ts)
 
-    # @staticmethod
     def file_open(self, reload=False, ts=False):
         if not reload:
             # filters = "s*.dat;; ts*.dat"
@@ -100,53 +125,14 @@ class ApplicationWindow(QMainWindow):
 
         try:
             # in_file = open(name[0],'r')
-            self.month_count = len(self.file_name[0])
-            print('FILENAME', self.file_name[0][0])
-            self.start_screen.sens_objects = {}  # Collection of Sensor objects for station for one month
+            # self.file_name[0] is an array of filenames loaded
+            month_count = len(self.file_name[0])
+            self.ui.lineEdit_2.setText("Loaded: " + str(month_count) + " months")
 
-            comb_data = np.ndarray(
-                0)  # ndarray of concatonated data for all the months that were loaded for a particular station
-            comb_time_col = []  # combined rows of all time columns for all the months that were loaded for a
-            # particular station
-            de = []  # List od DataExtractor objects for each month loaded which hold all the necessary data
-            line_count = []  # array for the number of lines (excluding headers and 9999s)for each month that were
-            # loaded for a particular station. Added as an attribute to respective sensor objects
+            station = load_station_data(self.file_name[0])
 
-            self.ui.lineEdit_2.setText("Loaded: " + str(self.month_count) + " months")
-
-            # Create DataExtractor for each month that was loaded into program
-            for j in range(self.month_count):
-                de.append(DataExtractor(self.file_name[0][j]))
-            # The reason de[0] is used is because the program only allows to load
-            # multiple months for the same station, so the station name will be the same
-            station_name = de[0].headers[0][:6]
-            my_station = Station(station_name, de[0].loc)
-            comb_headers = []
-            # Cycle through all the Sensors
-            # The reason de[0] is used is because the program only allows to load
-            # multiple months for the same station, so the station sensors should be the same
-            # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-            for i in range(len(de[0].sensor_ids)):
-                # cycle through all the months loaded (ie. DataExtractor objects)
-                for d in de:
-                    comb_data = np.append(comb_data, d.data_all[de[0].sensor_ids[i][-3:]])
-                    comb_time_col = comb_time_col + d.infos_time_col[de[0].sensor_ids[i][-3:]]
-                    line_count.append(len(d.infos_time_col[de[0].sensor_ids[i][-3:]]))
-                    comb_headers.append(d.headers[i])
-                self.start_screen.sens_objects[de[0].sensor_ids[i][-3:]] = Sensor(my_station, de[0].frequencies[i],
-                                                                                  de[-1].refs[i], de[0].sensor_ids[i],
-                                                                                  de[0].init_dates[i], comb_data,
-                                                                                  comb_time_col, comb_headers)
-                self.start_screen.sens_objects[
-                    de[0].sensor_ids[i][-3:]].line_num = line_count  # adding a line_num attribute for each sensor
-                # Empty the combined data
-                comb_time_col = []
-                comb_data = np.ndarray(0)
-                line_count = []
-                comb_headers = []
-                self.start_screen.sens_objects["ALL"] = {}
-
-            self.start_screen.make_sensor_buttons(self.start_screen.sens_objects)
+            self.start_screen.station = station
+            self.start_screen.make_sensor_buttons(station.month_collection[0].sensor_collection.sensors)
 
         except (FileNotFoundError, IndexError) as e:
             print('Error:', e)

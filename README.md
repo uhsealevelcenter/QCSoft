@@ -78,6 +78,15 @@ generated .py file:
 
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
 
+## Building package
+In your terminal (with the virtual environment activated) navigate to the project's root folder (PyQT5_fbs) and run (for more info [fbs - the packaging tool](https://github.com/mherrmann/fbs-tutorial)):
+
+```
+fbs clean
+fbs freeze
+fbs installer
+```
+
 ### Package freeze and build problems
 
 Scipy and utide might not get picked up by the PyInstaller which would crash the app freezing process (when running fbs freeze). In order to fix this, you will have to navigate to the PyInstaller folder of your python interpretter (/python3.6/site-packages/PyInstaller/hooks) and add a file for each of the libraries that need to be imported and name them hook-[package-name].py. For utide library the contents of this file would look like this:
@@ -107,6 +116,7 @@ You might also have to update hidden_imports inside of your /src/build/settings/
 }
 ```
 
+If you run into issues with any other packages, you might have to list them inside of the /src/build/settings/base.json file.
 
 ## Authors
 

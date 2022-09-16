@@ -1,8 +1,11 @@
-import numpy as np
 import re
 
+import numpy as np
 
-class DataExtractor:
+from sensor import SensorCollection, Sensor, Month
+
+
+class DataExtractor(Month):
     """
     Takes a path to the monp dat file
     """
@@ -22,9 +25,15 @@ class DataExtractor:
         self.infos_time_col = {}
         self.prev_date = 0
         self.units = []
-        self.loc = [0,0]
+        self.loc = [0, 0]
+        self.string_location = None
 
+        self.sensors = SensorCollection()
         self.parse_file(filename)
+
+        self.month_int = int(filename.split('.dat')[0][-2:])
+        self.year = int(filename.split('.dat')[0][-4:-2])
+        Month.__init__(self, self.month_int, self.year, self.sensors, self.headers[0][:3])
 
     def is_header(self, arg):
         """
@@ -43,10 +52,10 @@ class DataExtractor:
         return sorted(set(range(start, end + 1)).difference(L))
 
     def extract_lat(self, header):
-        NorS = header[25] # Extract a character to see if it is North or South
+        NorS = header[25]  # Extract a character to see if it is North or South
         lat_deg = header[18:20]
         lat_min = header[21:23]
-        lat_dec_deg = int(lat_deg) + int(lat_min)/60
+        lat_dec_deg = int(lat_deg) + int(lat_min) / 60
 
         return -lat_dec_deg if NorS == "S" else lat_dec_deg
 
@@ -54,9 +63,12 @@ class DataExtractor:
         WorE = header[40]  # West or East (W or E)
         long_deg = header[32:35]
         long_min = header[36:38]
-        long_dec_deg = int(long_deg) + int(long_min)/60
+        long_dec_deg = int(long_deg) + int(long_min) / 60
 
         return -long_dec_deg if WorE == "W" else long_dec_deg
+
+    def extract_string_location(self, header):
+        return header[14:41]
 
     def parse_file(self, filename):
         list_of_lists = []
@@ -84,6 +96,7 @@ class DataExtractor:
             self.sensor_ids.append(station_num + header[6:9])
 
         self.loc = [self.extract_lat(self.headers[0]), self.extract_long(self.headers[0])]
+        self.string_location = self.extract_string_location(self.headers[0])
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted
@@ -183,13 +196,12 @@ class DataExtractor:
                 # And add this row to the
                 # entire data set.
                 data.append(row_data)
-                
+
             # Data prior to Spet 2015 was stored in Imperial units.
             if init_date < np.datetime64('2015-09-01'):
                 self.units.append('Imperial')
             else:
                 self.units.append('Metric')
-            
 
             # # Finally, convert the "list of
             # # lists" into a 2D array.
@@ -197,5 +209,13 @@ class DataExtractor:
             self.infos_time_col[self.sensor_ids[sensor][-3:]] = info_time_col
             # self.data_all.append(np.array(data))
             self.data_all[self.sensor_ids[sensor][-3:]] = np.array(data)
+            sensor_type = self.sensor_ids[sensor][-3:]
+            frequency = self.frequencies[sensor]
+            ref_height = self.refs[sensor]
+            header = self.headers[sensor]
 
+            _sensor = Sensor(rate=frequency, height=int(ref_height), sensor_type=sensor_type,
+                             date=self.init_dates[sensor],
+                             data=np.array(data), time_info=info_time_col, header=header)
+            self.sensors.add_sensor(_sensor)
         self.in_file.close()
