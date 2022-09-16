@@ -1,7 +1,6 @@
 from matplotlib.backends.qt_compat import QtCore
 
 SETTINGS = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
-print("MY SETTING FILENAME",SETTINGS.fileName())
 LOAD_KEY = 'loadpath'
 SAVE_KEY = 'savepath'
 DIN_PATH = 'dinpath'
