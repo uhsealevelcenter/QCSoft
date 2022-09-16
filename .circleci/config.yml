@@ -57,12 +57,11 @@ jobs:
           path: output
 
       - run: xcodebuild -version
-      - run: python3.7 --version
+      - run: xcode-select --install
+      - run: python3 --version
 #      - run: cd "$(brew --repository)" && git fetch && git reset --hard origin/master
 #      - run: brew update
-      - run: brew install freetype
-      - run: brew install pkg-config
-      - run: brew install libpng
+      - run: brew install freetype pkg-config libpng pyenv
       - run: pip3 install -r PyQT5_fbs/requirements/mac.txt
 #      - python/install-packages:
 #          pkg-manager: pip
