@@ -17,6 +17,6 @@ python-dateutil==2.7.3
 pytz==2018.5
 scipy==1.4.1
 setuptools==28.8.0
-sip==4.19.8
+sip==5.0.0
 six==1.11.0
 utide==0.2.5
