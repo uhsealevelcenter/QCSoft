@@ -6,8 +6,8 @@ future==0.16.0
 kiwisolver==1.0.1
 macholib==1.11
 matplotlib==2.2.2
-numpy
-pandas
+numpy==1.15.0
+pandas==0.24.1
 pefile==2018.8.8
 pip==19.0.3
 PyInstaller==3.3.1
@@ -17,6 +17,6 @@ python-dateutil==2.7.3
 pytz==2018.5
 scipy==1.4.1
 setuptools==28.8.0
-sip==5.0.0
+sip==4.19.8
 six==1.11.0
 utide==0.2.5
