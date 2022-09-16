@@ -49,11 +49,12 @@ jobs:
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - run: xcodebuild -version
-      - python/install-packages:
-          pkg-manager: pip
-          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
-          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
-          pypi-cache: false
+      - run: pip3 install -r PyQT5_fbs/requirements/mac.txt
+#      - python/install-packages:
+#          pkg-manager: pip
+#          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
+#          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+#          pypi-cache: false
       - run: python -m fbs freeze
 
 
