@@ -49,6 +49,12 @@ jobs:
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - run: xcodebuild -version
+      - run: python3 --version
+      - run: cd "$(brew --repository)" && git fetch && git reset --hard origin/master
+      - run: brew update
+      - run: brew install freetype
+      - run: brew install pkg-config
+      - run: brew install libpng
       - run: pip3 install -r PyQT5_fbs/requirements/mac.txt
 #      - python/install-packages:
 #          pkg-manager: pip
