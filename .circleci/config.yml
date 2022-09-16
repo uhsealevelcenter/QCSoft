@@ -22,8 +22,8 @@ jobs:
     # Change the version below to your required version of python
     docker:
       - image: cimg/python:3.7
-    environment:
-      DISPLAY: mymachine.com:0.0
+#    environment:
+#      DISPLAY: mymachine.com:0.0
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     # Checkout the code as the first step. This is a dedicated CircleCI step.
@@ -38,6 +38,10 @@ jobs:
           app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
           pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
           pypi-cache: false
+      - run:
+          name: Solve matplotlib problem
+          command:
+            echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
       - run:
           name: Run tests
           command: python -m unittest
