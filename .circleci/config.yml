@@ -49,7 +49,7 @@ jobs:
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - run: xcodebuild -version
-      - run: fbs freeze
+      - run: python -m fbs freeze
 
 
 # Invoke jobs via workflows
