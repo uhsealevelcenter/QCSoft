@@ -196,8 +196,6 @@ class ApplicationWindow(QMainWindow):
 
 
 if __name__ == '__main__':
-    import matplotlib
-    matplotlib.use('Agg')
     appctxt = AppContext()  # 4. Instantiate the subclass
     exit_code = appctxt.run()  # 5. Invoke run()
     sys.exit(exit_code)
