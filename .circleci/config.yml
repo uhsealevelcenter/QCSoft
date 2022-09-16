@@ -39,9 +39,13 @@ jobs:
           pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
           pypi-cache: false
       - run:
-          name: "Setup custom environment variables"
-          command:
-            echo "backend: Agg" > ~/.config/matplotlib/matplotlibrc
+          name: Display Setting
+          command: |
+            disp=:99
+            screen=0
+            geom=640x480x24
+            exec Xvfb $disp -screen $screen $geom 2>/tmp/Xvfb.log &
+            export DISPLAY=:99
       - run:
           name: Run tests
           command: python -m unittest
