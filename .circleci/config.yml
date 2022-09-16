@@ -14,7 +14,7 @@ orbs:
 jobs:
   # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
   # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-  build-and-test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
+  test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
     # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
     # You can specify an image from dockerhub or use one of the convenience images from CircleCI's Developer Hub
     # A list of available CircleCI docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
@@ -41,12 +41,22 @@ jobs:
       - run:
           name: Run tests
           command: python -m unittest
+  build-mac:
+    macos:
+      xcode: 11.7.0
+
+    steps:
+      # Commands will execute in macOS container
+      # with Xcode 12.5.1 installed
+      - run: xcodebuild -version
+
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  sample:  # This is the name of the workflow, feel free to change it to better match your workflow.
+  qctool:  # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
-      - build-and-test
+      - test
+      - build-mac
