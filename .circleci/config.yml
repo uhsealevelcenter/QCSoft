@@ -62,8 +62,7 @@ jobs:
 #          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
 #          pypi-cache: false
       - run: echo "$PWD"
-      - run: cd PyQT5_fbs
-      - run: fbs freeze
+      - run: cd PyQT5_fbs && fbs freeze
 
 
 # Invoke jobs via workflows
