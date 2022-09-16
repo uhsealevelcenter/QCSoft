@@ -44,12 +44,20 @@ jobs:
   build-mac:
     macos:
       xcode: 11.7.0
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      FL_OUTPUT_DIR: output
     steps:
       - checkout
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
+      - store_test_results:
+          path: output/scan
+      - store_artifacts:
+          path: output
+
       - run: xcodebuild -version
-      - run: python3 --version
+      - run: python3.7 --version
 #      - run: cd "$(brew --repository)" && git fetch && git reset --hard origin/master
 #      - run: brew update
       - run: brew install freetype
