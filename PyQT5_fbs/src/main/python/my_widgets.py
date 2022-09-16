@@ -309,7 +309,6 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
                             line_str = final_str
                         the_file.write(line_str + "\n")
                         counter += 1
-            print("NEMO CCI LOG",st.FD_PATH)
             success.append({'title': "Success",
                             'message': "Success \n Daily Date Saved to " + st.get_path(
                                 st.FD_PATH) + "\n"})
