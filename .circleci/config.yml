@@ -61,7 +61,8 @@ jobs:
 #          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
 #          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
 #          pypi-cache: false
-      - run: python -m fbs freeze
+      - run: cd PyQT5_fbs/
+      - run: fbs freeze
 
 
 # Invoke jobs via workflows
