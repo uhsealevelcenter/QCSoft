@@ -36,7 +36,7 @@ class TestInteractiveBrowser(unittest.TestCase):
                          '123sabPRS    PLAT=05 53.3N LONG=095 18.9E TMZONE=GMT    REF=5555  2 NOV 18  030 \n')
         self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 5555)
 
-    @unittest.skipIf("CIRCLE_BUILD_NUM" in os.environ, "Matplotlib is tripping up")
+    # @unittest.skipIf("CIRCLE_BUILD_NUM" in os.environ, "Matplotlib is tripping up")
     def test_plot_value_edit(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
         time_prs = self.station.month_collection[0].sensor_collection['PRS'].get_time_vector()
