@@ -10,4 +10,8 @@ HF_PATH  = 'hfpath'
 
 
 def get_path(str_key):
-    return SETTINGS.value(str_key)
+    if SETTINGS.contains(str_key):
+        return SETTINGS.value(str_key)
+    else:
+        SETTINGS.setValue(str_key, '~')
+        return SETTINGS.value(str_key)
