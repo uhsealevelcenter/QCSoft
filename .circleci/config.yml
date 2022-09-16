@@ -44,20 +44,28 @@ jobs:
   build-mac:
     macos:
       xcode: 11.7.0
-
     steps:
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - run: xcodebuild -version
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
+          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+          pypi-cache: false
+      - run: cd PyQT5_fbs/
       - run: python -m fbs freeze
 
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  qctool:  # This is the name of the workflow, feel free to change it to better match your workflow.
+  test_build:  # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-      - build-mac
+      - build-mac:
+          requires:
+            test
