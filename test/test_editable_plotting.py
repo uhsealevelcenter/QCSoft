@@ -1,4 +1,5 @@
-import datetime
+import matplotlib
+matplotlib.use('Agg')
 import os
 import numpy as np
 import unittest
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from interactive_plot import PointBrowser
 from main import load_station_data, find_outliers
+
 
 dirname = os.path.dirname(__file__)
 file1 = os.path.join(dirname, 'test_data/monp/ssaba1811.dat')
