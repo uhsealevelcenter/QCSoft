@@ -67,8 +67,9 @@ jobs:
 #      - run: exec "$SHELL"
 #      - run: brew install freetype pkg-config libpng pyenv openssl readline sqlite3 xz zlib
       - run: brew install pyenv
+      - run: cd PyQT5_fbs && pyenv install 3.6.7
       - run: pyenv versions
-      - run: pip3 install -r PyQT5_fbs/requirements/mac.txt
+      - run: pyenv local 3.6.7 && pip3 install -r PyQT5_fbs/requirements/mac.txt
 #      - python/install-packages:
 #          pkg-manager: pip
 #          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
