@@ -7,7 +7,7 @@ kiwisolver==1.0.1
 macholib==1.11
 matplotlib==2.2.2
 numpy
-pandas==0.24.1
+pandas
 pefile==2018.8.8
 pip==19.0.3
 PyInstaller==3.3.1

@@ -50,8 +50,8 @@ jobs:
       # with Xcode 12.5.1 installed
       - run: xcodebuild -version
       - run: python3 --version
-      - run: cd "$(brew --repository)" && git fetch && git reset --hard origin/master
-      - run: brew update
+#      - run: cd "$(brew --repository)" && git fetch && git reset --hard origin/master
+#      - run: brew update
       - run: brew install freetype
       - run: brew install pkg-config
       - run: brew install libpng
