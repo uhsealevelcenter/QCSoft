@@ -49,8 +49,6 @@ jobs:
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
-      - attach_workspace:
-          at: src
       - checkout
       - add_ssh_keys
       # Commands will execute in macOS container
@@ -60,6 +58,8 @@ jobs:
       - store_artifacts:
           path: output
       - run: rsync --version
+      - attach_workspace:
+          at: src
       - run: cd PyQT5_fbs/target/requirements && scp -r ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
       - run: |
            cd PyQT5_fbs/target/requirements
