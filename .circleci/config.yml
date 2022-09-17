@@ -78,7 +78,7 @@ jobs:
 #          pypi-cache: false
 #      - run: echo "$PWD"
       - run: cd PyQT5_fbs && fbs freeze
-      - run: cd PyQT5_fbs && fbs installer
+      - run: cd PyQT5_fbs && fbs installer || true
 
 
 # Invoke jobs via workflows
