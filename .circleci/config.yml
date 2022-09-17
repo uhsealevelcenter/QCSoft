@@ -60,9 +60,9 @@ jobs:
       - run: rsync --version
       - attach_workspace:
           at: src
-      - run: cd PyQT5_fbs/target/requirements && scp -r ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
+      - run: cd src/PyQT5_fbs/target/requirements && scp -r ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
       - run: |
-           cd PyQT5_fbs/target/requirements
+           cd src/PyQT5_fbs/target/requirements
            echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKFbbcnvFxtiBWcrhI9rHhzaDXISdsSmoNX0wtjR+md komar@hawaii.edu' >> ~/.ssh/known_hosts
            rsync -va ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
 #      - run: xcodebuild -version
