@@ -50,7 +50,9 @@ jobs:
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
       - checkout
-      - add_ssh_keys
+      - add_ssh_keys:
+          fingerprints:
+            - "7c:7d:b0:02:cd:12:af:a5:8b:e8:32:d9:e5:ab:2d:ae"
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - store_test_results:
