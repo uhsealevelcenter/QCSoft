@@ -78,6 +78,7 @@ jobs:
 #      - run: cd PyQT5_fbs/target
       - attach_workspace:
           at: src
+      - run: cd PyQT5_fbs/target && scp -r /UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
       - run: |
          cd PyQT5_fbs/target
          echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKFbbcnvFxtiBWcrhI9rHhzaDXISdsSmoNX0wtjR+md komar@hawaii.edu' >> ~/.ssh/known_hosts
