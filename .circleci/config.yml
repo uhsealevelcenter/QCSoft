@@ -51,8 +51,6 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints:
-            - "7c:7d:b0:02:cd:12:af:a5:8b:e8:32:d9:e5:ab:2d:ae"
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - store_test_results:
@@ -65,7 +63,7 @@ jobs:
 #      - run: cd PyQT5_fbs/requirements && scp -r ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
       - run: |
            cd PyQT5_fbs/requirements
-           echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKFbbcnvFxtiBWcrhI9rHhzaDXISdsSmoNX0wtjR+md komar@hawaii.edu' >> ~/.ssh/known_hosts
+           echo "wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=" >> ~/.ssh/known_hosts
            rsync -va ./base.txt komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
 #      - run: xcodebuild -version
 #      - run: python3 --version
