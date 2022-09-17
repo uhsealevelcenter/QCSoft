@@ -50,13 +50,13 @@ jobs:
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
       - checkout
+      - add_ssh_keys
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - store_test_results:
           path: output/scan
       - store_artifacts:
           path: output
-      - add_ssh_keys
       - run: rsync --version
       - run: xcodebuild -version
       - run: python3 --version
@@ -74,9 +74,9 @@ jobs:
       - run: cd PyQT5_fbs && fbs installer || true
 #      - run: cd PyQT5_fbs/target
       - run: |
-       cd PyQT5_fbs/target
-       echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKFbbcnvFxtiBWcrhI9rHhzaDXISdsSmoNX0wtjR+md komar@hawaii.edu' >> ~/.ssh/known_hosts
-       rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
+         cd PyQT5_fbs/target
+         echo 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBKFbbcnvFxtiBWcrhI9rHhzaDXISdsSmoNX0wtjR+md komar@hawaii.edu' >> ~/.ssh/known_hosts
+         rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
 
 
 # Invoke jobs via workflows
