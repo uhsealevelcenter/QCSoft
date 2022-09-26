@@ -43,7 +43,7 @@ jobs:
           command: python -m unittest
   build-mac:
     macos:
-      xcode: 12.4.0
+      xcode: 12.5.0
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
       FL_OUTPUT_DIR: output
