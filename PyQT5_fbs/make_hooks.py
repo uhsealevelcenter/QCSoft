@@ -23,6 +23,8 @@ datas = collect_data_files('utide')
             with open(os.path.join(destination, fname), 'w') as f:
                 f.write('{}'.format(data).strip())
 
+            assert os.path.exists(os.path.join(destination, fname))
+
 
 if __name__ == '__main__':
     main()
