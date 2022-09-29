@@ -73,10 +73,8 @@ jobs:
       - run: echo $PYTHON_CONFIGURE_OPTS && cd PyQT5_fbs && pyenv install 3.6.7
       - run: cd PyQT5_fbs && pyenv versions
       - run: cd PyQT5_fbs && pyenv local 3.6.7 && pyenv versions && pip3 install -r requirements/mac.txt
+      - run: cd PyQT5_fbs && python make_hooks.py
       - run: cd PyQT5_fbs && fbs freeze
-      # fbs 0.7.4 has a bug when running the installer. It exits with non zero code but it still produces the dmg
-      # For that reason forcing this job to pass with || true
-      # The bug was fixed in fbs 0.9.5 but that fbs requires other dependencies that break other things...
       - run: cd PyQT5_fbs && fbs installer
 #      - run: cd PyQT5_fbs/target
       - attach_workspace:
