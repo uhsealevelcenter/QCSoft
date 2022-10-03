@@ -1,7 +1,7 @@
 altgraph==0.16.1
 darkdetect==0.5.1
 cycler==0.10.0
-fbs==0.7.4
+fbs==0.9.7
 future==0.16.0
 kiwisolver==1.0.1
 macholib==1.11
@@ -10,13 +10,13 @@ numpy==1.15.0
 pandas==0.24.1
 pefile==2018.8.8
 pip==19.0.3
-PyInstaller==3.3.1
+PyInstaller==3.4
 pyparsing==2.2.1
 PyQt5==5.9.2
 python-dateutil==2.7.3
 pytz==2018.5
 scipy==1.4.1
-setuptools==28.8.0
+setuptools==40.8.0
 sip==4.19.8
 six==1.11.0
 utide==0.2.5

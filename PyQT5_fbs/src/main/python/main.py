@@ -3,7 +3,8 @@ from collections import defaultdict
 from itertools import groupby
 
 from PyQt5 import QtWidgets
-from fbs_runtime.application_context import ApplicationContext, cached_property
+from fbs_runtime.application_context import cached_property
+from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 from extractor2 import DataExtractor
 from my_widgets import *
