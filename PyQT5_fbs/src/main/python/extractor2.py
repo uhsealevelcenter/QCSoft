@@ -32,7 +32,7 @@ class DataExtractor(Month):
         self.parse_file(filename)
 
         self.month_int = int(filename.split('.dat')[0][-2:])
-        self.year = int(filename.split('.dat')[0][-4:-2])
+        self.year = int("20"+filename.split('.dat')[0][-4:-2])
         Month.__init__(self, self.month_int, self.year, self.sensors, self.headers[0][:3])
 
     def is_header(self, arg):
