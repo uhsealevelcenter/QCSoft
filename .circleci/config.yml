@@ -105,5 +105,5 @@ workflows:
             branches:
               only:
                 - master
-          tags:
-            only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+            tags:
+              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
