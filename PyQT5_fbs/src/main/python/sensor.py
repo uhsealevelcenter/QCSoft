@@ -93,10 +93,13 @@ class Month:
         self.station_id = st_id
         self.day_count = calendar.monthrange(year, month)[1]
 
-    def assemble_root_filename(self):
+    def assemble_root_filename(self, four_digit_year=False):
         month_int = self.month
         month_str = "{:02}".format(month_int)
-        year_str = "{:02}".format(self.year)
+        if not four_digit_year:
+            year_str = str(self.year)[2:]
+        else:
+            year_str = str(self.year)
         station_num = self.station_id
         root_filename = '{}{}{}'.format(station_num, year_str, month_str)
         return root_filename
@@ -108,7 +111,7 @@ class Month:
     def get_mat_filename(self):
         sensor_file = {}
         for key, sensor in self.sensor_collection.items():
-            file_name = 't{}{}{}'.format(self.assemble_root_filename(), key.lower(), '.mat')
+            file_name = 't{}{}{}'.format(self.assemble_root_filename(four_digit_year=True), key.lower(), '.mat')
             sensor_file[key] = file_name
 
         return sensor_file
