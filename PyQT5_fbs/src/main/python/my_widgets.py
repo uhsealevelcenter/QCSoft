@@ -205,7 +205,7 @@ def remove_9s(data):
     return data
 
 
-def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
+def save_mat_high_fq(station: Station, path: str=None, callback: Callable = None):
     import scipy.io as sio
 
     success = []
@@ -222,15 +222,22 @@ def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
 
             file_name = month.get_mat_filename()[key]
             variable = file_name.split('.')[0]
+
+            if not path:
+                save_folder = month.get_save_folder()  # t + station_id
+                save_path = get_top_level_directory() / st.HIGH_FREQUENCY_FOLDER / save_folder / str(month.year)
+                create_directory_if_not_exists(save_path)
+            else:
+                save_path = Path(path)
             # transposing the data so that it matches the shape of the UHSLC matlab format
             matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
             try:
-                sio.savemat(path + '/' + file_name, matlab_obj)
+                sio.savemat(Path(save_path / file_name), matlab_obj)
                 success.append(
-                    {'title': "Success", 'message': "Success \n" + file_name + " Saved to " + path + "\n"})
+                    {'title': "Success", 'message': "Success \n" + file_name + " Saved to " + str(save_path) + "\n"})
             except IOError as e:
                 failure.append({'title': "Error",
-                                'message': "Cannot Save to high frequency (.mat) data to" + path + "\n" + str(
+                                'message': "Cannot Save to high frequency (.mat) data to" + str(save_path) + "\n" + str(
                                     e) + "\n Please select a different path to save to"})
     if callback:
         callback(success, failure)
@@ -856,15 +863,15 @@ class Start(QMainWindow):
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = assemble_ts_text(self.station)
             save_ts_files(text_data, callback=self.file_saving_notifications)
-            if st.get_path(st.HF_PATH_KEY):
-                save_path = st.get_path(st.HF_PATH_KEY)
-            else:
-                self.show_custom_message("Warning",
-                                         "Please select a location where you would like your high "
-                                         "frequency matlab data "
-                                         "to be saved. Click save again once selected.")
-                return
-            save_mat_high_fq(self.station, save_path, callback=self.file_saving_notifications)
+            # if st.get_path(st.HF_PATH_KEY):
+            #     save_path = st.get_path(st.HF_PATH_KEY)
+            # else:
+            #     self.show_custom_message("Warning",
+            #                              "Please select a location where you would like your high "
+            #                              "frequency matlab data "
+            #                              "to be saved. Click save again once selected.")
+            #     return
+            save_mat_high_fq(self.station, callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
