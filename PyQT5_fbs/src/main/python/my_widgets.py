@@ -176,12 +176,11 @@ def save_ts_files(text_collection, path=None, callback: Callable = None):
     for text_file in text_collection:
         # text_file[0] is of type Month
         file_name = text_file[0].get_ts_filename()
-        if not path:
-            save_folder = text_file[0].get_save_folder() # t + station_id
-            save_path = get_top_level_directory() / st.HIGH_FREQUENCY_FOLDER / save_folder / str(text_file[0].year)
-            create_directory_if_not_exists(save_path)
-        else:
-            save_path = Path(path)
+
+        save_folder = text_file[0].get_save_folder() # t + station_id
+        save_path = get_top_level_directory(parent_dir=path) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(text_file[0].year)
+        create_directory_if_not_exists(save_path)
+
 
         try:
             with open(Path(save_path / file_name), 'w') as the_file:
@@ -205,7 +204,7 @@ def remove_9s(data):
     return data
 
 
-def save_mat_high_fq(station: Station, path: str=None, callback: Callable = None):
+def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
     import scipy.io as sio
 
     success = []
@@ -223,12 +222,9 @@ def save_mat_high_fq(station: Station, path: str=None, callback: Callable = None
             file_name = month.get_mat_filename()[key]
             variable = file_name.split('.')[0]
 
-            if not path:
-                save_folder = month.get_save_folder()  # t + station_id
-                save_path = get_top_level_directory() / st.HIGH_FREQUENCY_FOLDER / save_folder / str(month.year)
-                create_directory_if_not_exists(save_path)
-            else:
-                save_path = Path(path)
+            save_folder = month.get_save_folder()  # t + station_id
+            save_path = get_top_level_directory(parent_dir=path) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(month.year)
+            create_directory_if_not_exists(save_path)
             # transposing the data so that it matches the shape of the UHSLC matlab format
             matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
             try:
@@ -244,7 +240,7 @@ def save_mat_high_fq(station: Station, path: str=None, callback: Callable = None
     return success, failure
 
 
-def save_fast_delivery(station: Station, din_path: str, path: str = "", callback: Callable = None):
+def save_fast_delivery(station: Station, din_path: str, path: str, callback: Callable = None):
     # Todo: Refactor this into at least two more functions, one for daily fast deivery and one for hourly,
     #  each saving to both .mat and .dat
     import scipy.io as sio
@@ -273,8 +269,13 @@ def save_fast_delivery(station: Station, din_path: str, path: str = "", callback
         # month = _data[primary_sensor].date.astype(object).month
 
         #  Filter to hourly
+        year_end = year
+        month_end = month.month
+        if month_end + 1 > 12:
+            month_end = 1
+            year_end = year + 1
         data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month.month, 1, 0, 0, 0),
-                                    filt.datetime(year, month.month + 1, 1, 0, 0, 0))
+                                    filt.datetime(year_end, month_end + 1, 1, 0, 0, 0))
 
         # for channel parameters see filt.channel_merge function
         # We are not actually merging channels here (not needed for fast delivery)
@@ -289,12 +290,11 @@ def save_fast_delivery(station: Station, din_path: str, path: str = "", callback
         data_day = filt.day_119filt(hourly_merged, station.location[0])
 
         month_str = "{:02}".format(month.month)
-        if not path:
-            save_folder = month.get_save_folder()  # t + station_id
-            save_path = get_top_level_directory() / st.FAST_DELIVERY_FOLDER / save_folder / str(month.year)
-            create_directory_if_not_exists(save_path)
-        else:
-            save_path = Path(path)
+
+        save_folder = month.get_save_folder()  # t + station_id
+        save_path = get_top_level_directory(parent_dir=path) / st.FAST_DELIVERY_FOLDER / save_folder / str(month.year)
+        create_directory_if_not_exists(save_path)
+
 
         hourly_filename = str(save_path) + '/' + 'th' + str(station_num) + two_digit_year + month_str
         daily_filename = str(save_path) + '/' + 'da' + str(station_num) + two_digit_year + month_str
@@ -471,16 +471,19 @@ def create_directory_if_not_exists(path):
         os.makedirs(path)
 
 
-def get_top_level_directory():
+def get_top_level_directory(parent_dir):
+    # parent_dir = Path(st.get_path(st.SAVE_KEY))
+    # Directory where production data is saved
     if is_production_mode():
-        directory = Path(st.get_path(st.SAVE_KEY) / st.PRODUCTION_DATA_TOP_FOLDER)
+        directory = Path(parent_dir / st.PRODUCTION_DATA_TOP_FOLDER)
         if directory.is_dir():
             return directory
         else:
             create_directory_if_not_exists(directory)
             return directory
+    # Directory where test data is saved
     else:
-        test_directory = Path(st.get_path(st.SAVE_KEY) / st.TEST_DATA_TOP_FOLDER)
+        test_directory = Path(parent_dir / st.TEST_DATA_TOP_FOLDER)
         if test_directory.is_dir():
             return test_directory
         else:
@@ -707,8 +710,13 @@ class Start(QMainWindow):
 
             year = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date.astype(object).year
             month = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date.astype(object).month
+            year_end = year
+            month_end = month
+            if month_end + 1 > 12:
+                month_end = 1
+                year_end = year + 1
             data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
-                                        filt.datetime(year, month + 1, 1, 0, 0, 0))
+                                        filt.datetime(year_end, month_end + 1, 1, 0, 0, 0))
 
             hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
             time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
@@ -869,16 +877,17 @@ class Start(QMainWindow):
             # updates all the user made changes (data cleaning) for all the data loaded
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = assemble_ts_text(self.station)
-            save_ts_files(text_data, callback=self.file_saving_notifications)
+            save_path = st.get_path(st.SAVE_KEY)
             # if st.get_path(st.HF_PATH_KEY):
-            #     save_path = st.get_path(st.HF_PATH_KEY)
+            #     save_path = st.get_path(st.SAVE_KEY)
             # else:
             #     self.show_custom_message("Warning",
             #                              "Please select a location where you would like your high "
             #                              "frequency matlab data "
             #                              "to be saved. Click save again once selected.")
             #     return
-            save_mat_high_fq(self.station, callback=self.file_saving_notifications)
+            save_ts_files(text_data, path=save_path, callback=self.file_saving_notifications)
+            save_mat_high_fq(self.station, path=save_path, callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
@@ -902,7 +911,7 @@ class Start(QMainWindow):
             #                              "to be saved. Click save again once selected.")
             #     return
 
-            save_fast_delivery(self.station, din_path=din_path, callback=self.file_saving_notifications)
+            save_fast_delivery(self.station, din_path=din_path, path=save_path, callback=self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
