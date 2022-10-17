@@ -2,13 +2,16 @@ import io
 import os
 import tempfile
 import unittest
+from pathlib import Path
+
+import settings as st
 
 import numpy as np
 import scipy.io as sio
 
 import filtering as filt
 from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq, save_fast_delivery
-from my_widgets import find_outliers
+from my_widgets import find_outliers, get_top_level_directory
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -50,10 +53,13 @@ class TestDatFileSave(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             success, failure = save_ts_files(text_data_input, tmp)
             self.assertEqual(len(success), 1)
-            self.assertEqual(success[0]['message'], 'Success \nt1231810.dat Saved to ' + tmp + '\n')
+            save_folder = "t123"
+            save_path = get_top_level_directory(parent_dir=tmp) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            self.assertEqual(success[0]['message'], 'Success \nt1231810.dat Saved to ' + str(save_path) + '\n')
             self.assertEqual(success[0]['title'], 'Success')
             self.assertEqual(len(failure), 0)
-            with io.open(tmp + '/' + 't1231810.dat') as tst_f:
+            with io.open(Path(save_path / 't1231810.dat')) as tst_f:
                 with io.open(output_filename) as ref_f:
                     self.assertListEqual(list(tst_f), list(ref_f))
 
@@ -74,20 +80,23 @@ class TestDatFileSave(unittest.TestCase):
 
         # Compare the saved file to the ground truth file
         with tempfile.TemporaryDirectory() as tmp:
+            save_folder = "t123"
+            save_path = get_top_level_directory(parent_dir=tmp) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
             success, failure = save_ts_files(data_as_text, tmp)
             self.assertEqual(len(success), 3)
-            self.assertEqual(success[0]['message'], 'Success \nt1231809.dat Saved to ' + tmp + '\n')
-            self.assertEqual(success[1]['message'], 'Success \nt1231810.dat Saved to ' + tmp + '\n')
-            self.assertEqual(success[2]['message'], 'Success \nt1231811.dat Saved to ' + tmp + '\n')
+            self.assertEqual(success[0]['message'], 'Success \nt1231809.dat Saved to ' + str(save_path) + '\n')
+            self.assertEqual(success[1]['message'], 'Success \nt1231810.dat Saved to ' + str(save_path) + '\n')
+            self.assertEqual(success[2]['message'], 'Success \nt1231811.dat Saved to ' + str(save_path) + '\n')
             self.assertEqual(success[0]['title'], 'Success')
             self.assertEqual(len(failure), 0)
-            with io.open(tmp + '/' + 't1231809.dat') as tst_f1:
+            with io.open(Path(save_path / 't1231809.dat')) as tst_f1:
                 with io.open(truth_file1) as ref_f:
                     self.assertListEqual(list(tst_f1), list(ref_f))
-            with io.open(tmp + '/' + 't1231810.dat') as tst_f2:
+            with io.open(Path(save_path / 't1231810.dat')) as tst_f2:
                 with io.open(truth_file2) as ref_f:
                     self.assertListEqual(list(tst_f2), list(ref_f))
-            with io.open(tmp + '/' + 't1231811.dat') as tst_f3:
+            with io.open(Path(save_path / 't1231811.dat')) as tst_f3:
                 with io.open(truth_file3) as ref_f:
                     self.assertListEqual(list(tst_f3), list(ref_f))
 
@@ -96,6 +105,9 @@ class TestDatFileSave(unittest.TestCase):
         station = self.input_data
 
         with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t123"
+            save_path = get_top_level_directory(parent_dir=tmp_dir) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
             save_mat_high_fq(station, tmp_dir, callback=None)
             for month in station.month_collection:
                 # Compare every sensor (one file per sensor)
@@ -103,7 +115,7 @@ class TestDatFileSave(unittest.TestCase):
                     if key == "ALL":
                         continue
                     file_name = month.get_mat_filename()[key]
-                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
                     time_vector = filt.datenum2(sensor.get_time_vector())
@@ -138,6 +150,9 @@ class TestDatFileSave(unittest.TestCase):
                     clean_station.aggregate_months['data'][key][outliers_idx] = 9999
 
         with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t123"
+            save_path = get_top_level_directory(parent_dir=tmp_dir) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
             clean_station.back_propagate_changes(clean_station.aggregate_months['data'])
             save_mat_high_fq(clean_station, tmp_dir, callback=None)
             for month in clean_station.month_collection:
@@ -146,7 +161,7 @@ class TestDatFileSave(unittest.TestCase):
                     if key == "ALL":
                         continue
                     file_name = month.get_mat_filename()[key]
-                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
                     time_vector = filt.datenum2(sensor.get_time_vector())
@@ -190,10 +205,13 @@ class TestDatFileSave(unittest.TestCase):
         station = load_station_data([SSABA1809])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t123"
+            save_path = get_top_level_directory(parent_dir=tmp_dir) / st.FAST_DELIVERY_FOLDER / save_folder / str(
+                2018)
             save_fast_delivery(station, path=tmp_dir, din_path=DIN, callback=None)
             # .mat files test
             # Hourly test
-            data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
+            data = sio.loadmat(os.path.join(save_path, 'th1231809.mat'))
             data_trans = data['rad'].transpose((1, 0))
             sea_level = data_trans['sealevel'][0][0]
             sea_level = np.concatenate(sea_level, axis=0)
@@ -211,7 +229,7 @@ class TestDatFileSave(unittest.TestCase):
             # daily test
             data_truth = sio.loadmat(os.path.join(DAILY_PATH, 'da1231809.mat'))
             sea_level_truth = np.concatenate(data_truth['data_day']['sealevel'][0][0], axis=0)
-            data = sio.loadmat(os.path.join(tmp_dir, 'da1231809.mat'))
+            data = sio.loadmat(os.path.join(save_path, 'da1231809.mat'))
             sea_level = data['sealevel'][0]
             # Make sure all 9999s are taken out from the final .mat file
             self.assertNotIn(9999, sea_level)
