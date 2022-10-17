@@ -1,6 +1,7 @@
 import calendar
 from collections import defaultdict
 from itertools import groupby
+from pathlib import Path
 
 import numpy as np
 
@@ -106,7 +107,7 @@ class Month:
 
     def get_ts_filename(self):
         file_name = '{}{}{}'.format('t', self.assemble_root_filename(), '.dat')
-        return file_name
+        return Path(file_name)
 
     def get_mat_filename(self):
         sensor_file = {}
@@ -115,6 +116,9 @@ class Month:
             sensor_file[key] = file_name
 
         return sensor_file
+
+    def get_save_folder(self):
+        return '{}{}'.format('t', self.station_id)
 
 
 # It should be like this: Each Station has a Month/Months associated with it, and then each Month has one or more
