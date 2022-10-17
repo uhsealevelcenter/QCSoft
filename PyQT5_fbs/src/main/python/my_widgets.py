@@ -244,7 +244,7 @@ def save_mat_high_fq(station: Station, path: str=None, callback: Callable = None
     return success, failure
 
 
-def save_fast_delivery(station: Station, save_path: str, din_path: str, callback: Callable = None):
+def save_fast_delivery(station: Station, din_path: str, path: str = "", callback: Callable = None):
     # Todo: Refactor this into at least two more functions, one for daily fast deivery and one for hourly,
     #  each saving to both .mat and .dat
     import scipy.io as sio
@@ -289,8 +289,15 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
         data_day = filt.day_119filt(hourly_merged, station.location[0])
 
         month_str = "{:02}".format(month.month)
-        hourly_filename = save_path + '/' + 'th' + str(station_num) + two_digit_year + month_str
-        daily_filename = save_path + '/' + 'da' + str(station_num) + two_digit_year + month_str
+        if not path:
+            save_folder = month.get_save_folder()  # t + station_id
+            save_path = get_top_level_directory() / st.FAST_DELIVERY_FOLDER / save_folder / str(month.year)
+            create_directory_if_not_exists(save_path)
+        else:
+            save_path = Path(path)
+
+        hourly_filename = str(save_path) + '/' + 'th' + str(station_num) + two_digit_year + month_str
+        daily_filename = str(save_path) + '/' + 'da' + str(station_num) + two_digit_year + month_str
 
         monthly_mean = np.round(np.nanmean(data_day['sealevel'])).astype(int)
 
@@ -307,6 +314,8 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
         station_name = month.station_id + station.name
         line_begin_str = '{}WOC {}{}'.format(station_name.ljust(7), year, month_str)
         counter = 1
+
+
         try:
             sio.savemat(daily_filename + '.mat', data_day)
             # Remove nans, replace with 9999 to match the legacy files
@@ -326,8 +335,7 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
                         the_file.write(line_str + "\n")
                         counter += 1
             success.append({'title': "Success",
-                            'message': "Success \n Daily Date Saved to " + st.get_path(
-                                st.FD_PATH_KEY) + "\n"})
+                            'message': "Success \n Daily Date Saved to " + str(save_path) + "\n"})
         except IOError as e:
             failure.append({'title': "Error",
                             'message': "Cannot Save Daily Data to " + daily_filename + "\n" + str(
@@ -365,8 +373,7 @@ def save_fast_delivery(station: Station, save_path: str, din_path: str, callback
                             sl_hr_str[i:i + 12]).rjust(5)
                         the_file.write(line_str + "\n")
             success.append({'title': "Success",
-                            'message': "Success \n Hourly Data Saved to " + st.get_path(
-                                st.FD_PATH_KEY) + "\n"})
+                            'message': "Success \n Hourly Data Saved to " + str(save_path) + "\n"})
         except IOError as e:
             failure.append({'title': "Error",
                             'message': "Cannot Save Hourly Data to " + hourly_filename + "\n" + str(
@@ -887,15 +894,15 @@ class Start(QMainWindow):
                                          "then click the save button again.")
                 return
 
-            if st.get_path(st.FD_PATH_KEY):
-                save_path = st.get_path(st.FD_PATH_KEY)
-            else:
-                self.show_custom_message("Warning",
-                                         "Please select a location where you would like your hourly and daily data"
-                                         "to be saved. Click save again once selected.")
-                return
+            # if st.get_path(st.FD_PATH_KEY):
+            #     save_path = st.get_path(st.FD_PATH_KEY)
+            # else:
+            #     self.show_custom_message("Warning",
+            #                              "Please select a location where you would like your hourly and daily data"
+            #                              "to be saved. Click save again once selected.")
+            #     return
 
-            save_fast_delivery(self.station, save_path, din_path, self.file_saving_notifications)
+            save_fast_delivery(self.station, din_path=din_path, callback=self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
