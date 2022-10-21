@@ -27,7 +27,7 @@
        <enum>QFrame::Plain</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="page">
        <property name="enabled">
@@ -497,16 +497,6 @@ p, li { white-space: pre-wrap; }
                  </widget>
                 </item>
                 <item row="2" column="0">
-                 <widget class="QLineEdit" name="lineEditFDPath">
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                  <property name="placeholderText">
-                   <string>Click Change FD Save Folder to choose a folder where to save Fast Delivery Huorly and Daily data...</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="4" column="0">
                  <widget class="QLineEdit" name="lineEdit_din">
                   <property name="readOnly">
                    <bool>true</bool>
@@ -516,22 +506,15 @@ p, li { white-space: pre-wrap; }
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="1">
+                <item row="2" column="1">
                  <widget class="QPushButton" name="pushButton_din">
                   <property name="text">
                    <string>Set .din file</string>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
-                 <widget class="QPushButton" name="pushButton_fd_folder">
-                  <property name="text">
-                   <string>Change FD Save Folder</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="0">
-                 <widget class="QLineEdit" name="lineEditPath">
+                <item row="1" column="0">
+                 <widget class="QLineEdit" name="lineEditLoadPath">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -543,9 +526,6 @@ p, li { white-space: pre-wrap; }
                   </property>
                   <property name="readOnly">
                    <bool>true</bool>
-                  </property>
-                  <property name="placeholderText">
-                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -568,8 +548,8 @@ p, li { white-space: pre-wrap; }
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
-                 <widget class="QLineEdit" name="lineEditLoadPath">
+                <item row="0" column="0">
+                 <widget class="QLineEdit" name="lineEditPath">
                   <property name="enabled">
                    <bool>true</bool>
                   </property>
@@ -582,15 +562,8 @@ p, li { white-space: pre-wrap; }
                   <property name="readOnly">
                    <bool>true</bool>
                   </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLineEdit" name="lineEditHFPath"/>
-                </item>
-                <item row="3" column="1">
-                 <widget class="QPushButton" name="pushButton_hf_data">
-                  <property name="text">
-                   <string>Change high freq folder</string>
+                  <property name="placeholderText">
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -707,12 +680,12 @@ p, li { white-space: pre-wrap; }
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_data"/>
+  <buttongroup name="buttonGroup_resolution"/>
   <buttongroup name="buttonGroup_residual">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="buttonGroup_resolution"/>
+  <buttongroup name="buttonGroup_data"/>
  </buttongroups>
 </ui>
