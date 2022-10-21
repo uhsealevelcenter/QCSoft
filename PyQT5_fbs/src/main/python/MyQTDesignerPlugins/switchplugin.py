@@ -3,7 +3,7 @@ import os
 from PyQt5.QtDesigner import QPyDesignerCustomWidgetPlugin
 from PyQt5.QtGui import QIcon
 from matplotlib import rcParams
-from switchwidget import Switch
+from switchwidget import SwitchWidget
 
 rcParams['font.size'] = 9
 
@@ -20,10 +20,10 @@ class SwitchPlugin(QPyDesignerCustomWidgetPlugin):
         return self._initialized
 
     def createWidget(self, parent):
-        return Switch(parent)
+        return SwitchWidget(parent)
 
     def name(self):
-        return 'Switch'
+        return 'SwitchWidget'
 
     def group(self):
         return 'PyQt'
@@ -42,7 +42,7 @@ class SwitchPlugin(QPyDesignerCustomWidgetPlugin):
         return False
 
     def domXml(self):
-        return '<widget class="Switch" name="switchwidget">\n' \
+        return '<widget class="SwitchWidget" name="switchwidget">\n' \
                '</widget>\n'
 
     def includeFile(self):

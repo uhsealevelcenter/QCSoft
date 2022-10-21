@@ -1,3 +1,4 @@
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import QObject, QSize, QPointF, QPropertyAnimation, QEasingCurve, pyqtProperty, pyqtSlot, Qt
 from PyQt5.QtGui import QPainter, QPalette, QLinearGradient, QGradient
 from PyQt5.QtWidgets import QAbstractButton
@@ -89,3 +90,15 @@ class Switch(QAbstractButton):
 
     def __del__(self):
         del self.dPtr
+
+
+class SwitchWidget(QtWidgets.QWidget):
+
+    def __init__(self, parent=None):
+        QtWidgets.QWidget.__init__(self, parent)
+        self.button = Switch()  # create switch
+
+        self.vbl = QtWidgets.QVBoxLayout()
+        self.vbl.addWidget(self.button)
+
+        self.setLayout(self.vbl)
