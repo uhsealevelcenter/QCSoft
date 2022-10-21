@@ -53,19 +53,19 @@ class HelpScreen(QMainWindow):
 
         self.ui.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
 
-        # If a fast delivery save path hasn't been defined, give it a home directory
-        if (st.get_path(st.FD_PATH)):
-            self.ui.lineEditFDPath.setPlaceholderText(st.get_path(st.FD_PATH))
-        else:
-            st.SETTINGS.setValue(st.FD_PATH, os.path.expanduser('~'))
-            self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
-
-        # If a high frequency data save path hasn't been defined, give it a home directory
-        if (st.get_path(st.HF_PATH)):
-            self.ui.lineEditHFPath.setPlaceholderText(st.get_path(st.HF_PATH))
-        else:
-            st.SETTINGS.setValue(st.HF_PATH, os.path.expanduser('~'))
-            self.ui.lineEditHFPath.setPlaceholderText(os.path.expanduser('~'))
+        # # If a fast delivery save path hasn't been defined, give it a home directory
+        # if (st.get_path(st.FD_PATH)):
+        #     self.ui.lineEditFDPath.setPlaceholderText(st.get_path(st.FD_PATH))
+        # else:
+        #     st.SETTINGS.setValue(st.FD_PATH, os.path.expanduser('~'))
+        #     self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
+        #
+        # # If a high frequency data save path hasn't been defined, give it a home directory
+        # if (st.get_path(st.HF_PATH)):
+        #     self.ui.lineEditHFPath.setPlaceholderText(st.get_path(st.HF_PATH))
+        # else:
+        #     st.SETTINGS.setValue(st.HF_PATH, os.path.expanduser('~'))
+        #     self.ui.lineEditHFPath.setPlaceholderText(os.path.expanduser('~'))
 
         if st.get_path(st.DIN_PATH):
             self.ui.lineEdit_din.setPlaceholderText(st.get_path(st.DIN_PATH))
@@ -73,14 +73,14 @@ class HelpScreen(QMainWindow):
         saveButton = self.ui.pushButton_save_folder
         loadButton = self.ui.pushButton_load_folder
         dinSave = self.ui.pushButton_din
-        FDSave = self.ui.pushButton_fd_folder
-        hf_save = self.ui.pushButton_hf_data
+        # FDSave = self.ui.pushButton_fd_folder
+        # hf_save = self.ui.pushButton_hf_data
 
         saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath, st.SAVE_KEY))
         loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath, st.LOAD_KEY))
         dinSave.clicked.connect(lambda: self.saveDIN(self.ui.lineEdit_din, st.DIN_PATH))
-        FDSave.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.FD_PATH))
-        hf_save.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.HF_PATH))
+        # FDSave.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.FD_PATH))
+        # hf_save.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.HF_PATH))
 
     def savePath(self, lineEditObj, setStr):
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
