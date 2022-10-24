@@ -529,7 +529,7 @@ class Start(QMainWindow):
         self.ui.buttonGroup_resolution.buttonClicked.connect(self.on_frequency_changed)
 
     def on_sensor_changed(self, btn):
-        print(btn.text())
+
         if btn.text() == "ALL":
             # TODO: plot_all and plot should be merged to one function
             self.ui.save_btn.setEnabled(False)
