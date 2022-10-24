@@ -8,6 +8,8 @@ from station_tools import filtering as filt
 from station_tools import utils
 
 import numpy as np
+import glob
+import os
 
 
 class Sensor:
@@ -139,6 +141,7 @@ class Station:
         self.location = location
         self.month_collection = month
         self.aggregate_months = self.combine_months()
+        self.top_level_folder = None
 
     def month_length(self):
         return len(self.month_collection)
@@ -510,6 +513,59 @@ class Station:
         if callback:
             callback(success, failure)
         return success, failure
+
+    def save_to_annual_file(self):
+        ''' Loads all high frequency data for a station for a given year and saves it to a single file. One file per
+        sensor.'''
+        import scipy.io as sio
+        #1) Get all high frequency .mat files for this year for this station
+        # Beware of weird edge cases in which we might load month 12 and 1 for example
+        #2) Load them into memory and append each sensor in the appropriate order
+        #3) Save the annual file
+        # Take care of cases when a new Sensor appears in a month or disappears
+        # Todo: This is just a temporary solution, we should have a better way to handle this
+        # We shouldn't be looking to only the first month to determine stuff
+        month = self.month_collection[0]
+        station_folder = month.get_save_folder()
+        mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
+                    station_folder / str(
+            month.year)
+        all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
+        sensors_set = set()
+        months_sensor = {}
+        # Next, Find all unique sensors letters in the file names:
+        for file_name in all_mat_files:
+            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a save assumption)
+            sensor_name = file_name.split('.')[0][-3:]
+            sensors_set.add(sensor_name)
+            if sensor_name not in months_sensor:
+                months_sensor[sensor_name] = [file_name]
+            else:
+                months_sensor[sensor_name].append(file_name)
+
+        annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
+                         station_folder
+        all_data = {}
+        for sensor, file_name in months_sensor.items():
+            for file in file_name:
+                filename = file.split('/')[-1].split('.')[0]
+                data = sio.loadmat(file)
+                time = data[filename][:, 0]
+                sealevel = data[filename][:, 1]
+                if sensor not in all_data:
+                    all_data[sensor] = {'time': [time], 'sealevel': [sealevel]}
+                else:
+                    all_data[sensor]['sealevel'] = np.append(all_data[sensor]['sealevel'], sealevel)
+                    all_data[sensor]['time'] = np.append(all_data[sensor]['time'], time)
+            data_obj = [all_data[sensor]['time'], all_data[sensor]['sealevel']]
+            variable = station_folder + str(month.year) + sensor
+
+            matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
+            variable = Path(variable + '.mat')
+            try:
+                sio.savemat(Path(annual_mat_files_path / variable), matlab_obj)
+            except IOError as e:
+                print("Cannot Save Data to " + str(annual_mat_files_path) + "\n" + str(e) + "\n Please select a different path to save to")
 
 
 class DataCollection:

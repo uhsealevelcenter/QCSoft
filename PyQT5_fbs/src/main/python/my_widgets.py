@@ -578,18 +578,13 @@ class Start(QMainWindow):
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = self.station.assemble_ts_text()
             save_path = st.get_path(st.SAVE_KEY)
-            # if st.get_path(st.HF_PATH_KEY):
-            #     save_path = st.get_path(st.SAVE_KEY)
-            # else:
-            #     self.show_custom_message("Warning",
-            #                              "Please select a location where you would like your high "
-            #                              "frequency matlab data "
-            #                              "to be saved. Click save again once selected.")
-            #     return
+            self.station.top_level_folder = save_path
+
             self.station.save_ts_files(text_data, path=save_path, is_test_mode=self.is_test_mode(),
                                        callback=self.file_saving_notifications)
             self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
                                           callback=self.file_saving_notifications)
+            self.station.save_to_annual_file()
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
