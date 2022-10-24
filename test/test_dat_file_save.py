@@ -12,6 +12,7 @@ import scipy.io as sio
 import filtering as filt
 from main import load_station_data
 from my_widgets import find_outliers
+from station_tools import utils
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -54,7 +55,7 @@ class TestDatFileSave(unittest.TestCase):
             success, failure = self.input_data.save_ts_files(text_data_input, tmp)
             self.assertEqual(len(success), 1)
             save_folder = "t123"
-            save_path = st.get_top_level_directory(parent_dir=tmp) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
                 2018)
             self.assertEqual(success[0]['message'], 'Success \nt1231810.dat Saved to ' + str(save_path) + '\n')
             self.assertEqual(success[0]['title'], 'Success')
@@ -81,7 +82,7 @@ class TestDatFileSave(unittest.TestCase):
         # Compare the saved file to the ground truth file
         with tempfile.TemporaryDirectory() as tmp:
             save_folder = "t123"
-            save_path = st.get_top_level_directory(parent_dir=tmp) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
                 2018)
             success, failure = station_data.save_ts_files(data_as_text, tmp)
             self.assertEqual(len(success), 3)
@@ -106,7 +107,7 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_folder = "t123"
-            save_path = st.get_top_level_directory(parent_dir=tmp_dir) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
                 2018)
             station.save_mat_high_fq(tmp_dir, callback=None)
             for month in station.month_collection:
@@ -151,7 +152,7 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_folder = "t123"
-            save_path = st.get_top_level_directory(parent_dir=tmp_dir) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
                 2018)
             clean_station.back_propagate_changes(clean_station.aggregate_months['data'])
             clean_station.save_mat_high_fq(tmp_dir, callback=None)
@@ -206,7 +207,7 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_folder = "t123"
-            save_path = st.get_top_level_directory(parent_dir=tmp_dir) / st.FAST_DELIVERY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
                 2018)
             station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
             # .mat files test
