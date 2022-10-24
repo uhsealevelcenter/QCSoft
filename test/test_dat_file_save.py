@@ -9,8 +9,8 @@ import settings as st
 import numpy as np
 import scipy.io as sio
 
-import filtering as filt
-from extractor2 import load_station_data
+from station_tools import filtering as filt
+from station_tools.extractor2 import load_station_data
 from my_widgets import find_outliers
 from station_tools import utils
 
