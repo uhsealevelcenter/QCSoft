@@ -168,7 +168,7 @@ def assemble_ts_text(station: Station):
     return months
 
 
-def save_ts_files(text_collection, path=None, callback: Callable = None):
+def save_ts_files(text_collection, path=None, is_test_mode=False, callback: Callable = None):
     # text collection here refers to multiple text files for each month loaded
     success = []
     failure = []
@@ -176,10 +176,11 @@ def save_ts_files(text_collection, path=None, callback: Callable = None):
         # text_file[0] is of type Month
         file_name = text_file[0].get_ts_filename()
 
-        save_folder = text_file[0].get_save_folder() # t + station_id
-        save_path = get_top_level_directory(parent_dir=path) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(text_file[0].year)
+        save_folder = text_file[0].get_save_folder()  # t + station_id
+        save_path = get_top_level_directory(parent_dir=path, is_test_mode=is_test_mode) / st.HIGH_FREQUENCY_FOLDER / \
+                    save_folder / str(
+            text_file[0].year)
         create_directory_if_not_exists(save_path)
-
 
         try:
             with open(Path(save_path / file_name), 'w') as the_file:
@@ -203,7 +204,7 @@ def remove_9s(data):
     return data
 
 
-def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
+def save_mat_high_fq(station: Station, path: str, is_test_mode=False, callback: Callable = None):
     import scipy.io as sio
 
     success = []
@@ -222,7 +223,9 @@ def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
             variable = file_name.split('.')[0]
 
             save_folder = month.get_save_folder()  # t + station_id
-            save_path = get_top_level_directory(parent_dir=path) / st.HIGH_FREQUENCY_FOLDER / save_folder / str(month.year)
+            save_path = get_top_level_directory(parent_dir=path, is_test_mode=is_test_mode) / st.HIGH_FREQUENCY_FOLDER / \
+                        save_folder / str(
+                month.year)
             create_directory_if_not_exists(save_path)
             # transposing the data so that it matches the shape of the UHSLC matlab format
             matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
@@ -239,7 +242,7 @@ def save_mat_high_fq(station: Station, path: str, callback: Callable = None):
     return success, failure
 
 
-def save_fast_delivery(station: Station, din_path: str, path: str, callback: Callable = None):
+def save_fast_delivery(station: Station, din_path: str, path: str, is_test_mode=False, callback: Callable = None):
     # Todo: Refactor this into at least two more functions, one for daily fast deivery and one for hourly,
     #  each saving to both .mat and .dat
     import scipy.io as sio
@@ -291,9 +294,11 @@ def save_fast_delivery(station: Station, din_path: str, path: str, callback: Cal
         month_str = "{:02}".format(month.month)
 
         save_folder = month.get_save_folder()  # t + station_id
-        save_path = get_top_level_directory(parent_dir=path) / st.FAST_DELIVERY_FOLDER / save_folder / str(month.year)
+        save_path = get_top_level_directory(parent_dir=path,
+                                            is_test_mode=is_test_mode) / st.FAST_DELIVERY_FOLDER / save_folder \
+                    / str(
+            month.year)
         create_directory_if_not_exists(save_path)
-
 
         hourly_filename = str(save_path) + '/' + 'th' + str(station_num) + two_digit_year + month_str
         daily_filename = str(save_path) + '/' + 'da' + str(station_num) + two_digit_year + month_str
@@ -460,20 +465,15 @@ def find_outliers(station, t, data, sens):
     return itemindex
 
 
-def is_production_mode():
-    # return self.production_mode
-    return True
-
-
 def create_directory_if_not_exists(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
 
-def get_top_level_directory(parent_dir):
+def get_top_level_directory(parent_dir, is_test_mode=False):
     # parent_dir = Path(st.get_path(st.SAVE_KEY))
     # Directory where production data is saved
-    if is_production_mode():
+    if not is_test_mode:
         directory = Path(parent_dir / st.PRODUCTION_DATA_TOP_FOLDER)
         if directory.is_dir():
             return directory
@@ -514,6 +514,11 @@ class Start(QMainWindow):
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
         self.ui.save_btn.clicked.connect(self.save_button)
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
+
+    def is_test_mode(self):
+        # If switch button is in far right position (which is checked state, red button), test mode is on.
+        # Vice versa for pruduction
+        return self.ui.switchwidget.button.isChecked()
 
     def make_sensor_buttons(self, sensors):
         if self.station.is_sampling_inconsistent():
@@ -885,8 +890,10 @@ class Start(QMainWindow):
             #                              "frequency matlab data "
             #                              "to be saved. Click save again once selected.")
             #     return
-            save_ts_files(text_data, path=save_path, callback=self.file_saving_notifications)
-            save_mat_high_fq(self.station, path=save_path, callback=self.file_saving_notifications)
+            save_ts_files(text_data, path=save_path, is_test_mode=self.is_test_mode(),
+                          callback=self.file_saving_notifications)
+            save_mat_high_fq(self.station, path=save_path, is_test_mode=self.is_test_mode(),
+                             callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
@@ -910,7 +917,8 @@ class Start(QMainWindow):
             #                              "to be saved. Click save again once selected.")
             #     return
 
-            save_fast_delivery(self.station, din_path=din_path, path=save_path, callback=self.file_saving_notifications)
+            save_fast_delivery(self.station, din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
+                               callback=self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
