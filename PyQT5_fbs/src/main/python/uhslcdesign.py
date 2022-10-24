@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designDpdhnE.ui'
+# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designfVOzoz.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -29,11 +29,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_left_main = QtWidgets.QVBoxLayout()
         self.verticalLayout_left_main.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.verticalLayout_left_main.setObjectName("verticalLayout_left_main")
-        # self.label_3 = QtWidgets.QLabel(self.page)
-        # self.label_3.setToolTip("")
-        # self.label_3.setAlignment(QtCore.Qt.AlignCenter)
-        # self.label_3.setObjectName("label_3")
-        # self.verticalLayout_left_main.addWidget(self.label_3)
         self.switchwidget = SwitchWidget(self.page)
         self.switchwidget.setMaximumSize(QtCore.QSize(120, 80))
         self.switchwidget.setObjectName("switchwidget")
@@ -314,7 +309,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        # self.label_3.setText(_translate("MainWindow", "Production"))
         self.save_btn.setToolTip(_translate("MainWindow", "<html><head/><body><p>Testing ToolTip</p></body></html>"))
         self.save_btn.setText(_translate("MainWindow", "Save"))
         self.radioButton.setText(_translate("MainWindow", "PRD"))
@@ -418,7 +412,8 @@ class Ui_MainWindow(object):
                                             "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">--------------</span></p>\n"
                                             "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
         self.pushButton_load_folder.setText(_translate("MainWindow", "Change Load Folder"))
-        self.lineEdit_din.setPlaceholderText(_translate("MainWindow", "Click the button on the right to choose the din file from which primary sensors are loaded"))
+        self.lineEdit_din.setPlaceholderText(_translate("MainWindow",
+                                                        "Click the button on the right to choose the din file from which primary sensors are loaded"))
         self.pushButton_din.setText(_translate("MainWindow", "Set .din file"))
         self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
         self.backButton.setText(_translate("MainWindow", "Back To Main Menu"))
