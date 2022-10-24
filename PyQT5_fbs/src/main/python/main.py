@@ -5,7 +5,7 @@ from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 from my_widgets import *
-from extractor2 import load_station_data
+from station_tools.extractor2 import load_station_data
 from uhslcdesign import Ui_MainWindow
 # from qt_material import apply_stylesheet
 # import darkdetect

@@ -3,7 +3,7 @@ from collections import defaultdict
 from itertools import groupby
 from pathlib import Path
 from typing import Callable
-import filtering as filt
+from station_tools import filtering as filt
 
 from station_tools import utils
 

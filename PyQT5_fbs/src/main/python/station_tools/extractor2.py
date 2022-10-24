@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 
-from sensor import SensorCollection, Sensor, Month, Station
+from station_tools.sensor import SensorCollection, Sensor, Month, Station
 
 
 class DataExtractor(Month):

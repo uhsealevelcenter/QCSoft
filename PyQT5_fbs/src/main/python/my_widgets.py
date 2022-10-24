@@ -5,11 +5,11 @@ from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
 
-import filtering as filt
+from station_tools import filtering as filt
 import settings as st
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
-from sensor import *
+from station_tools.sensor import *
 
 if is_pyqt5():
     pass

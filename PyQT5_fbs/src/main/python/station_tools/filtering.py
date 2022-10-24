@@ -4,7 +4,7 @@ import numpy as np
 from scipy import stats
 from utide import solve, reconstruct
 
-import filter_weights as fw
+from station_tools import filter_weights as fw
 
 
 def calwts(Tc, S):
