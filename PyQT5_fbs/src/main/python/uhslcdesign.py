@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designPkPVYQ.ui'
+# Form implementation generated from reading ui file 'C:/Users/komar/AppData/Local/Temp/stacked_designfVOzoz.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -29,6 +29,10 @@ class Ui_MainWindow(object):
         self.verticalLayout_left_main = QtWidgets.QVBoxLayout()
         self.verticalLayout_left_main.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.verticalLayout_left_main.setObjectName("verticalLayout_left_main")
+        self.switchwidget = SwitchWidget(self.page)
+        self.switchwidget.setMaximumSize(QtCore.QSize(120, 80))
+        self.switchwidget.setObjectName("switchwidget")
+        self.verticalLayout_left_main.addWidget(self.switchwidget)
         self.save_btn = QtWidgets.QPushButton(self.page)
         self.save_btn.setToolTipDuration(-1)
         self.save_btn.setAutoDefault(False)
@@ -215,20 +219,32 @@ class Ui_MainWindow(object):
         self.pushButton_load_folder = QtWidgets.QPushButton(self.page_2)
         self.pushButton_load_folder.setObjectName("pushButton_load_folder")
         self.gridLayout_5.addWidget(self.pushButton_load_folder, 1, 1, 1, 1)
-        self.lineEditFDPath = QtWidgets.QLineEdit(self.page_2)
-        self.lineEditFDPath.setReadOnly(True)
-        self.lineEditFDPath.setObjectName("lineEditFDPath")
-        self.gridLayout_5.addWidget(self.lineEditFDPath, 2, 0, 1, 1)
         self.lineEdit_din = QtWidgets.QLineEdit(self.page_2)
         self.lineEdit_din.setReadOnly(True)
         self.lineEdit_din.setObjectName("lineEdit_din")
-        self.gridLayout_5.addWidget(self.lineEdit_din, 4, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.lineEdit_din, 2, 0, 1, 1)
         self.pushButton_din = QtWidgets.QPushButton(self.page_2)
         self.pushButton_din.setObjectName("pushButton_din")
-        self.gridLayout_5.addWidget(self.pushButton_din, 4, 1, 1, 1)
-        self.pushButton_fd_folder = QtWidgets.QPushButton(self.page_2)
-        self.pushButton_fd_folder.setObjectName("pushButton_fd_folder")
-        self.gridLayout_5.addWidget(self.pushButton_fd_folder, 2, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.pushButton_din, 2, 1, 1, 1)
+        self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
+        self.lineEditLoadPath.setEnabled(True)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineEditLoadPath.sizePolicy().hasHeightForWidth())
+        self.lineEditLoadPath.setSizePolicy(sizePolicy)
+        self.lineEditLoadPath.setReadOnly(True)
+        self.lineEditLoadPath.setObjectName("lineEditLoadPath")
+        self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
+        self.pushButton_save_folder = QtWidgets.QPushButton(self.page_2)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pushButton_save_folder.sizePolicy().hasHeightForWidth())
+        self.pushButton_save_folder.setSizePolicy(sizePolicy)
+        self.pushButton_save_folder.setMaximumSize(QtCore.QSize(200, 16777215))
+        self.pushButton_save_folder.setObjectName("pushButton_save_folder")
+        self.gridLayout_5.addWidget(self.pushButton_save_folder, 0, 1, 1, 1)
         self.lineEditPath = QtWidgets.QLineEdit(self.page_2)
         self.lineEditPath.setEnabled(True)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
@@ -240,31 +256,6 @@ class Ui_MainWindow(object):
         self.lineEditPath.setPlaceholderText("")
         self.lineEditPath.setObjectName("lineEditPath")
         self.gridLayout_5.addWidget(self.lineEditPath, 0, 0, 1, 1)
-        self.pushButton_save_folder = QtWidgets.QPushButton(self.page_2)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton_save_folder.sizePolicy().hasHeightForWidth())
-        self.pushButton_save_folder.setSizePolicy(sizePolicy)
-        self.pushButton_save_folder.setMaximumSize(QtCore.QSize(200, 16777215))
-        self.pushButton_save_folder.setObjectName("pushButton_save_folder")
-        self.gridLayout_5.addWidget(self.pushButton_save_folder, 0, 1, 1, 1)
-        self.lineEditLoadPath = QtWidgets.QLineEdit(self.page_2)
-        self.lineEditLoadPath.setEnabled(True)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lineEditLoadPath.sizePolicy().hasHeightForWidth())
-        self.lineEditLoadPath.setSizePolicy(sizePolicy)
-        self.lineEditLoadPath.setReadOnly(True)
-        self.lineEditLoadPath.setObjectName("lineEditLoadPath")
-        self.gridLayout_5.addWidget(self.lineEditLoadPath, 1, 0, 1, 1)
-        self.lineEditHFPath = QtWidgets.QLineEdit(self.page_2)
-        self.lineEditHFPath.setObjectName("lineEditHFPath")
-        self.gridLayout_5.addWidget(self.lineEditHFPath, 3, 0, 1, 1)
-        self.pushButton_hf_data = QtWidgets.QPushButton(self.page_2)
-        self.pushButton_hf_data.setObjectName("pushButton_hf_data")
-        self.gridLayout_5.addWidget(self.pushButton_hf_data, 3, 1, 1, 1)
         self.verticalLayout_4.addLayout(self.gridLayout_5)
         self.backButton = QtWidgets.QPushButton(self.page_2)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
@@ -335,62 +326,96 @@ class Ui_MainWindow(object):
         self.refLevelEdit.setPlaceholderText(_translate("MainWindow", "Enter New Ref Level"))
         self.ref_level_btn.setText(_translate("MainWindow", "Change Ref Level"))
         self.label_title.setText(_translate("MainWindow", "Software manual"))
-        self.textBrowser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">INITIAL SETUP:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">------------------</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">To save/load files to/from a server, connect to a server from your operating system (e.g CMD + K on a MAC, WIN + R on Windows), and then follow the instruction below:</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        1) Specify the default loading folder by clicking &quot;Change Load Folder&quot; button</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        2) Specify the default saving folder by clicking &quot;Change Save Folder&quot; button</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">3) Specify default folder for saving fast delivery data (.mat files)</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">4) Specify default folder for saving high frequency data (.mat files)</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">5) Specify the .din file path to load stations sensrors information</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">If no path is specified, the path will default to your home directory on your local machine or you will be asked to set it up.  If different local directory needs to be used, this can be achieved by performing the same steps above. </span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA LOADING:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + O to load unprocessed (monp) data</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + T to load processed (ts) data</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + R to reload the same data file and undo all changes</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA MANIPULATION:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">---------------------------</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete a single data point press &quot;D&quot;</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete multiple data points use right mouse click (or CTRL + Left Click) to circle the points</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To change a reference level for a specific channel, enter a new reference level in &quot;Enter New Reference Level&quot; text box</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        and then click &quot;Change Ref Level&quot; button. This will prompt you with a calendar and time selector to choose a point when an</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        adjustment to the reference level was made (usually supplied by technicians). The time/date selector can be modified</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        incrementally by using UP/DOWN arrows or simply by clicking the desired time/date portion to be changed and typing in</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        the time of change. Using TAB will scroll through year-month-day hour:minute sections.</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA NAVIGATION:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-----------------------</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Use LEFT and RIGHT arrow to pan through the data</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;B&quot; to scroll backward through the individual data points</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;N&quot; to scroll forward through the individual data points</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click on any particular data point to zoom in on that data section</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;0&quot; to reset the view back to the entire data set</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">UNDO ACTIONS:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + Z to undo data deletion</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + B to undo bulk data deletion</span></p>\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">SAVE DATA:</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">--------------</span></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
+        self.textBrowser.setHtml(_translate("MainWindow",
+                                            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+                                            "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+                                            "p, li { white-space: pre-wrap; }\n"
+                                            "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; font-size:8pt; font-weight:400; font-style:normal;\">\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">INITIAL SETUP:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">------------------</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">To save/load files to/from a server, connect to a server from your operating system (e.g CMD + K on a MAC, WIN + R on Windows), and then follow the instruction below:</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">    1) Specify the default loading folder by clicking &quot;Change Load Folder&quot; button</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">    2) Specify the default saving folder by clicking &quot;Change Save Folder&quot; button</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">    3) Specify the .din file path to load stations sensrors information</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">FOLDER STRUCTURE:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Inside the folder specified in step (2) above the strucuture would look as following:</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">Your-chosen-folder/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|</span><span style=\" font-size:12pt; font-weight:600;\"> -- production_data/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    | -- high_frequency/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     | -- t123/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    | --  2019/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- t123201901enc.mat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- t123201901rad.mat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- t123201901prs.mat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- t1231901enc.dat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    | -- fast_delivery/ </span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     | -- t123/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    | --  2019</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- th1231901.dat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- th1231901.mat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- da1231901.dat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    |     |    |      | -- da1231901.mat</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|</span><span style=\" font-size:12pt; font-weight:600;\"> -- test_data/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    | -- high_frequency/</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">|    | -- fast_delivery/</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Data inside of both the </span><span style=\" font-size:12pt; font-weight:600;\">high_frequency</span><span style=\" font-size:12pt;\"> and </span><span style=\" font-size:12pt; font-weight:600;\">fast_delivery</span><span style=\" font-size:12pt;\"> folders will contain subdirectories (one for each station -- e.g. </span><span style=\" font-size:12pt; font-weight:600;\">t123</span><span style=\" font-size:12pt;\">) letter t followed by a three digit station ID. And then every station folder will have a subfolder for each year that data belongs to (e.g. </span><span style=\" font-size:12pt; font-weight:600;\">2019</span><span style=\" font-size:12pt;\">). The station subfolder in </span><span style=\" font-size:12pt; font-weight:600;\">high_frequency</span><span style=\" font-size:12pt;\"> directory will contain multiple yearly, high frequency .mat files, which are created by appending multiple monthy high frequency .mat files for the corresponding year (not shown in the folder structure above). </span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Note that the high frequency .mat files are in the following format:</span></p>\n"
+                                            "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">t</span><span style=\" font-size:12pt;\">&lt;three_digit_station_ID&gt;</span><span style=\" font-size:12pt; font-weight:600;\">YYYYMM</span><span style=\" font-size:12pt;\">&lt;three_letter_sensor&gt;</span><span style=\" font-size:12pt; font-weight:600;\">.mat</span></p>\n"
+                                            "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">High frequency .dat file (also known as TS file or legacy file) format is the following:</span></p>\n"
+                                            "<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">t</span><span style=\" font-size:12pt;\">&lt;three_digit_station_ID&gt;</span><span style=\" font-size:12pt; font-weight:600;\">YYMM</span><span style=\" font-size:12pt;\">&lt;three_letter_sensor&gt;</span><span style=\" font-size:12pt; font-weight:600;\">.mat</span></p>\n"
+                                            "<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Fast delivery hourly and daily data files begin with </span><span style=\" font-size:12pt; font-weight:600;\">th</span><span style=\" font-size:12pt;\"> and </span><span style=\" font-size:12pt; font-weight:600;\">da</span><span style=\" font-size:12pt;\">, respectively, followed by the three-digit station id followed by a two-digit year and two-digit month (see the above folder strucutre and file name examples).</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">test_data </span><span style=\" font-size:12pt;\">folder is a place where we store the data during testing period. Testing is enabled by switching the testing/produciton toggle. The subfolder structure of the </span><span style=\" font-size:12pt; font-weight:600;\">test_data</span><span style=\" font-size:12pt;\"> folder is exactly the same as the one for </span><span style=\" font-size:12pt; font-weight:600;\">production_data</span><span style=\" font-size:12pt;\">.</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">If no path is specified, the path will default to your home directory on your local machine or you will be asked to set it up.  If different local directory needs to be used, this can be achieved by performing the same steps above. </span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA LOADING:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + O to load unprocessed (monp) data</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + T to load processed (ts) data</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        Press CTRL (CMD) + R to reload the same data file and undo all changes</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA MANIPULATION:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">---------------------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete a single data point press &quot;D&quot;</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To delete multiple data points use right mouse click (or CTRL + Left Click) to circle the points</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        To change a reference level for a specific channel, enter a new reference level in &quot;Enter New Reference Level&quot; text box</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        and then click &quot;Change Ref Level&quot; button. This will prompt you with a calendar and time selector to choose a point when an</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        adjustment to the reference level was made (usually supplied by technicians). The time/date selector can be modified</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        incrementally by using UP/DOWN arrows or simply by clicking the desired time/date portion to be changed and typing in</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">        the time of change. Using TAB will scroll through year-month-day hour:minute sections.</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">DATA NAVIGATION:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-----------------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Use LEFT and RIGHT arrow to pan through the data</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;B&quot; to scroll backward through the individual data points</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;N&quot; to scroll forward through the individual data points</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click on any particular data point to zoom in on that data section</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press &quot;0&quot; to reset the view back to the entire data set</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">UNDO ACTIONS:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">-------------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + Z to undo data deletion</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Press CTRL (CMD) + B to undo bulk data deletion</span></p>\n"
+                                            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;\"><br /></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">SAVE DATA:</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt; font-weight:600;\">--------------</span></p>\n"
+                                            "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:12pt;\">Click the &quot;SAVE&quot; button to save changes to a &quot;TS&quot; file</span></p></body></html>"))
         self.pushButton_load_folder.setText(_translate("MainWindow", "Change Load Folder"))
-        self.lineEditFDPath.setPlaceholderText(_translate("MainWindow", "Click Change FD Save Folder to choose a folder where to save Fast Delivery Huorly and Daily data..."))
-        self.lineEdit_din.setPlaceholderText(_translate("MainWindow", "Click the button on the right to choose the din file from which primary sensors are loaded"))
+        self.lineEdit_din.setPlaceholderText(_translate("MainWindow",
+                                                        "Click the button on the right to choose the din file from which primary sensors are loaded"))
         self.pushButton_din.setText(_translate("MainWindow", "Set .din file"))
-        self.pushButton_fd_folder.setText(_translate("MainWindow", "Change FD Save Folder"))
         self.pushButton_save_folder.setText(_translate("MainWindow", "Change Save Folder"))
-        self.pushButton_hf_data.setText(_translate("MainWindow", "Change high freq folder"))
         self.backButton.setText(_translate("MainWindow", "Back To Main Menu"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
@@ -405,4 +430,6 @@ class Ui_MainWindow(object):
         self.actionInstructions.setText(_translate("MainWindow", "Instructions"))
         self.actionInstructions.setShortcut(_translate("MainWindow", "F1"))
 
+
 from MyQTDesignerPlugins.matplotlibwidget import MatplotlibWidget
+from MyQTDesignerPlugins.switchwidget import SwitchWidget
