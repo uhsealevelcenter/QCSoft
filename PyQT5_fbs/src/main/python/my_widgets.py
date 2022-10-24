@@ -395,14 +395,14 @@ class Start(QMainWindow):
             data_obj = {}
 
             sl_data = self.station.aggregate_months["data"][sens_str1].copy()
-            sl_data = st.remove_9s(sl_data)
+            sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
             data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
-            sl_data2 = st.remove_9s(sl_data2)
+            sl_data2 = utils.remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
             data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str2]),

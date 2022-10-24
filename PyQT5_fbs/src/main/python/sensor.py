@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Callable
 import filtering as filt
 
+from station_tools import utils
+
 import numpy as np
 import settings as st
 
@@ -306,11 +308,11 @@ class Station:
             file_name = text_file[0].get_ts_filename()
 
             save_folder = text_file[0].get_save_folder()  # t + station_id
-            save_path = st.get_top_level_directory(parent_dir=path, is_test_mode=is_test_mode) / \
-                        st.HIGH_FREQUENCY_FOLDER / \
+            save_path = utils.get_top_level_directory(parent_dir=path, is_test_mode=is_test_mode) / \
+                        utils.HIGH_FREQUENCY_FOLDER / \
                         save_folder / str(
                 text_file[0].year)
-            st.create_directory_if_not_exists(save_path)
+            utils.create_directory_if_not_exists(save_path)
 
             try:
                 with open(Path(save_path / file_name), 'w') as the_file:
@@ -337,7 +339,7 @@ class Station:
                 if key == "ALL":
                     continue
                 sl_data = sensor.get_flat_data().copy()
-                sl_data = st.remove_9s(sl_data)
+                sl_data = utils.remove_9s(sl_data)
                 sl_data = sl_data - int(sensor.height)
                 time = filt.datenum2(sensor.get_time_vector())
                 data_obj = [time, sl_data]
@@ -346,11 +348,11 @@ class Station:
                 variable = file_name.split('.')[0]
 
                 save_folder = month.get_save_folder()  # t + station_id
-                save_path = st.get_top_level_directory(parent_dir=path,
-                                                       is_test_mode=is_test_mode) / st.HIGH_FREQUENCY_FOLDER / \
+                save_path = utils.get_top_level_directory(parent_dir=path,
+                                                       is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
                             save_folder / str(
                     month.year)
-                st.create_directory_if_not_exists(save_path)
+                utils.create_directory_if_not_exists(save_path)
                 # transposing the data so that it matches the shape of the UHSLC matlab format
                 matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
                 try:
@@ -386,7 +388,7 @@ class Station:
                     primary_sensor)})
                 return
             sl_data = _data[primary_sensor].get_flat_data().copy()
-            sl_data = st.remove_9s(sl_data)
+            sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(_data[primary_sensor].height)
             data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
                                                 'station': station_num, 'sealevel': sl_data}
@@ -419,11 +421,11 @@ class Station:
             month_str = "{:02}".format(month.month)
 
             save_folder = month.get_save_folder()  # t + station_id
-            save_path = st.get_top_level_directory(parent_dir=path,
-                                                   is_test_mode=is_test_mode) / st.FAST_DELIVERY_FOLDER / save_folder \
+            save_path = utils.get_top_level_directory(parent_dir=path,
+                                                   is_test_mode=is_test_mode) / utils.FAST_DELIVERY_FOLDER / save_folder \
                         / str(
                 month.year)
-            st.create_directory_if_not_exists(save_path)
+            utils.create_directory_if_not_exists(save_path)
 
             hourly_filename = str(save_path) + '/' + 'th' + str(station_num) + two_digit_year + month_str
             daily_filename = str(save_path) + '/' + 'da' + str(station_num) + two_digit_year + month_str
