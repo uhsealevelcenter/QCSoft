@@ -1,13 +1,11 @@
 import sys
-from collections import defaultdict
-from itertools import groupby
 
 from PyQt5 import QtWidgets
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-from extractor2 import DataExtractor
 from my_widgets import *
+from extractor2 import load_station_data
 from uhslcdesign import Ui_MainWindow
 # from qt_material import apply_stylesheet
 # import darkdetect
@@ -35,33 +33,6 @@ class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
     @cached_property
     def window(self):
         return ApplicationWindow()
-
-
-def load_station_data(file_names):
-    """
-
-    :param file_names: An array of data files to be loaded
-    :return: Station instance with all the data needed for further processing
-    """
-
-    # Create DataExtractor for each month that was loaded into program
-    months = []
-    for file_name in file_names:
-        month = DataExtractor(file_name)
-        # An empty sensor, used to create "ALL" radio button in the GUI
-        all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
-        month.sensors.add_sensor(all_sensor)
-        # month = Month(month=month_int, sensors=month.sensors)
-        months.append(month)
-
-    # # The reason months[0] is used is because the program only allows to load
-    # # multiple months for the same station, so the station sensors should be the same
-    # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-    name = months[0].headers[0][3:6]
-    location = months[0].loc
-
-    station = Station(name=name, location=location, month=months)
-    return station
 
 
 class ApplicationWindow(QMainWindow):

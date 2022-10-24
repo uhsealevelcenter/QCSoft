@@ -8,7 +8,6 @@ import filtering as filt
 from station_tools import utils
 
 import numpy as np
-import settings as st
 
 
 class Sensor:

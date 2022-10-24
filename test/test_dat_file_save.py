@@ -10,7 +10,7 @@ import numpy as np
 import scipy.io as sio
 
 import filtering as filt
-from main import load_station_data
+from extractor2 import load_station_data
 from my_widgets import find_outliers
 from station_tools import utils
 

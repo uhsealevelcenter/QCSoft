@@ -2,7 +2,7 @@ import re
 
 import numpy as np
 
-from sensor import SensorCollection, Sensor, Month
+from sensor import SensorCollection, Sensor, Month, Station
 
 
 class DataExtractor(Month):
@@ -219,3 +219,30 @@ class DataExtractor(Month):
                              data=np.array(data), time_info=info_time_col, header=header)
             self.sensors.add_sensor(_sensor)
         self.in_file.close()
+
+
+def load_station_data(file_names):
+    """
+
+    :param file_names: An array of data files to be loaded
+    :return: Station instance with all the data needed for further processing
+    """
+
+    # Create DataExtractor for each month that was loaded into program
+    months = []
+    for file_name in file_names:
+        month = DataExtractor(file_name)
+        # An empty sensor, used to create "ALL" radio button in the GUI
+        all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
+        month.sensors.add_sensor(all_sensor)
+        # month = Month(month=month_int, sensors=month.sensors)
+        months.append(month)
+
+    # # The reason months[0] is used is because the program only allows to load
+    # # multiple months for the same station, so the station sensors should be the same
+    # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
+    name = months[0].headers[0][3:6]
+    location = months[0].loc
+
+    station = Station(name=name, location=location, month=months)
+    return station
