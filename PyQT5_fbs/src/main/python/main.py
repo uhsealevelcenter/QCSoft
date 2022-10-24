@@ -9,7 +9,7 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from extractor2 import DataExtractor
 from my_widgets import *
 from uhslcdesign import Ui_MainWindow
-
+# from qt_material import apply_stylesheet
 # import darkdetect
 
 if is_pyqt5():
@@ -198,5 +198,6 @@ class ApplicationWindow(QMainWindow):
 
 if __name__ == '__main__':
     appctxt = AppContext()  # 4. Instantiate the subclass
+    # apply_stylesheet(appctxt.app, theme='dark_blue.xml')
     exit_code = appctxt.run()  # 5. Invoke run()
     sys.exit(exit_code)
