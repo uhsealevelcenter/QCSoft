@@ -1,12 +1,13 @@
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QObject, QSize, QPointF, QPropertyAnimation, QEasingCurve, pyqtProperty, pyqtSlot, Qt
-from PyQt5.QtGui import QPainter, QPalette, QLinearGradient, QGradient
+from PyQt5.QtGui import QPainter, QPalette, QLinearGradient, QGradient, QColor
 from PyQt5.QtWidgets import QAbstractButton
 
 
 class SwitchPrivate(QObject):
     def __init__(self, q, parent=None):
         QObject.__init__(self, parent=parent)
+        self.button = QColor(10, 240, 10)
         self.mPointer = q
         self.mPosition = 0.0
         self.mGradient = QLinearGradient()
@@ -36,7 +37,7 @@ class SwitchPrivate(QObject):
         margin = r.height() / 10
         shadow = self.mPointer.palette().color(QPalette.Dark)
         light = self.mPointer.palette().color(QPalette.Light)
-        button = self.mPointer.palette().color(QPalette.Button)
+        # button = self.mPointer.palette().color(QPalette.Button)
         painter.setPen(Qt.NoPen)
 
         self.mGradient.setColorAt(0, shadow.darker(130))
@@ -53,8 +54,8 @@ class SwitchPrivate(QObject):
         painter.setBrush(self.mGradient)
         painter.drawRoundedRect(r.adjusted(margin, margin, -margin, -margin), r.height() / 2, r.height() / 2)
 
-        self.mGradient.setColorAt(0, button.darker(130))
-        self.mGradient.setColorAt(1, button)
+        self.mGradient.setColorAt(0, self.button.darker(130))
+        self.mGradient.setColorAt(1, self.button)
 
         painter.setBrush(self.mGradient)
 
@@ -65,6 +66,10 @@ class SwitchPrivate(QObject):
     def animate(self, checked):
         self.animation.setDirection(QPropertyAnimation.Forward if checked else QPropertyAnimation.Backward)
         self.animation.start()
+        if checked:
+            self.button = QColor(230, 50, 0)
+        else:
+            self.button = QColor(10, 240, 10)
 
     def __del__(self):
         del self.animation
@@ -75,10 +80,15 @@ class Switch(QAbstractButton):
         QAbstractButton.__init__(self, parent=parent)
         self.dPtr = SwitchPrivate(self)
         self.setCheckable(True)
+        self.label = QtWidgets.QLabel(self)
+        self.label.setToolTip("Files will be saved to production folder")
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setObjectName("label")
+        self.label.setText(QtCore.QCoreApplication.translate("MainWindow", "Production"))
         self.clicked.connect(self.dPtr.animate)
 
     def sizeHint(self):
-        return QSize(84, 42)
+        return QSize(84, 84)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -97,8 +107,20 @@ class SwitchWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
         self.button = Switch()  # create switch
-
+        self.button.setToolTip("Files will be saved to production folder")
+        self.button.setMinimumHeight(40)
         self.vbl = QtWidgets.QVBoxLayout()
-        self.vbl.addWidget(self.button)
 
+        self.vbl.addWidget(self.button.label)
+        self.vbl.addWidget(self.button)
         self.setLayout(self.vbl)
+
+        self.button.clicked.connect(self.on_clicked)
+
+    def on_clicked(self, checked):
+        text = 'Test' if checked else 'Production'
+        tooltip_text = 'Files will be saved to test folder' if checked else 'Files will be saved to production ' \
+                                                                            'folder'
+        self.button.label.setText(QtCore.QCoreApplication.translate("MainWindow", text))
+        self.button.setToolTip(tooltip_text)
+        self.button.label.setToolTip(tooltip_text)
