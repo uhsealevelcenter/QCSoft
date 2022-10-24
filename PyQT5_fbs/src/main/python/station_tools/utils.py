@@ -15,8 +15,8 @@ def create_directory_if_not_exists(path):
 
 
 def get_top_level_directory(parent_dir, is_test_mode=False):
-    # parent_dir = Path(st.get_path(st.SAVE_KEY))
-    # Directory where production data is saved
+
+    # Subdirectory of parent_dir where production data is saved
     if not is_test_mode:
         directory = Path(parent_dir / PRODUCTION_DATA_TOP_FOLDER)
         if directory.is_dir():
@@ -24,7 +24,7 @@ def get_top_level_directory(parent_dir, is_test_mode=False):
         else:
             create_directory_if_not_exists(directory)
             return directory
-    # Directory where test data is saved
+    # Subdirectory of parent_dir where test data is saved
     else:
         test_directory = Path(parent_dir / TEST_DATA_TOP_FOLDER)
         if test_directory.is_dir():
