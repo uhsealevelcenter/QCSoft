@@ -530,28 +530,38 @@ class Station:
         mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
                     station_folder / str(
             month.year)
+        # Get all the HF .mat files for this station
         all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
-        sensors_set = set()
+        # sensors_set = set()
         months_sensor = {}
         # Next, Find all unique sensors letters in the file names:
-        for file_name in all_mat_files:
-            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a save assumption)
-            sensor_name = file_name.split('.')[0][-3:]
-            sensors_set.add(sensor_name)
+        for file_name_list in all_mat_files:
+            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
+            sensor_name = file_name_list.split('.')[0][-3:]
+            # sensors_set.add(sensor_name)
             if sensor_name not in months_sensor:
-                months_sensor[sensor_name] = [file_name]
+                months_sensor[sensor_name] = [file_name_list]
             else:
-                months_sensor[sensor_name].append(file_name)
+                months_sensor[sensor_name].append(file_name_list)
 
         annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
                          station_folder
         all_data = {}
-        for sensor, file_name in months_sensor.items():
-            for file in file_name:
+        # Todo: We need to figure out a way to handle the case when a sensor is added or removed from a station
+        # Detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
+        # Figure out how many days this month has and figure out the sensor frequency
+        # (from the closest month that has this sensor)
+        # Then based on the frequency and month fill in the missing data with nans
+
+        # combine all year's data
+        for sensor, file_name_list in months_sensor.items():
+            for file in file_name_list:
                 filename = file.split('/')[-1].split('.')[0]
                 data = sio.loadmat(file)
                 time = data[filename][:, 0]
                 sealevel = data[filename][:, 1]
+                # create an object with time and sealevel arrays for each sensor if this sensor is yet added to all
+                # data object, else append the data to the existing object
                 if sensor not in all_data:
                     all_data[sensor] = {'time': [time], 'sealevel': [sealevel]}
                 else:
@@ -565,7 +575,8 @@ class Station:
             try:
                 sio.savemat(Path(annual_mat_files_path / variable), matlab_obj)
             except IOError as e:
-                print("Cannot Save Data to " + str(annual_mat_files_path) + "\n" + str(e) + "\n Please select a different path to save to")
+                print("Error {}. Cannot Save Annual Data {} to {}".format(str(e), str(variable),
+                                                                          str(annual_mat_files_path)))
 
 
 class DataCollection:
