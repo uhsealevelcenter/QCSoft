@@ -356,7 +356,7 @@ class Station:
 
                 save_folder = month.get_save_folder()  # t + station_id
                 save_path = utils.get_top_level_directory(parent_dir=path,
-                                                       is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
+                                                          is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
                             save_folder / str(
                     month.year)
                 utils.create_directory_if_not_exists(save_path)
@@ -397,8 +397,9 @@ class Station:
             sl_data = _data[primary_sensor].get_flat_data().copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(_data[primary_sensor].height)
-            data_obj[primary_sensor.lower()] = {'time': station_tools.utils.datenum2(_data[primary_sensor].get_time_vector()),
-                                                'station': station_num, 'sealevel': sl_data}
+            data_obj[primary_sensor.lower()] = {
+                'time': station_tools.utils.datenum2(_data[primary_sensor].get_time_vector()),
+                'station': station_num, 'sealevel': sl_data}
 
             year = _data[primary_sensor].date.astype(object).year
             two_digit_year = str(year)[-2:]
@@ -429,7 +430,7 @@ class Station:
 
             save_folder = month.get_save_folder()  # t + station_id
             save_path = utils.get_top_level_directory(parent_dir=path,
-                                                   is_test_mode=is_test_mode) / utils.FAST_DELIVERY_FOLDER / save_folder \
+                                                      is_test_mode=is_test_mode) / utils.FAST_DELIVERY_FOLDER / save_folder \
                         / str(
                 month.year)
             utils.create_directory_if_not_exists(save_path)
@@ -472,7 +473,7 @@ class Station:
                             the_file.write(line_str + "\n")
                             counter += 1
                 success.append({'title': "Success",
-                                'message': "Success \n Daily Date Saved to " + str(save_path) + "\n"})
+                                'message': "Success \n Daily Data Saved to " + str(save_path) + "\n"})
             except IOError as e:
                 failure.append({'title': "Error",
                                 'message': "Cannot Save Daily Data to " + daily_filename + "\n" + str(
@@ -519,7 +520,7 @@ class Station:
             callback(success, failure)
         return success, failure
 
-    def save_to_annual_file(self):
+    def save_to_annual_file(self, path: str, is_test_mode=False, callback: Callable = None):
         ''' Saves annual high frequency data to a .mat file. One annual file per sensor.
             The logic is as follows:
             1. Get all HF .mat files that exist for the given year and group them by sensor name
@@ -531,7 +532,8 @@ class Station:
             4. Then again read in all the .mat files (now including the ones with NaN values) and combine them into one
                 .mat file per sensor and save it to the annual folder
             TODO:
-            4. Have this function accept the production/development flag and save to the appropriate folder
+            4. Have this function accept the production/development flag and save to the appropriate folder and implement
+                a callback function to update the GUI
             5. Delete the monthly .mat files that were created in step 3 (to clear up an confusion when an analyst
                 looks at the monthly folder and sees a bunch of files with NaN values)
             6. Ensure we cannot do this if have station data loaded for two different years (i.e. month 12 and 1 loaded)
@@ -540,12 +542,16 @@ class Station:
         import scipy.io as sio
         # We shouldn't be looking to only the first month to determine stuff
         month = self.month_collection[0]
-        station_folder = month.get_save_folder()
-        mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
-                    station_folder / str(
+        save_folder = month.get_save_folder()  # t + station_id
+        mat_files_path = utils.get_top_level_directory(parent_dir=path,
+                                                       is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
+                         save_folder / str(
             month.year)
+        # mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
+        #                  save_folder / str(
+        #     month.year)
         # Get all the HF .mat files for this station
-        all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
+        all_mat_files = sorted(glob.glob(str(mat_files_path) + '/*.mat'))
         sensor_months = {}  # sensors and a list of months they appear in
         for file_name_list in all_mat_files:
             # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
@@ -560,12 +566,15 @@ class Station:
         # convert to int to simplify the way we check if any months are missing
         for sensor, str_month in sensor_months.items():
             sensor_months[sensor] = [int(x) for x in str_month]
-        annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
-                         station_folder
+        annual_mat_files_path = utils.get_top_level_directory(parent_dir=path,
+                                                              is_test_mode=is_test_mode) / \
+                                utils.HIGH_FREQUENCY_FOLDER / save_folder
 
         # Figure out if a sensor was added or removed in a month
         # By detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
         # Save a .mat file for that sensor and month with a single NaN value
+        success = []
+        failure = []
         missing = {}
         for sensor, month_list in sensor_months.items():
             missing[sensor] = get_missing_months(month_list)
@@ -577,16 +586,17 @@ class Station:
                     time = [datenum(datetime(month.year, m, 15))]
                     sealevel = [np.nan]
                     data_obj = [time, sealevel]
-                    variable = station_folder + str(month.year) + '{:02d}'.format(m) + sensor
+                    variable = save_folder + str(month.year) + '{:02d}'.format(m) + sensor
 
                     matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
                     variable = Path(variable + '.mat')
                     try:
                         sio.savemat(Path(mat_files_path / variable), matlab_obj)
                     except IOError as e:
-                        print("ERROR {}. Cannot save temporary {} files ".format(e, str(variable)))
+                        failure.append({'title': "Error",
+                                        'message': "ERROR {}. Cannot save temporary {} files ".format(e, str(variable))})
 
-        all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
+        all_mat_files = sorted(glob.glob(str(mat_files_path) + '/*.mat'))
         # sensors_set = set()
         months_sensor = {}  # sensors and list of .mat files for each month
         # Next, Find all unique sensors letters in the file names:
@@ -615,15 +625,21 @@ class Station:
                     all_data[sensor]['sealevel'] = np.append(all_data[sensor]['sealevel'], sealevel)
                     all_data[sensor]['time'] = np.append(all_data[sensor]['time'], time)
             data_obj = [all_data[sensor]['time'], all_data[sensor]['sealevel']]
-            variable = station_folder + str(month.year) + sensor
+            variable = save_folder + str(month.year) + sensor
 
             matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
             variable = Path(variable + '.mat')
             try:
                 sio.savemat(Path(annual_mat_files_path / variable), matlab_obj)
             except IOError as e:
-                print("Error {}. Cannot Save Annual Data {} to {}".format(str(e), str(variable),
-                                                                          str(annual_mat_files_path)))
+                failure.append({'title': "Error",
+                                'message': "Error {}. Cannot Save Annual Data {} to {}".format(str(e), str(variable),
+                                                                                               str(annual_mat_files_path))})
+        success.append({'title': "Success",
+                        'message': "Success \n Annual .mat Data Saved to " + str(annual_mat_files_path) + "\n"})
+        if callback:
+            callback(success, failure)
+        return success, failure
 
 
 class DataCollection:

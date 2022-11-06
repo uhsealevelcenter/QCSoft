@@ -399,14 +399,14 @@ class Start(QMainWindow):
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
             data_obj[sens_str1.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
-                                                                     sens_str1]),
+                                                                                    sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
             sl_data2 = utils.remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
             data_obj[sens_str2.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
-                                                                     sens_str2]),
+                                                                                    sens_str2]),
                                            'station': '014', 'sealevel': sl_data2}
 
             year = self.station.month_collection[0].sensor_collection.sensors[sens_str2].date.astype(object).year
@@ -585,7 +585,8 @@ class Start(QMainWindow):
                                        callback=self.file_saving_notifications)
             self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
                                           callback=self.file_saving_notifications)
-            self.station.save_to_annual_file()
+            self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
+                                             callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
@@ -610,7 +611,7 @@ class Start(QMainWindow):
             #     return
 
             self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
-                               callback=self.file_saving_notifications)
+                                            callback=self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
