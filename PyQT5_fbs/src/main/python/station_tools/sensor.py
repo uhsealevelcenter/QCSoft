@@ -530,14 +530,14 @@ class Station:
                 sea level in the middle of the month (15th of the month more precisely, arbitrarily chosen)
             4. Then again read in all the .mat files (now including the ones with NaN values) and combine them into one
                 .mat file per sensor and save it to the annual folder
+            TODO:
+            4. Have this function accept the production/development flag and save to the appropriate folder
+            5. Delete the monthly .mat files that were created in step 3 (to clear up an confusion when an analyst
+                looks at the monthly folder and sees a bunch of files with NaN values)
+            6. Ensure we cannot do this if have station data loaded for two different years (i.e. month 12 and 1 loaded)
+                OR disable the ability to load two different years of data at the same time
         '''
         import scipy.io as sio
-        #1) Get all high frequency .mat files for this year for this station
-        # Beware of weird edge cases in which we might load month 12 and 1 for example
-        #2) Load them into memory and append each sensor in the appropriate order
-        #3) Save the annual file
-        # Take care of cases when a new Sensor appears in a month or disappears
-        # Todo: This is just a temporary solution, we should have a better way to handle this
         # We shouldn't be looking to only the first month to determine stuff
         month = self.month_collection[0]
         station_folder = month.get_save_folder()
@@ -584,7 +584,7 @@ class Station:
                     try:
                         sio.savemat(Path(mat_files_path / variable), matlab_obj)
                     except IOError as e:
-                        print("ERROR {}".format(e))
+                        print("ERROR {}. Cannot save temporary {} files ".format(e, str(variable)))
 
         all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
         # sensors_set = set()
