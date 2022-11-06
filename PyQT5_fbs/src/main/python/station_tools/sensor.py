@@ -547,22 +547,9 @@ class Station:
                                                        is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
                          save_folder / str(
             month.year)
-        # mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
-        #                  save_folder / str(
-        #     month.year)
-        # Get all the HF .mat files for this station
-        all_mat_files = sorted(glob.glob(str(mat_files_path) + '/*.mat'))
-        sensor_months = {}  # sensors and a list of months they appear in
-        for file_name_list in all_mat_files:
-            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
-            sensor_name = file_name_list.split('.mat')[0][-3:]
-            month_str = file_name_list.split('.mat')[0][-5:-3]
-            # sensors_set.add(sensor_name)
-            if sensor_name not in sensor_months:
-                sensor_months[sensor_name] = [month_str]
-            else:
-                sensor_months[sensor_name].append(month_str)
 
+        # Get all the sensor .mat files and a list of months for each sensor
+        sensor_months = utils.get_hf_mat_files(mat_files_path)
         # convert to int to simplify the way we check if any months are missing
         for sensor, str_month in sensor_months.items():
             sensor_months[sensor] = [int(x) for x in str_month]
@@ -596,19 +583,8 @@ class Station:
                         failure.append({'title': "Error",
                                         'message': "ERROR {}. Cannot save temporary {} files ".format(e, str(variable))})
 
-        all_mat_files = sorted(glob.glob(str(mat_files_path) + '/*.mat'))
-        # sensors_set = set()
-        months_sensor = {}  # sensors and list of .mat files for each month
-        # Next, Find all unique sensors letters in the file names:
-        for file_name_list in all_mat_files:
-            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
-            sensor_name = file_name_list.split('.mat')[0][-3:]
-            # sensors_set.add(sensor_name)
-            if sensor_name not in months_sensor:
-                months_sensor[sensor_name] = [file_name_list]
-            else:
-                months_sensor[sensor_name].append(file_name_list)
-
+        # Get all the .mat files, including the ones we just created with NaN values
+        months_sensor = utils.get_hf_mat_files(mat_files_path, full_name=True)
         # combine all year's HF .mat data to a single .mat file for each sensor
         all_data = {}
         for sensor, file_name_list in months_sensor.items():

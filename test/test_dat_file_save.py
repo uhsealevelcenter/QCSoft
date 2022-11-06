@@ -253,13 +253,18 @@ class TestDatFileSave(unittest.TestCase):
             save_path_annual = utils.get_top_level_directory(
                 parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder
             success, failure = station.save_to_annual_file(tmp)
-            all_hf_mat_files = sorted(glob.glob(str(save_path_hf) + '/*.mat'))
-
+            all_hf_mat_files = utils.get_hf_mat_files(save_path_hf, full_name=True)
+            keys = ['enc', 'prs', 'rad', 'prd']
             # 4 sensors per month times 12 months
-            self.assertEqual(48, len(all_hf_mat_files))
-            all_annual_mat_files = sorted(glob.glob(str(save_path_annual) + '/*.mat'))
+            for key, value in all_hf_mat_files.items():
+                self.assertEqual(len(value), 12)
+            self.assertListEqual(sorted(keys), sorted(all_hf_mat_files.keys()))
+
+            all_annual_mat_files = utils.get_hf_mat_files(save_path_annual, full_name=True)
             # 4 sensors, 1 annual file per sensor
-            self.assertEqual(4, len(all_annual_mat_files))
+            for key, value in all_annual_mat_files.items():
+                self.assertEqual(len(value), 1)
+            self.assertListEqual(sorted(keys), sorted(all_annual_mat_files.keys()))
 
 
 if __name__ == '__main__':

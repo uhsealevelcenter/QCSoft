@@ -1,3 +1,4 @@
+import glob
 import os
 from datetime import datetime
 from pathlib import Path
@@ -50,6 +51,30 @@ def get_missing_months(month_list):
     missing_months.sort()
     return missing_months
 
+
+def get_hf_mat_files(path: Path, full_name=False):
+    """
+    Returns an object of all sensor files at the given path as keys and
+    a list of all the months in the file as values if full_name is False
+    or a list of all the full file names if full_name is True.
+    :param path:
+    :return: {"<sensor_id>": ["01', '02', ...], ...} or {"<sensor_id>": ["<file_name_01>", "<file_name_02>", ...], ...}
+    """
+    all_mat_files = sorted(glob.glob(str(path) + '/*.mat'))
+    sensor_months = {}  # sensors and a list of months they appear in
+    for file_name_list in all_mat_files:
+        # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
+        sensor_name = file_name_list.split('.mat')[0][-3:]
+        if full_name:
+            value = file_name_list
+        else:
+            value = file_name_list.split('.mat')[0][-5:-3]
+        # sensors_set.add(sensor_name)
+        if sensor_name not in sensor_months:
+            sensor_months[sensor_name] = [value]
+        else:
+            sensor_months[sensor_name].append(value)
+    return sensor_months
 
 def datenum2(date):
     # TO make it work numpy datetime
