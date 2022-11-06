@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
 
+import station_tools.utils
 from station_tools import filtering as filt
 import settings as st
 from dialogs import DateDialog
@@ -397,14 +398,14 @@ class Start(QMainWindow):
             sl_data = self.station.aggregate_months["data"][sens_str1].copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
-            data_obj[sens_str1.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
+            data_obj[sens_str1.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
             sl_data2 = utils.remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
-            data_obj[sens_str2.lower()] = {'time': filt.datenum2(self.station.aggregate_months['time'][
+            data_obj[sens_str2.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
                                                                      sens_str2]),
                                            'station': '014', 'sealevel': sl_data2}
 

@@ -9,6 +9,7 @@ import settings as st
 import numpy as np
 import scipy.io as sio
 
+import station_tools.utils
 from station_tools import filtering as filt
 from station_tools.extractor2 import load_station_data
 from my_widgets import find_outliers
@@ -119,7 +120,7 @@ class TestDatFileSave(unittest.TestCase):
                     data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
-                    time_vector = filt.datenum2(sensor.get_time_vector())
+                    time_vector = station_tools.utils.datenum2(sensor.get_time_vector())
 
                     sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data
@@ -165,7 +166,7 @@ class TestDatFileSave(unittest.TestCase):
                     data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
-                    time_vector = filt.datenum2(sensor.get_time_vector())
+                    time_vector = station_tools.utils.datenum2(sensor.get_time_vector())
 
                     sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data

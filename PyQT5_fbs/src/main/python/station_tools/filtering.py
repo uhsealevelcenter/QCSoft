@@ -5,6 +5,7 @@ from scipy import stats
 from utide import solve, reconstruct
 
 from station_tools import filter_weights as fw
+from station_tools.utils import datenum
 
 
 def calwts(Tc, S):
@@ -86,32 +87,6 @@ def smooth_gap1(u, wt, ngap=0.8):
     ua = ua[nwt2:nwt2 + n]
 
     return ua
-
-
-def datenum(d):
-    """
-    Python equivalent of the Matlab datenum function.
-
-    Parameters:
-    -----------
-    d: datetime object (e.g. datetime(yr,mon,day,hr,min,sec))
-
-    Returns:
-    --------
-    float: datetime object converted to Matlab epoch
-
-    """
-    return 366 + d.toordinal() + (d - datetime.fromordinal(d.toordinal())).total_seconds() / (24 * 60 * 60)
-
-
-# TO make it work numpy datetime
-def datenum2(date):
-    obj = []
-    for d in date:
-        obj.append(366 + d.astype(datetime).toordinal() + (
-                d.astype(datetime) - datetime.fromordinal(d.astype(datetime).toordinal())).total_seconds() / (
-                           24 * 60 * 60))
-    return obj
 
 
 def matlab2datetime(matlab_datenum):

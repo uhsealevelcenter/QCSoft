@@ -3,6 +3,9 @@ from collections import defaultdict
 from itertools import groupby
 from pathlib import Path
 from typing import Callable
+
+import station_tools.utils
+from datetime import datetime
 from station_tools import filtering as filt
 
 from station_tools import utils
@@ -10,6 +13,8 @@ from station_tools import utils
 import numpy as np
 import glob
 import os
+
+from station_tools.utils import get_missing_months, datenum
 
 
 class Sensor:
@@ -343,7 +348,7 @@ class Station:
                 sl_data = sensor.get_flat_data().copy()
                 sl_data = utils.remove_9s(sl_data)
                 sl_data = sl_data - int(sensor.height)
-                time = filt.datenum2(sensor.get_time_vector())
+                time = station_tools.utils.datenum2(sensor.get_time_vector())
                 data_obj = [time, sl_data]
 
                 file_name = month.get_mat_filename()[key]
@@ -392,7 +397,7 @@ class Station:
             sl_data = _data[primary_sensor].get_flat_data().copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(_data[primary_sensor].height)
-            data_obj[primary_sensor.lower()] = {'time': filt.datenum2(_data[primary_sensor].get_time_vector()),
+            data_obj[primary_sensor.lower()] = {'time': station_tools.utils.datenum2(_data[primary_sensor].get_time_vector()),
                                                 'station': station_num, 'sealevel': sl_data}
 
             year = _data[primary_sensor].date.astype(object).year
@@ -533,30 +538,64 @@ class Station:
         # Get all the HF .mat files for this station
         all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
         # sensors_set = set()
-        months_sensor = {}
+        sensor_months = {}  # sensors and a list of months they appear in
         # Next, Find all unique sensors letters in the file names:
         for file_name_list in all_mat_files:
             # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
-            sensor_name = file_name_list.split('.')[0][-3:]
+            sensor_name = file_name_list.split('.mat')[0][-3:]
+            month_str = file_name_list.split('.mat')[0][-5:-3]
+            # sensors_set.add(sensor_name)
+            if sensor_name not in sensor_months:
+                sensor_months[sensor_name] = [month_str]
+            else:
+                sensor_months[sensor_name].append(month_str)
+
+        # convert to int to check if months are consecutive
+        for sensor, str_month in sensor_months.items():
+            sensor_months[sensor] = [int(x) for x in str_month]
+        annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
+                         station_folder
+
+        # Figure out if a sensor was added or removed in a month
+        # Detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
+        # Save an empty .mat file for that sensor and month
+        missing = {}
+        for sensor, month_list in sensor_months.items():
+            missing[sensor] = get_missing_months(month_list)
+        # give the missing sensor for the given month only one NaN value for that month and save to .mat file
+        for sensor, mon in missing.items():
+            if missing[sensor]:
+                for m in mon:
+                    # Give it two NaN values for that month (two needed because of the transpose)
+                    time = [datenum(datetime(month.year, m, 1)), datenum(datetime(month.year, m, 15))]
+                    sealevel = [np.nan, np.nan]
+                    data_obj = [time, sealevel]
+                    variable = station_folder + str(month.year) + '{:02d}'.format(m) + sensor
+
+                    matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
+                    variable = Path(variable + '.mat')
+                    try:
+                        sio.savemat(Path(mat_files_path / variable), matlab_obj)
+                    except IOError as e:
+                        print("ERROR {}".format(e))
+
+        all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
+        # sensors_set = set()
+        months_sensor = {}  # sensors and list of .mat files for each month
+        # Next, Find all unique sensors letters in the file names:
+        for file_name_list in all_mat_files:
+            # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
+            sensor_name = file_name_list.split('.mat')[0][-3:]
             # sensors_set.add(sensor_name)
             if sensor_name not in months_sensor:
                 months_sensor[sensor_name] = [file_name_list]
             else:
                 months_sensor[sensor_name].append(file_name_list)
-
-        annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
-                         station_folder
         all_data = {}
-        # Todo: We need to figure out a way to handle the case when a sensor is added or removed from a station
-        # Detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
-        # Figure out how many days this month has and figure out the sensor frequency
-        # (from the closest month that has this sensor)
-        # Then based on the frequency and month fill in the missing data with nans
-
         # combine all year's data
         for sensor, file_name_list in months_sensor.items():
             for file in file_name_list:
-                filename = file.split('/')[-1].split('.')[0]
+                filename = file.split('/')[-1].split('.mat')[0]
                 data = sio.loadmat(file)
                 time = data[filename][:, 0]
                 sealevel = data[filename][:, 1]
