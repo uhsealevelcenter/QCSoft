@@ -520,8 +520,17 @@ class Station:
         return success, failure
 
     def save_to_annual_file(self):
-        ''' Loads all high frequency data for a station for a given year and saves it to a single file. One file per
-        sensor.'''
+        ''' Saves annual high frequency data to a .mat file. One annual file per sensor.
+            The logic is as follows:
+            1. Get all HF .mat files that exist for the given year and group them by sensor name
+            2. Find all the sensor/month combos that do not exist for the given year
+                Above step is necessary because it could happen that sometimes we remove a sensor from a station
+                and sometimes we add it. This way, we won't miss out on any data
+            3. For each sensor/month combo that does not exist, create a new .mat file with adding a nan value for
+                sea level in the middle of the month (15th of the month more precisely, arbitrarily chosen)
+            4. Then again read in all the .mat files (now including the ones with NaN values) and combine them into one
+                .mat file per sensor and save it to the annual folder
+        '''
         import scipy.io as sio
         #1) Get all high frequency .mat files for this year for this station
         # Beware of weird edge cases in which we might load month 12 and 1 for example
@@ -537,9 +546,7 @@ class Station:
             month.year)
         # Get all the HF .mat files for this station
         all_mat_files = sorted(glob.glob(str(mat_files_path)+'/*.mat'))
-        # sensors_set = set()
         sensor_months = {}  # sensors and a list of months they appear in
-        # Next, Find all unique sensors letters in the file names:
         for file_name_list in all_mat_files:
             # Assuming that each sensor name is ALWAYS 3 letters long (not sure if a safe assumption)
             sensor_name = file_name_list.split('.mat')[0][-3:]
@@ -550,15 +557,15 @@ class Station:
             else:
                 sensor_months[sensor_name].append(month_str)
 
-        # convert to int to check if months are consecutive
+        # convert to int to simplify the way we check if any months are missing
         for sensor, str_month in sensor_months.items():
             sensor_months[sensor] = [int(x) for x in str_month]
         annual_mat_files_path = self.top_level_folder / utils.PRODUCTION_DATA_TOP_FOLDER / utils.HIGH_FREQUENCY_FOLDER / \
                          station_folder
 
         # Figure out if a sensor was added or removed in a month
-        # Detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
-        # Save an empty .mat file for that sensor and month
+        # By detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
+        # Save a .mat file for that sensor and month with a single NaN value
         missing = {}
         for sensor, month_list in sensor_months.items():
             missing[sensor] = get_missing_months(month_list)
@@ -567,8 +574,8 @@ class Station:
             if missing[sensor]:
                 for m in mon:
                     # Give it two NaN values for that month (two needed because of the transpose)
-                    time = [datenum(datetime(month.year, m, 1)), datenum(datetime(month.year, m, 15))]
-                    sealevel = [np.nan, np.nan]
+                    time = [datenum(datetime(month.year, m, 15))]
+                    sealevel = [np.nan]
                     data_obj = [time, sealevel]
                     variable = station_folder + str(month.year) + '{:02d}'.format(m) + sensor
 
@@ -591,8 +598,9 @@ class Station:
                 months_sensor[sensor_name] = [file_name_list]
             else:
                 months_sensor[sensor_name].append(file_name_list)
+
+        # combine all year's HF .mat data to a single .mat file for each sensor
         all_data = {}
-        # combine all year's data
         for sensor, file_name_list in months_sensor.items():
             for file in file_name_list:
                 filename = file.split('/')[-1].split('.mat')[0]
