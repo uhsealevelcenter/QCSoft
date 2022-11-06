@@ -1,3 +1,4 @@
+import glob
 import io
 import os
 import tempfile
@@ -238,6 +239,27 @@ class TestDatFileSave(unittest.TestCase):
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
             # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
+
+    def test_annual_save(self):
+        station = self.input_data
+        with tempfile.TemporaryDirectory() as tmp:
+            # Save HF .mat files so that we can build the annual .mat files
+            # There needs to HF.mat data for at least one month, otherwise, annual mat can't be built
+            station.save_mat_high_fq(tmp)
+            save_folder = "t123"
+            save_path_hf = utils.get_top_level_directory(
+                parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            save_path_annual = utils.get_top_level_directory(
+                parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder
+            success, failure = station.save_to_annual_file(tmp)
+            all_hf_mat_files = sorted(glob.glob(str(save_path_hf) + '/*.mat'))
+
+            # 4 sensors per month times 12 months
+            self.assertEqual(48, len(all_hf_mat_files))
+            all_annual_mat_files = sorted(glob.glob(str(save_path_annual) + '/*.mat'))
+            # 4 sensors, 1 annual file per sensor
+            self.assertEqual(4, len(all_annual_mat_files))
 
 
 if __name__ == '__main__':
