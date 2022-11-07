@@ -1,19 +1,16 @@
 import calendar
+import os
 from collections import defaultdict
+from datetime import datetime
 from itertools import groupby
 from pathlib import Path
 from typing import Callable
 
-import station_tools.utils
-from datetime import datetime
-from station_tools import filtering as filt
-
-from station_tools import utils
-
 import numpy as np
-import glob
-import os
 
+import station_tools.utils
+from station_tools import filtering as filt
+from station_tools import utils
 from station_tools.utils import get_missing_months, datenum
 
 
@@ -590,7 +587,7 @@ class Station:
         all_data = {}
         for sensor, file_name_list in months_sensor.items():
             for file in file_name_list:
-                filename = file.split('/')[-1].split('.mat')[0]
+                filename = os.path.basename(file).split('/')[-1].split('.mat')[0]
                 data = sio.loadmat(file)
                 time = data[filename][:, 0]
                 sealevel = data[filename][:, 1]

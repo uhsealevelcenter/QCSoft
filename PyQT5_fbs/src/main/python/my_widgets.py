@@ -1,13 +1,9 @@
-import os
-from typing import Callable
-
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
 
-import station_tools.utils
-from station_tools import filtering as filt
 import settings as st
+import station_tools.utils
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from station_tools.sensor import *
@@ -585,8 +581,6 @@ class Start(QMainWindow):
                                        callback=self.file_saving_notifications)
             self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
                                           callback=self.file_saving_notifications)
-            self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
-                                             callback=self.file_saving_notifications)
 
             # 1. Check if the .din file was added and that it still exist at that path
             #       b) also check that a save folder is set up
@@ -612,6 +606,8 @@ class Start(QMainWindow):
 
             self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
                                             callback=self.file_saving_notifications)
+            self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
+                                             callback=self.file_saving_notifications)
         else:
             self.show_custom_message("Warning", "You haven't loaded any data.")
 

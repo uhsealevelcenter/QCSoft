@@ -1,20 +1,16 @@
-import glob
 import io
 import os
 import tempfile
 import unittest
 from pathlib import Path
 
-import settings as st
-
 import numpy as np
 import scipy.io as sio
 
 import station_tools.utils
-from station_tools import filtering as filt
-from station_tools.extractor2 import load_station_data
 from my_widgets import find_outliers
 from station_tools import utils
+from station_tools.extractor2 import load_station_data
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -259,7 +255,7 @@ class TestDatFileSave(unittest.TestCase):
             # And that the only files left are the ones that had HD data in it
             for key, value in all_hf_mat_files.items():
                 self.assertEqual(1, len(value))
-                self.assertEqual(value[0].split('/')[-1], 't123201810{}.mat'.format(key))
+                self.assertEqual(os.path.basename(value[0]).split('/')[-1], 't123201810{}.mat'.format(key))
             self.assertListEqual(sorted(keys), sorted(all_hf_mat_files.keys()))
 
             all_annual_mat_files = utils.get_hf_mat_files(save_path_annual, full_name=True)
