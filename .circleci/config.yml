@@ -112,6 +112,7 @@ jobs:
             cd PyQT5_fbs
             pyenv local 3.6.7
             pyenv versions
+            git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
             pyenv virtualenv 3.6.7 uhslc
             pyenv shell uhslc
             python --version
