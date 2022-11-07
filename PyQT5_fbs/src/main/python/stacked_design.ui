@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1199</width>
+    <width>1200</width>
     <height>894</height>
    </rect>
   </property>
@@ -52,7 +52,7 @@
           <item>
            <widget class="QPushButton" name="save_btn">
             <property name="toolTip">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Testing ToolTip&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>Save High Frequency and Fast Delivery data. Annual HF data is also created</string>
             </property>
             <property name="toolTipDuration">
              <number>-1</number>
@@ -448,7 +448,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;FOLDER STRUCTURE:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;-------------------------&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Inside the folder specified in step (2) above the strucuture would look as following:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Inside the folder specified in step (2) above the strucuture will look as following:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Your-chosen-folder/&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;|&lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt; -- production_data/&lt;/span&gt;&lt;/p&gt;
@@ -470,7 +470,7 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;|    | -- high_frequency/&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;|    | -- fast_delivery/&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Data inside of both the &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;high_frequency&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; and &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;fast_delivery&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; folders will contain subdirectories (one for each station -- e.g. &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;t123&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;) letter t followed by a three digit station ID. And then every station folder will have a subfolder for each year that data belongs to (e.g. &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;2019&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;). The station subfolder in &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;high_frequency&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; directory will contain multiple yearly, high frequency .mat files, which are created by appending multiple monthy high frequency .mat files for the corresponding year (not shown in the folder structure above). &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Data inside of both the &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;high_frequency&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; and &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;fast_delivery&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; folders will contain subdirectories (one for each station -- e.g. &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;t123&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;) letter t followed by a three digit station ID. And then every station folder will have a subfolder for each year that the data belongs to (e.g. &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;2019&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;). The station subfolder in &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;high_frequency&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; directory will contain multiple yearly, high frequency .mat files, which are created by appending multiple monthy high frequency .mat files for the corresponding year (not shown in the folder structure above). &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Note that the high frequency .mat files are in the following format:&lt;/span&gt;&lt;/p&gt;
 &lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;t&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;&amp;lt;three_digit_station_ID&amp;gt;&lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;YYYYMM&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;&amp;lt;three_letter_sensor&amp;gt;&lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;.mat&lt;/span&gt;&lt;/p&gt;
@@ -480,10 +480,21 @@ p, li { white-space: pre-wrap; }
 &lt;p align=&quot;center&quot; style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;Fast delivery hourly and daily data files begin with &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;th&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; and &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;da&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;, respectively, followed by the three-digit station id followed by a two-digit year and two-digit month (see the above folder strucutre and file name examples).&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;test_data &lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;folder is a place where we store the data during testing period. Testing is enabled by switching the testing/produciton toggle. The subfolder structure of the &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;test_data&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; folder is exactly the same as the one for &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;production_data&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;test_data &lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;folder is a place where we store the data during testing period. Testing is enabled by switching the testing/produciton toggle (the big green/red circle). The subfolder structure of the &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;test_data&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt; folder is exactly the same as the one for &lt;/span&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;production_data&lt;/span&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;If no path is specified, the path will default to your home directory on your local machine or you will be asked to set it up.  If different local directory needs to be used, this can be achieved by performing the same steps above. &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;KNOWN LIMITATIONS:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;(to be fixed in the future)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;------------------------------&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt; font-weight:600;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;1. When loading multiple months of data, the data loaded can only belong to the same year. This limitation will be removed in the future when we have my robust testing in place. Right now, this allows to avoid many edge cases we might not be accounting for.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;2. Hourly filtering on the bottom graph might not work properly if we have multiple months loaded&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt;&quot;&gt;3. Changing reference level for multiple months might not work properly (only load one month worth of data when changing the reference level)&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:12pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;DATA LOADING:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;-------------------&lt;/span&gt;&lt;/p&gt;
@@ -650,7 +661,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1199</width>
+     <width>1200</width>
      <height>18</height>
     </rect>
    </property>
@@ -718,12 +729,12 @@ p, li { white-space: pre-wrap; }
  <customwidgets>
   <customwidget>
    <class>MatplotlibWidget</class>
-   <extends></extends>
+   <extends>QWidget</extends>
    <header>matplotlibwidget</header>
   </customwidget>
   <customwidget>
    <class>SwitchWidget</class>
-   <extends></extends>
+   <extends>QWidget</extends>
    <header>switchwidget</header>
   </customwidget>
  </customwidgets>
