@@ -112,8 +112,11 @@ jobs:
             cd PyQT5_fbs
             pyenv local 3.6.7
             pyenv versions
-            pip install -r requirements/windows.txt
+            python -m pip install –user virtualenv
+            python -m venv env
+            .\env\Scripts\activate
             python --version
+            pip3 install -r requirements/windows.txt
             python make_hooks.py
             fbs freeze
 #      - run:
