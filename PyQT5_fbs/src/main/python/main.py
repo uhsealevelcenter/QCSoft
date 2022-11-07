@@ -84,7 +84,7 @@ class ApplicationWindow(QMainWindow):
         # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
         # Validating files selected
-        if is_valid_files(self.file_name):
+        if is_valid_files(self.file_name[0]):
             pass
         else:
             self.critical_dialog(title="ERROR",

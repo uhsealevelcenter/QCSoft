@@ -122,7 +122,7 @@ def is_valid_files(files: List[str], callback: Callable = None):
     success = []
     failure = []
     # extract dates and station 4 letter codes for every file that was loaded
-    for file in files[0]:
+    for file in files:
         if file[-8:-4].isdigit():
             dates.append(int(file[-8:-4]))
             # check if monp file or a TS file
