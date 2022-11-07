@@ -107,7 +107,12 @@ jobs:
             python --version
       - run:
           name: Activate python 3.6.7 and install requirements
-          command: cd PyQT5_fbs && pyenv local 3.6.7 && pyenv versions && pip3 install -r requirements/mac.txt
+          shell: powershell.exe
+          command: |
+            cd PyQT5_fbs
+            pyenv local 3.6.7
+            pyenv versions
+            pip install -r requirements/win.txt
       - run:
           name: Build uTide hook
           shell: powershell.exe
