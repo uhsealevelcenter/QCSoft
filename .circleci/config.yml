@@ -112,7 +112,7 @@ jobs:
             cd PyQT5_fbs
             pyenv local 3.6.7
             pyenv versions
-            pip install -r requirements/win.txt
+            pip install -r requirements/windows.txt
       - run:
           name: Build uTide hook
           shell: powershell.exe
