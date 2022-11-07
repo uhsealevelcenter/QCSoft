@@ -112,9 +112,10 @@ jobs:
             cd PyQT5_fbs
             pyenv local 3.6.7
             pyenv versions
-            git clone https://github.com/pyenv/pyenv-virtualenv.git
-            pyenv virtualenv 3.6.7 uhslc
-            pyenv shell uhslc
+            
+#            git clone https://github.com/pyenv/pyenv-virtualenv.git
+#            pyenv virtualenv 3.6.7 uhslc
+#            pyenv shell uhslc
             python --version
             pip3 install -r requirements/windows.txt
             python make_hooks.py
