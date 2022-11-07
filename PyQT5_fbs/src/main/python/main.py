@@ -6,6 +6,7 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 from my_widgets import *
 from station_tools.extractor2 import load_station_data
+from station_tools.utils import is_valid_files
 from uhslcdesign import Ui_MainWindow
 # from qt_material import apply_stylesheet
 # import darkdetect
@@ -83,7 +84,7 @@ class ApplicationWindow(QMainWindow):
         # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
         # Validating files selected
-        if self.is_valid_files(self.file_name):
+        if is_valid_files(self.file_name):
             pass
         else:
             self.critical_dialog(title="ERROR",
@@ -120,41 +121,6 @@ class ApplicationWindow(QMainWindow):
         msg_box.setDetailedText(str(details))
         msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
         msg_box.exec_()
-
-    def pairwise_diff(self, lst):
-        diff = 0
-        result = []
-        for i in range(len(lst) - 1):
-            # subtracting the alternate numbers
-            diff = lst[i] - lst[i + 1]
-            result.append(diff)
-        return result
-
-    def is_valid_files(self, files):
-        dates = []
-        names = []
-        result = []
-        # extract dates and station 4 letter codes for every file that was loaded
-        for file in files[0]:
-            if file[-8:-4].isdigit():
-                dates.append(int(file[-8:-4]))
-                # check if monp file or a TS file
-                if file.split("/")[-1][0] == "s":
-                    names.append(file.split("/")[-1][1:5])
-                else:
-                    names.append(file.split("/")[-1][0:4])
-        # check the difference between all dates
-        # if the difference is not 1, then the files are not adjacent months
-        for val in self.pairwise_diff(dates):
-            # if we want the adjacent month from the adjacent year then need to add
-            # check for -89 as well (and val != -89)
-            if val != -1:
-                result.append(val)
-        # check if the files selected are all from the same station
-        if names[1:] != names[:-1]:
-            return False
-
-        return len(result) == 0
 
     def close_application(self):
         choice = QtWidgets.QMessageBox.question(self, 'Warning', "Are you sure you want to quit?",

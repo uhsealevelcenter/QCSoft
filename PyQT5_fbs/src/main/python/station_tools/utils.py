@@ -2,6 +2,7 @@ import glob
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import List, Callable
 
 import numpy as np
 
@@ -11,13 +12,14 @@ FAST_DELIVERY_FOLDER = Path('fast_delivery')
 HIGH_FREQUENCY_FOLDER = Path('high_frequency')
 
 ALL_MONTHS_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+
 def create_directory_if_not_exists(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
 
 def get_top_level_directory(parent_dir, is_test_mode=False):
-
     # Subdirectory of parent_dir where production data is saved
     if not is_test_mode:
         directory = Path(parent_dir / PRODUCTION_DATA_TOP_FOLDER)
@@ -76,6 +78,7 @@ def get_hf_mat_files(path: Path, full_name=False):
             sensor_months[sensor_name].append(value)
     return sensor_months
 
+
 def datenum2(date):
     # TO make it work numpy datetime
     obj = []
@@ -100,3 +103,51 @@ def datenum(d):
 
     """
     return 366 + d.toordinal() + (d - datetime.fromordinal(d.toordinal())).total_seconds() / (24 * 60 * 60)
+
+
+def pairwise_diff(lst):
+    diff = 0
+    result = []
+    for i in range(len(lst) - 1):
+        # subtracting the alternate numbers
+        diff = lst[i] - lst[i + 1]
+        result.append(diff)
+    return result
+
+
+def is_valid_files(files: List[str], callback: Callable = None):
+    dates = []
+    names = []
+    result = []
+    success = []
+    failure = []
+    # extract dates and station 4 letter codes for every file that was loaded
+    for file in files[0]:
+        if file[-8:-4].isdigit():
+            dates.append(int(file[-8:-4]))
+            # check if monp file or a TS file
+            if file.split("/")[-1][0] == "s":
+                names.append(file.split("/")[-1][1:5])
+            else:
+                names.append(file.split("/")[-1][0:4])
+    # check the difference between all dates
+    # if the difference is not 1, then the files are not adjacent months
+    for val in pairwise_diff(dates):
+        # if we want the adjacent month from the adjacent year then need to add
+        # check for -89 as well (and val != -89)
+        if val != -1:
+            result.append(val)
+            failure.append({'title': "Error",
+                            'message': "The months loaded are not adjacent or they are not properly sorted."})
+    # check if the files selected are all from the same station
+    if names[1:] != names[:-1]:
+        failure.append({'title': "Error",
+                        'message': "Files selected are all not from the same station"})
+        return False
+
+    success.append({'title': 'Success',
+                    'message': "Files successfully loaded"})
+    if callback:
+        callback(success, failure)
+
+    return len(result) == 0
