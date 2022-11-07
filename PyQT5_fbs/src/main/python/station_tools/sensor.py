@@ -521,7 +521,7 @@ class Station:
         return success, failure
 
     def save_to_annual_file(self, path: str, is_test_mode=False, callback: Callable = None):
-        ''' Saves annual high frequency data to a .mat file. One annual file per sensor.
+        """ Saves annual high frequency data to a .mat file. One annual file per sensor.
             The logic is as follows:
             1. Get all HF .mat files that exist for the given year and group them by sensor name
             2. Find all the sensor/month combos that do not exist for the given year
@@ -531,14 +531,12 @@ class Station:
                 sea level in the middle of the month (15th of the month more precisely, arbitrarily chosen)
             4. Then again read in all the .mat files (now including the ones with NaN values) and combine them into one
                 .mat file per sensor and save it to the annual folder
-            TODO:
-            4. Have this function accept the production/development flag and save to the appropriate folder and implement
-                a callback function to update the GUI
             5. Delete the monthly .mat files that were created in step 3 (to clear up an confusion when an analyst
                 looks at the monthly folder and sees a bunch of files with NaN values)
+            TODO:
             6. Ensure we cannot do this if have station data loaded for two different years (i.e. month 12 and 1 loaded)
                 OR disable the ability to load two different years of data at the same time
-        '''
+        """
         import scipy.io as sio
         # We shouldn't be looking to only the first month to determine stuff
         month = self.month_collection[0]
@@ -566,6 +564,7 @@ class Station:
         for sensor, month_list in sensor_months.items():
             missing[sensor] = get_missing_months(month_list)
         # give the missing sensor for the given month only one NaN value for that month and save to .mat file
+        files_created = []
         for sensor, mon in missing.items():
             if missing[sensor]:
                 for m in mon:
@@ -579,6 +578,7 @@ class Station:
                     variable = Path(variable + '.mat')
                     try:
                         sio.savemat(Path(mat_files_path / variable), matlab_obj)
+                        files_created.append(Path(mat_files_path / variable))
                     except IOError as e:
                         failure.append({'title': "Error",
                                         'message': "ERROR {}. Cannot save temporary {} files ".format(e, str(variable))})
@@ -613,6 +613,14 @@ class Station:
                                                                                                str(annual_mat_files_path))})
         success.append({'title': "Success",
                         'message': "Success \n Annual .mat Data Saved to " + str(annual_mat_files_path) + "\n"})
+
+        for file_name in files_created:
+            try:
+                os.remove(file_name)
+            except OSError as e:
+                failure.append({'title': "Error",
+                                'message': "Error {}. Cannot delete temporary {} files ".format(e, str(file_name))})
+
         if callback:
             callback(success, failure)
         return success, failure

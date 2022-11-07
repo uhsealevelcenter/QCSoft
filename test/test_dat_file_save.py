@@ -255,16 +255,44 @@ class TestDatFileSave(unittest.TestCase):
             success, failure = station.save_to_annual_file(tmp)
             all_hf_mat_files = utils.get_hf_mat_files(save_path_hf, full_name=True)
             keys = ['enc', 'prs', 'rad', 'prd']
-            # 4 sensors per month times 12 months
+            # Make sure that there are no empty .mat files left in the HF folder
+            # And that the only files left are the ones that had HD data in it
             for key, value in all_hf_mat_files.items():
-                self.assertEqual(len(value), 12)
+                self.assertEqual(1, len(value))
+                self.assertEqual(value[0].split('/')[-1], 't123201810{}.mat'.format(key))
             self.assertListEqual(sorted(keys), sorted(all_hf_mat_files.keys()))
 
             all_annual_mat_files = utils.get_hf_mat_files(save_path_annual, full_name=True)
-            # 4 sensors, 1 annual file per sensor
+            # 4 sensors, 1 annual file per sensor for annual HF files
             for key, value in all_annual_mat_files.items():
                 self.assertEqual(len(value), 1)
             self.assertListEqual(sorted(keys), sorted(all_annual_mat_files.keys()))
+
+            # Check the saved annual files
+            data_enc = sio.loadmat(os.path.join(save_path_annual, 't1232018enc.mat'))
+
+            # Sealevel data for first 9 months should be NaN because HF for those months does not exist
+            empty_months = data_enc['t1232018enc'][0:10]
+            for month in empty_months:
+                self.assertTrue(np.isnan(month[1]))
+
+            # The total amount of data points should be 60/6 * 24 * 31 + 11
+            # Which is minutes in an hour, divided bu the sampling freq (6 for enc) * hours in a day * days in a month
+            # + the number of months with no data (all months besides October
+            self.assertEqual(7451, len(data_enc['t1232018enc']))
+
+            # Do the same for other sensors
+            datapoints = 60 / 3 * 24 * 31 + 11
+            data_rad = sio.loadmat(os.path.join(save_path_annual, 't1232018rad.mat'))
+            self.assertEqual(datapoints, len(data_rad['t1232018rad']))
+
+            datapoints = 60 / 2 * 24 * 31 + 11
+            data_prs = sio.loadmat(os.path.join(save_path_annual, 't1232018prs.mat'))
+            self.assertEqual(datapoints, len(data_prs['t1232018prs']))
+
+            datapoints = 60 / 15 * 24 * 31 + 11
+            data_prd = sio.loadmat(os.path.join(save_path_annual, 't1232018prd.mat'))
+            self.assertEqual(datapoints, len(data_prd['t1232018prd']))
 
 
 if __name__ == '__main__':
