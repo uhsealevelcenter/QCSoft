@@ -124,6 +124,7 @@ jobs:
           shell: powershell.exe
           command: |
             cd PyQT5_fbs
+            python --version
             fbs freeze
 
 # Invoke jobs via workflows
