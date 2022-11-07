@@ -116,9 +116,7 @@ jobs:
             [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-#            python --version
-#            python make_hooks.py
-            fbs freeze
+            python -m fbs freeze
 #      - run:
 #          name: Build uTide hook
 #          shell: powershell.exe
