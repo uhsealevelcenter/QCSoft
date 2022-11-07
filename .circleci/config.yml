@@ -113,19 +113,22 @@ jobs:
             pyenv local 3.6.7
             pyenv versions
             pip install -r requirements/windows.txt
-      - run:
-          name: Build uTide hook
-          shell: powershell.exe
-          command: |
-            cd PyQT5_fbs
-            python make_hooks.py
-      - run:
-          name: Freeze the app
-          shell: powershell.exe
-          command: |
-            cd PyQT5_fbs
             python --version
+            python make_hooks.py
             fbs freeze
+#      - run:
+#          name: Build uTide hook
+#          shell: powershell.exe
+#          command: |
+#            cd PyQT5_fbs
+#            python make_hooks.py
+#      - run:
+#          name: Freeze the app
+#          shell: powershell.exe
+#          command: |
+#            cd PyQT5_fbs
+#            python --version
+#            fbs freeze
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
