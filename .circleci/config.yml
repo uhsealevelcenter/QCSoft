@@ -99,7 +99,7 @@ jobs:
           name: Install and set Python 3.6.7
           shell: powershell.exe
           command: |
-            choco install pyenv-win
+            choco install pyenv-win --force
             refreshenv
             pyenv install 3.6.7
             pyenv global 3.6.7
