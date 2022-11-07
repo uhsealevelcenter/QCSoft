@@ -88,7 +88,22 @@ jobs:
            cd PyQT5_fbs/target
            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
            rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
-
+  build-win:
+    executor: win/default
+    environment:
+      FL_OUTPUT_DIR: output
+    steps:
+      - checkout
+      - run:
+          name: Install and set Python 3.6.7
+          shell: powershell.exe
+          command: |
+            choco install pyenv-win --force
+            refreshenv
+            pyenv install 3.6.7
+            pyenv global 3.6.7
+            $env:Path = 'C:\Users\circleci\.pyenv\pyenv-win\bin;C:\Users\circleci\.pyenv\pyenv-win\shims;' + $env:Path
+            python --version
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -98,12 +113,21 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-      - build-mac:
-          requires:
-            - test
-          filters:
-            branches:
-              only:
-                - master
-            tags:
-              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+#      - build-mac:
+#          requires:
+#            - test
+#          filters:
+#            branches:
+#              only:
+#                - master
+#            tags:
+#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+      - build-win
+#          requires:
+#            - test
+#          filters:
+#            branches:
+#              only:
+#                - master
+#            tags:
+#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
