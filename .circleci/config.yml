@@ -99,7 +99,7 @@ jobs:
           name: Install and set Python 3.6.7
           shell: powershell.exe
           command: |
-            choco install pyenv-win --force
+            choco install pyenv-win
             refreshenv
             pyenv install 3.6.7
             pyenv global 3.6.7
@@ -112,7 +112,7 @@ jobs:
             [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-            fbs freeze
+            c:\users\circleci\.pyenv\pyenv-win\versions\3.6.7\python.exe -m fbs freeze
 #      - run:
 #          name: Build uTide hook
 #          shell: powershell.exe
