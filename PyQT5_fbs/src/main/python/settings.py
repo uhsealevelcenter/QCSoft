@@ -1,11 +1,17 @@
+
+
+import numpy as np
 from matplotlib.backends.qt_compat import QtCore
 
 SETTINGS = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
 LOAD_KEY = 'loadpath'
 SAVE_KEY = 'savepath'
-DIN_PATH = 'dinpath'
-FD_PATH  = 'fdpath'
-HF_PATH  = 'hfpath'
+DIN_PATH_KEY = 'dinpath'
+FD_PATH_KEY = 'fdpath'
+HF_PATH_KEY = 'hfpath'
+TEST_PATH_KEY = 'testpath'
+PRODUCTION_PATH_KEY = 'productionpath'
+
 
 
 def get_path(str_key):

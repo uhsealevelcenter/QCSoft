@@ -2,13 +2,15 @@ import io
 import os
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import scipy.io as sio
 
-import filtering as filt
-from main import load_station_data, assemble_ts_text, save_ts_files, save_mat_high_fq, save_fast_delivery
+import station_tools.utils
 from my_widgets import find_outliers
+from station_tools import utils
+from station_tools.extractor2 import load_station_data
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -41,19 +43,22 @@ class TestDatFileSave(unittest.TestCase):
         # for the two files and they are completely equal. So this is essentially an end to end test (sort of)
         # 5) Compare that formatting is exactly the same, it's all strings after all
 
-        text_data_input = assemble_ts_text(self.input_data)
-        text_data_truth = assemble_ts_text(self.data_truth)
+        text_data_input = self.input_data.assemble_ts_text()
+        text_data_truth = self.input_data.assemble_ts_text()
         self.assertEqual(text_data_input[0][1], text_data_truth[0][1])
 
         # test ts file save
         # Compare the saved file to the ground truth file
         with tempfile.TemporaryDirectory() as tmp:
-            success, failure = save_ts_files(text_data_input, tmp)
+            success, failure = self.input_data.save_ts_files(text_data_input, tmp)
             self.assertEqual(len(success), 1)
-            self.assertEqual(success[0]['message'], 'Success \nt1231810.dat Saved to ' + tmp + '\n')
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            self.assertEqual(success[0]['message'], 'Success \nt1231810.dat Saved to ' + str(save_path) + '\n')
             self.assertEqual(success[0]['title'], 'Success')
             self.assertEqual(len(failure), 0)
-            with io.open(tmp + '/' + 't1231810.dat') as tst_f:
+            with io.open(Path(save_path / 't1231810.dat')) as tst_f:
                 with io.open(output_filename) as ref_f:
                     self.assertListEqual(list(tst_f), list(ref_f))
 
@@ -69,25 +74,28 @@ class TestDatFileSave(unittest.TestCase):
         station_data = load_station_data([file1, file2, file3])
         # station_data_truth = load_station_data([truth_file1, truth_file2, truth_file3])
 
-        data_as_text = assemble_ts_text(station_data)
+        data_as_text = station_data.assemble_ts_text()
         # data_as_text_truth = assemble_ts_text(station_data_truth)
 
         # Compare the saved file to the ground truth file
         with tempfile.TemporaryDirectory() as tmp:
-            success, failure = save_ts_files(data_as_text, tmp)
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            success, failure = station_data.save_ts_files(data_as_text, tmp)
             self.assertEqual(len(success), 3)
-            self.assertEqual(success[0]['message'], 'Success \nt1231809.dat Saved to ' + tmp + '\n')
-            self.assertEqual(success[1]['message'], 'Success \nt1231810.dat Saved to ' + tmp + '\n')
-            self.assertEqual(success[2]['message'], 'Success \nt1231811.dat Saved to ' + tmp + '\n')
+            self.assertEqual(success[0]['message'], 'Success \nt1231809.dat Saved to ' + str(save_path) + '\n')
+            self.assertEqual(success[1]['message'], 'Success \nt1231810.dat Saved to ' + str(save_path) + '\n')
+            self.assertEqual(success[2]['message'], 'Success \nt1231811.dat Saved to ' + str(save_path) + '\n')
             self.assertEqual(success[0]['title'], 'Success')
             self.assertEqual(len(failure), 0)
-            with io.open(tmp + '/' + 't1231809.dat') as tst_f1:
+            with io.open(Path(save_path / 't1231809.dat')) as tst_f1:
                 with io.open(truth_file1) as ref_f:
                     self.assertListEqual(list(tst_f1), list(ref_f))
-            with io.open(tmp + '/' + 't1231810.dat') as tst_f2:
+            with io.open(Path(save_path / 't1231810.dat')) as tst_f2:
                 with io.open(truth_file2) as ref_f:
                     self.assertListEqual(list(tst_f2), list(ref_f))
-            with io.open(tmp + '/' + 't1231811.dat') as tst_f3:
+            with io.open(Path(save_path / 't1231811.dat')) as tst_f3:
                 with io.open(truth_file3) as ref_f:
                     self.assertListEqual(list(tst_f3), list(ref_f))
 
@@ -96,17 +104,20 @@ class TestDatFileSave(unittest.TestCase):
         station = self.input_data
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            save_mat_high_fq(station, tmp_dir, callback=None)
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            station.save_mat_high_fq(tmp_dir, callback=None)
             for month in station.month_collection:
                 # Compare every sensor (one file per sensor)
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
                         continue
                     file_name = month.get_mat_filename()[key]
-                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
-                    time_vector = filt.datenum2(sensor.get_time_vector())
+                    time_vector = station_tools.utils.datenum2(sensor.get_time_vector())
 
                     sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data
@@ -138,18 +149,21 @@ class TestDatFileSave(unittest.TestCase):
                     clean_station.aggregate_months['data'][key][outliers_idx] = 9999
 
         with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
             clean_station.back_propagate_changes(clean_station.aggregate_months['data'])
-            save_mat_high_fq(clean_station, tmp_dir, callback=None)
+            clean_station.save_mat_high_fq(tmp_dir, callback=None)
             for month in clean_station.month_collection:
                 # Compare every sensor (one file per sensor)
                 for key, sensor in month.sensor_collection.items():
                     if key == "ALL":
                         continue
                     file_name = month.get_mat_filename()[key]
-                    data = sio.loadmat(os.path.join(tmp_dir, file_name))
+                    data = sio.loadmat(os.path.join(save_path, file_name))
                     data_trans = data[file_name.split('.')[0]].transpose((1, 0))
                     time_vector_mat = data_trans[0]
-                    time_vector = filt.datenum2(sensor.get_time_vector())
+                    time_vector = station_tools.utils.datenum2(sensor.get_time_vector())
 
                     sea_level = sensor.get_flat_data().copy()
                     # Add the reference height back to .mat data
@@ -190,10 +204,13 @@ class TestDatFileSave(unittest.TestCase):
         station = load_station_data([SSABA1809])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            save_fast_delivery(station, tmp_dir, DIN, callback=None)
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2018)
+            station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
             # .mat files test
             # Hourly test
-            data = sio.loadmat(os.path.join(tmp_dir, 'th1231809.mat'))
+            data = sio.loadmat(os.path.join(save_path, 'th1231809.mat'))
             data_trans = data['rad'].transpose((1, 0))
             sea_level = data_trans['sealevel'][0][0]
             sea_level = np.concatenate(sea_level, axis=0)
@@ -211,13 +228,67 @@ class TestDatFileSave(unittest.TestCase):
             # daily test
             data_truth = sio.loadmat(os.path.join(DAILY_PATH, 'da1231809.mat'))
             sea_level_truth = np.concatenate(data_truth['data_day']['sealevel'][0][0], axis=0)
-            data = sio.loadmat(os.path.join(tmp_dir, 'da1231809.mat'))
+            data = sio.loadmat(os.path.join(save_path, 'da1231809.mat'))
             sea_level = data['sealevel'][0]
             # Make sure all 9999s are taken out from the final .mat file
             self.assertNotIn(9999, sea_level)
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
             # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
+
+    def test_annual_save(self):
+        station = self.input_data
+        with tempfile.TemporaryDirectory() as tmp:
+            # Save HF .mat files so that we can build the annual .mat files
+            # There needs to HF.mat data for at least one month, otherwise, annual mat can't be built
+            station.save_mat_high_fq(tmp)
+            save_folder = "t123"
+            save_path_hf = utils.get_top_level_directory(
+                parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder / str(
+                2018)
+            save_path_annual = utils.get_top_level_directory(
+                parent_dir=tmp) / utils.HIGH_FREQUENCY_FOLDER / save_folder
+            success, failure = station.save_to_annual_file(tmp)
+            all_hf_mat_files = utils.get_hf_mat_files(save_path_hf, full_name=True)
+            keys = ['enc', 'prs', 'rad', 'prd']
+            # Make sure that there are no empty .mat files left in the HF folder
+            # And that the only files left are the ones that had HD data in it
+            for key, value in all_hf_mat_files.items():
+                self.assertEqual(1, len(value))
+                self.assertEqual(os.path.basename(value[0]).split('/')[-1], 't123201810{}.mat'.format(key))
+            self.assertListEqual(sorted(keys), sorted(all_hf_mat_files.keys()))
+
+            all_annual_mat_files = utils.get_hf_mat_files(save_path_annual, full_name=True)
+            # 4 sensors, 1 annual file per sensor for annual HF files
+            for key, value in all_annual_mat_files.items():
+                self.assertEqual(len(value), 1)
+            self.assertListEqual(sorted(keys), sorted(all_annual_mat_files.keys()))
+
+            # Check the saved annual files
+            data_enc = sio.loadmat(os.path.join(save_path_annual, 't1232018enc.mat'))
+
+            # Sealevel data for first 9 months should be NaN because HF for those months does not exist
+            empty_months = data_enc['t1232018enc'][0:10]
+            for month in empty_months:
+                self.assertTrue(np.isnan(month[1]))
+
+            # The total amount of data points should be 60/6 * 24 * 31 + 11
+            # Which is minutes in an hour, divided bu the sampling freq (6 for enc) * hours in a day * days in a month
+            # + the number of months with no data (all months besides October
+            self.assertEqual(7451, len(data_enc['t1232018enc']))
+
+            # Do the same for other sensors
+            datapoints = 60 / 3 * 24 * 31 + 11
+            data_rad = sio.loadmat(os.path.join(save_path_annual, 't1232018rad.mat'))
+            self.assertEqual(datapoints, len(data_rad['t1232018rad']))
+
+            datapoints = 60 / 2 * 24 * 31 + 11
+            data_prs = sio.loadmat(os.path.join(save_path_annual, 't1232018prs.mat'))
+            self.assertEqual(datapoints, len(data_prs['t1232018prs']))
+
+            datapoints = 60 / 15 * 24 * 31 + 11
+            data_prd = sio.loadmat(os.path.join(save_path_annual, 't1232018prd.mat'))
+            self.assertEqual(datapoints, len(data_prd['t1232018prd']))
 
 
 if __name__ == '__main__':

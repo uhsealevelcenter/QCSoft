@@ -6,7 +6,8 @@ import PyQt5
 import matplotlib.pyplot as plt
 
 from interactive_plot import PointBrowser
-from main import load_station_data, find_outliers
+from main import find_outliers
+from station_tools.extractor2 import load_station_data
 
 dirname = os.path.dirname(__file__)
 file1 = os.path.join(dirname, 'test_data/monp/ssaba1811.dat')

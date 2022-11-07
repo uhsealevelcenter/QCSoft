@@ -1,15 +1,14 @@
 import sys
-from collections import defaultdict
-from itertools import groupby
 
 from PyQt5 import QtWidgets
 from fbs_runtime.application_context import cached_property
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
-from extractor2 import DataExtractor
 from my_widgets import *
+from station_tools.extractor2 import load_station_data
+from station_tools.utils import is_valid_files
 from uhslcdesign import Ui_MainWindow
-
+# from qt_material import apply_stylesheet
 # import darkdetect
 
 if is_pyqt5():
@@ -35,33 +34,6 @@ class AppContext(ApplicationContext):  # 1. Subclass ApplicationContext
     @cached_property
     def window(self):
         return ApplicationWindow()
-
-
-def load_station_data(file_names):
-    """
-
-    :param file_names: An array of data files to be loaded
-    :return: Station instance with all the data needed for further processing
-    """
-
-    # Create DataExtractor for each month that was loaded into program
-    months = []
-    for file_name in file_names:
-        month = DataExtractor(file_name)
-        # An empty sensor, used to create "ALL" radio button in the GUI
-        all_sensor = Sensor(None, None, 'ALL', None, None, None, None)
-        month.sensors.add_sensor(all_sensor)
-        # month = Month(month=month_int, sensors=month.sensors)
-        months.append(month)
-
-    # # The reason months[0] is used is because the program only allows to load
-    # # multiple months for the same station, so the station sensors should be the same
-    # # But what if a sensor is ever added to a station??? Check with fee it this ever happens
-    name = months[0].headers[0][3:6]
-    location = months[0].loc
-
-    station = Station(name=name, location=location, month=months)
-    return station
 
 
 class ApplicationWindow(QMainWindow):
@@ -112,12 +84,14 @@ class ApplicationWindow(QMainWindow):
         # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
         # Validating files selected
-        if self.is_valid_files(self.file_name):
+        if is_valid_files(self.file_name[0]):
             pass
         else:
             self.critical_dialog(title="ERROR",
                                  text="Warning, wrong files selected",
-                                 info_text="The files need to belong to the adjacent months and the same station. Please select valid files to continue",
+                                 info_text="The files need to belong to the adjacent months and the same station and "
+                                           "they all need to be contained within a single year. Please select valid "
+                                           "files to continue",
                                  details=''''MAC:
             The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
             The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
@@ -148,38 +122,6 @@ class ApplicationWindow(QMainWindow):
         msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
         msg_box.exec_()
 
-    def pairwise_diff(self, lst):
-        diff = 0
-        result = []
-        for i in range(len(lst) - 1):
-            # subtracting the alternate numbers
-            diff = lst[i] - lst[i + 1]
-            result.append(diff)
-        return result
-
-    def is_valid_files(self, files):
-        dates = []
-        names = []
-        result = []
-        # extract dates and station 4 letter codes for every file that was loaded
-        for file in files[0]:
-            if file[-8:-4].isdigit():
-                dates.append(int(file[-8:-4]))
-                # check if monp file or a TS file
-                if file.split("/")[-1][0] == "s":
-                    names.append(file.split("/")[-1][1:5])
-                else:
-                    names.append(file.split("/")[-1][0:4])
-        # check the difference between all dates
-        for val in self.pairwise_diff(dates):
-            if val != -1 and val != -89:
-                result.append(val)
-        # check if the files selected are all from the same station
-        if names[1:] != names[:-1]:
-            return False
-
-        return len(result) == 0
-
     def close_application(self):
         choice = QtWidgets.QMessageBox.question(self, 'Warning', "Are you sure you want to quit?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -198,5 +140,6 @@ class ApplicationWindow(QMainWindow):
 
 if __name__ == '__main__':
     appctxt = AppContext()  # 4. Instantiate the subclass
+    # apply_stylesheet(appctxt.app, theme='dark_blue.xml')
     exit_code = appctxt.run()  # 5. Invoke run()
     sys.exit(exit_code)
