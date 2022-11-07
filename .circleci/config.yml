@@ -107,7 +107,7 @@ jobs:
             python --version
             cd PyQT5_fbs
             pyenv local 3.6.7
-            pip install -r requirements/windows.txt
+            c:\users\circleci\.pyenv\pyenv-win\versions\3.6.7\python.exe -m pip install -r requirements/windows.txt
             pyenv versions
             [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
