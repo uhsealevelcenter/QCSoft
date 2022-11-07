@@ -111,16 +111,13 @@ jobs:
           command: |
             cd PyQT5_fbs
             pyenv local 3.6.7
+            pip install -r requirements/windows.txt
             pyenv versions
             [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
             [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-            git clone https://github.com/pyenv/pyenv-virtualenv.git $(pyenv root)/plugins/pyenv-virtualenv
-            pyenv virtualenv 3.6.7 uhslc
-            pyenv shell uhslc
-            python --version
-            pip3 install -r requirements/windows.txt
-            python make_hooks.py
+#            python --version
+#            python make_hooks.py
             fbs freeze
 #      - run:
 #          name: Build uTide hook
