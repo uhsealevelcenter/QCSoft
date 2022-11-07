@@ -535,7 +535,8 @@ class Station:
                 looks at the monthly folder and sees a bunch of files with NaN values)
             TODO:
             6. Ensure we cannot do this if have station data loaded for two different years (i.e. month 12 and 1 loaded)
-                OR disable the ability to load two different years of data at the same time
+                OR disable the ability to load two different years of data at the same time. UPDATE 10/6/2022: For now
+                we disabled the ability to load two different years of data at the same time.
         """
         import scipy.io as sio
         # We shouldn't be looking to only the first month to determine stuff

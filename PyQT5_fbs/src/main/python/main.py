@@ -88,7 +88,9 @@ class ApplicationWindow(QMainWindow):
         else:
             self.critical_dialog(title="ERROR",
                                  text="Warning, wrong files selected",
-                                 info_text="The files need to belong to the adjacent months and the same station. Please select valid files to continue",
+                                 info_text="The files need to belong to the adjacent months and the same station and "
+                                           "they all need to be contained within a single year. Please select valid "
+                                           "files to continue",
                                  details=''''MAC:
             The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
             The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
@@ -142,8 +144,11 @@ class ApplicationWindow(QMainWindow):
                 else:
                     names.append(file.split("/")[-1][0:4])
         # check the difference between all dates
+        # if the difference is not 1, then the files are not adjacent months
         for val in self.pairwise_diff(dates):
-            if val != -1 and val != -89:
+            # if we want the adjacent month from the adjacent year then need to add
+            # check for -89 as well (and val != -89)
+            if val != -1:
                 result.append(val)
         # check if the files selected are all from the same station
         if names[1:] != names[:-1]:
