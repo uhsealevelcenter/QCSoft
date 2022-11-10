@@ -2,11 +2,11 @@ import os
 import numpy as np
 import unittest
 
-import PyQt5
+from PyQt5.QtCore import QDate as QDate
 import matplotlib.pyplot as plt
 
 from interactive_plot import PointBrowser
-from main import find_outliers
+from station_tools.utils import find_outliers
 from station_tools.extractor2 import load_station_data
 
 dirname = os.path.dirname(__file__)
@@ -25,11 +25,11 @@ class TestInteractiveBrowser(unittest.TestCase):
         self.assertFalse(self.station.is_sampling_inconsistent())
 
     def test_reference_level_change(self):
-        date = PyQt5.QtCore.QDate(2015, 7, 22)
+        qt_date = QDate(2015, 7, 22)
 
         self.assertEqual(self.station.month_collection[0].sensor_collection['PRS'].height, 783)
         # Change reference height
-        months_updated, ref_diff, new_header = self.station.update_header_reference_level(date, 5555, 'PRS')
+        months_updated, ref_diff, new_header = self.station.update_header_reference_level(qt_date, 5555, 'PRS')
 
         self.assertEqual(months_updated, 1)
         self.assertEqual(ref_diff, 4772)

@@ -8,7 +8,7 @@ import numpy as np
 import scipy.io as sio
 
 import station_tools.utils
-from my_widgets import find_outliers
+from station_tools.utils import find_outliers
 from station_tools import utils
 from station_tools.extractor2 import load_station_data
 

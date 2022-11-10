@@ -4,7 +4,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Callable
 
+import numpy
 import numpy as np
+from pandas import date_range, Series
 
 TEST_DATA_TOP_FOLDER = Path('test_data')
 PRODUCTION_DATA_TOP_FOLDER = Path('production_data')
@@ -151,3 +153,77 @@ def is_valid_files(files: List[str], callback: Callable = None):
         callback(success, failure)
 
     return len(result) == 0
+
+
+def find_outliers(station, t, data, sens):
+    channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
+    _freq = channel_freq + 'min'
+
+    nines_ind = np.where(data == 9999)
+    nonines_data = data.copy()
+    nonines_data[nines_ind] = float('nan')
+    # Get a date range to create pandas time Series
+    # using the sampling frequency of the sensor
+    rng = date_range(t[0], t[-1], freq=_freq)
+    ts = Series(nonines_data, rng)
+
+    # resample the data and linearly interpolate the missing values
+    upsampled = ts.resample(_freq)
+    interp = upsampled.interpolate()
+
+    # calculate a window size for moving average routine so the window
+    # size is always 60 minutes long
+    window_size = 60 // int(channel_freq)
+
+    # calculate moving average including the interolated data
+    # moving_average removes big outliers before calculating moving average
+    y_av = moving_average(np.asarray(interp.tolist()), window_size)
+    # y_av = self.moving_average(data, 30)
+    # missing=np.argwhere(np.isnan(y_av))
+    # y_av[missing] = np.nanmean(y_av)
+
+    # calculate the residual between the actual data and the moving average
+    # and then find the data that lies outside of sigma*std
+    residual = nonines_data - y_av
+    std = np.nanstd(residual)
+    sigma = 3.0
+
+    itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
+    return itemindex
+
+
+def moving_average(data, window_size):
+    """ Computes moving average using discrete linear convolution of two one dimensional sequences.
+    Args:
+    -----
+            data (pandas.Series): independent variable
+            window_size (int): rolling window size
+
+    Returns:
+    --------
+            ndarray of linear convolution
+
+    References:
+    ------------
+    [1] Wikipedia, "Convolution", http://en.wikipedia.org/wiki/Convolution.
+    [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
+
+    """
+    # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
+    filtered_data = data.copy()
+    # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
+    # my_mean=np.nanmean(filtered_data)
+
+    my_mean = np.nanmean(filtered_data)
+    my_std = np.nanstd(filtered_data)
+
+    # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
+    itemindex = np.where(((filtered_data > my_mean + 3 * my_std) | (filtered_data < my_mean - 3 * my_std)))
+    filtered_data[itemindex] = np.nanmean(filtered_data)
+    # Fix boundary effects by adding prepending and appending values to the data
+    filtered_data = np.insert(filtered_data, 0, np.ones(window_size) * np.nanmean(filtered_data[:window_size // 2]))
+    filtered_data = np.insert(filtered_data, filtered_data.size,
+                              np.ones(window_size) * np.nanmean(filtered_data[-window_size // 2:]))
+    window = np.ones(int(window_size)) / float(window_size)
+    # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
+    return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
