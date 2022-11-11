@@ -41,7 +41,8 @@ class TestInteractiveBrowser(unittest.TestCase):
     def test_plot_value_edit(self):
         data_prs = self.station.month_collection[0].sensor_collection['PRS'].get_flat_data()
         time_prs = self.station.month_collection[0].sensor_collection['PRS'].get_time_vector()
-        outliers = find_outliers(self.station, time_prs, data_prs, 'PRS')
+        rate_prs = self.station.month_collection[0].sensor_collection['PRS'].rate
+        outliers = find_outliers(self.station, time_prs, data_prs, rate_prs)
 
         fig, ax = plt.subplots()
         # ax.plot(time_prs, data_prs, "k")

@@ -137,7 +137,7 @@ class Start(QMainWindow):
 
     def is_test_mode(self):
         # If switch button is in far right position (which is checked state, red button), test mode is on.
-        # Vice versa for pruduction
+        # Vice versa for production
         return self.ui.switchwidget.button.isChecked()
 
     def make_sensor_buttons(self, sensors):
@@ -374,15 +374,15 @@ class Start(QMainWindow):
         self._residual_ax.margins(0.05, 0.05)
         self._residual_ax.legend()
 
-        if (is_interactive):
-            self.browser = PointBrowser(x, y, self._residual_ax, line, self._residual_fig,
-                                        find_outliers(self.station, x, y, sens1))
-            self.browser.onDataEnd += self.show_message
-            canvas.mpl_connect('pick_event', self.browser.onpick)
-            canvas.mpl_connect('key_press_event', self.browser.onpress)
-            ## need to activate focus onto the mpl canvas so that the keyboard can be used
-            canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
-            canvas.setFocus()
+        # if (is_interactive):
+        #     self.browser = PointBrowser(x, y, self._residual_ax, line, self._residual_fig,
+        #                                 find_outliers(self.station, x, y, sens1))
+        #     self.browser.onDataEnd += self.show_message
+        #     canvas.mpl_connect('pick_event', self.browser.onpick)
+        #     canvas.mpl_connect('key_press_event', self.browser.onpress)
+        #     ## need to activate focus onto the mpl canvas so that the keyboard can be used
+        #     canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
+        #     canvas.setFocus()
 
         self._residual_ax.figure.tight_layout()
         self.toolbar2 = self._residual_fig.canvas.toolbar  # Get the toolbar handler
@@ -391,7 +391,9 @@ class Start(QMainWindow):
         self._residual_ax.figure.canvas.draw()
 
     def _update_top_canvas(self, sens):
-        data_flat = self.station.aggregate_months['data'][sens]
+        aggregate_data = self.station.aggregate_months.copy()
+        data_flat = aggregate_data['data'][sens]
+        outliers = aggregate_data['outliers'][sens]
         nines_ind = np.where(data_flat == 9999)
         # nonines_data = data_flat.copy()
         # nonines_data[nines_ind] = float('nan')
@@ -413,12 +415,11 @@ class Start(QMainWindow):
             self.browser.onDataEnd -= self.show_message
             self.browser.disconnect()
         # time = np.arange(data_flat.size)
-        time = self.station.aggregate_months['time'][sens]
+        time = aggregate_data['time'][sens]
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5, lw=0.5, markersize=3)
 
         self._static_ax.set_title('select a point you would like to remove and press "D"')
-        self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig,
-                                    find_outliers(self.station, time, data_flat, sens))
+        self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig, (outliers,))
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
         # update event ids so that they can be disconnect on next sensor change

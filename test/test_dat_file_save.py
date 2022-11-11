@@ -144,7 +144,7 @@ class TestDatFileSave(unittest.TestCase):
                     continue
                 sea_level = sensor.get_flat_data().copy()
                 if key != "PRD":
-                    outliers_idx = find_outliers(clean_station, sensor.get_time_vector(), sea_level, key)
+                    outliers_idx = find_outliers(clean_station, sensor.get_time_vector(), sea_level, sensor.rate)
                     # Clean the data (change outliers to 9999)
                     clean_station.aggregate_months['data'][key][outliers_idx] = 9999
 

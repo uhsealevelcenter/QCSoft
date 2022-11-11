@@ -155,8 +155,8 @@ def is_valid_files(files: List[str], callback: Callable = None):
     return len(result) == 0
 
 
-def find_outliers(station, t, data, sens):
-    channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
+def find_outliers(station, t, data, channel_freq):
+    # channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
     _freq = channel_freq + 'min'
 
     nines_ind = np.where(data == 9999)
