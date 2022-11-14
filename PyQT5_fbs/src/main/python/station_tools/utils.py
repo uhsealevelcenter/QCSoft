@@ -155,7 +155,7 @@ def is_valid_files(files: List[str], callback: Callable = None):
     return len(result) == 0
 
 
-def find_outliers(station, t, data, channel_freq):
+def find_outliers(t, data, channel_freq, idx_offset=0):
     # channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
     _freq = channel_freq + 'min'
 
@@ -189,7 +189,13 @@ def find_outliers(station, t, data, channel_freq):
     sigma = 3.0
 
     itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
-    return itemindex
+    # If we are loading multiple months we need to add (offset) the indices of newly found multipliers
+    # by an offset, which is equal to the data count for the previous month
+    if len(itemindex[0]) > 0 and idx_offset:
+        outlier_indices = (itemindex[0] + idx_offset,)
+    else:
+        outlier_indices = itemindex
+    return outlier_indices
 
 
 def moving_average(data, window_size):

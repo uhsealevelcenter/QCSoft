@@ -2,6 +2,7 @@
 from matplotlib.widgets import LassoSelector
 from matplotlib.path import Path
 
+
 class PointBrowser:
     """
     Click on a point to select and highlight it -- the data that
@@ -55,10 +56,10 @@ class PointBrowser:
             self.ys[index] = data[1]
             # update UNDONE marker index
             self.lastind = index
-            self.update(event = event)
+            self.update(event=event)
         if event.key == 'ctrl+b' and self.bulk_deleted:
             for data in self.bulk_deleted:
-                for key,value in data.items():
+                for key, value in data.items():
                     self.xs[key] = value[0]
                     self.ys[key] = value[1]
             self.bulk_deleted = []
@@ -83,14 +84,10 @@ class PointBrowser:
             # print('Delete')
             self.ondelete(self.lastind)
             self.ys[self.lastind] = 9999
-            if (self.lastind in self.outl):
+            if self.lastind in self.outl:
                 self.outl_ind = self.next_pointer(self.ys, self.outl, self.outl_ind, +1)
-                # # skip over deleted values in outliers
-                # while self.ys[self.outl[self.outl_ind]]==9999:
-                #     self.outl_ind += 1
-                #     if self.outl_ind > len(self.outl)-1:
-                #         break
-        if (self.lastind in self.outl):
+
+        if self.lastind in self.outl:
             if event.key == 'n':
                 self.outl_ind = self.next_pointer(self.ys, self.outl, self.outl_ind, +1)
             if event.key == 'b':
@@ -99,35 +96,13 @@ class PointBrowser:
             self.lastind = self.outl[self.outl_ind]
         else:
             if event.key == 'n' or event.key == 'd':
-                self.lastind = self.next_pointer_all(self.ys, self.lastind, +1)
-                # while self.ys[self.lastind]==9999:
-                #     self.lastind += 1
-                #     if self.lastind > len(self.ys)-1:
-                #         break
+                    self.lastind = self.next_pointer_all(self.ys, self.lastind, +1)
+
             if event.key == 'b':
                 self.lastind = self.next_pointer_all(self.ys, self.lastind, -1)
 
-        # if(self.outl_ind>-1):
-        # if(self.lastind in self.outl):
-        #     self.lastind = self.outl[self.outl_ind]
-        # else:
-        #     if  event.key == 'n' or event.key == 'd':
-        #         self.lastind += 1
-        #     if event.key == 'b':
-        #         self.lastind -= 1
-        # else:
-        #     self.lastind = 0
-
         self.lastind = self.np.clip(self.lastind, 0, len(self.xs) - 1)
-
-        # if event.key != '0':
-        #     self.pan_index = self.lastind // self.jump_step
-        #     self.onpan(self.pan_index)
-
-        # print("NK ", self.lastind, self.outl)
-        # print("outl_indl ", self.outl_ind)
-        # self.lastind = self.np.clip(self.lastind, 0, len(self.xs) - 1)
-        self.update(event = event)
+        self.update(event=event)
 
     def onpick(self, event):
         # print("ON PICK CALLED")
@@ -161,9 +136,9 @@ class PointBrowser:
         self.onpan(self.pan_index)
 
         self.lastind = dataind
-        self.update(event = None)
+        self.update(event=None)
 
-    def update(self, event = None):
+    def update(self, event=None):
         # print("UPDATE IS CALLED")
         if self.lastind is None:
             return
@@ -177,7 +152,7 @@ class PointBrowser:
         # print("UPDATED OUTLIER INDEX", self.outl_ind)
         # pan the view to the highlighted point
         if event:
-            if(event.key != '0' and event.key != 'left' and event.key != 'right'):
+            if (event.key != '0' and event.key != 'left' and event.key != 'right'):
                 self.pan_index = self.lastind // self.jump_step
                 self.onpan(self.pan_index)
         # print("outlier index", self.outl_ind)
@@ -215,7 +190,7 @@ class PointBrowser:
 
     def ondelete(self, ind):
         # do not append if item already deleted
-        if (self.ys[ind] != 9999):
+        if self.ys[ind] != 9999:
             # print("On Delete Called on index", ind)
             self.deleted.append({ind: [self.xs[ind], self.ys[ind]]})
 
@@ -226,15 +201,14 @@ class PointBrowser:
         # i.e. the number of data points divided by the jump step is a whole number
         if (len(self.xs) % self.jump_step == 0):
             pan_lim = pan_lim - 1
-        if(self.pan_index>pan_lim):
+        if (self.pan_index > pan_lim):
             self.onDataEnd.fire("You've panned through all of the data")
         self.pan_index = self.np.clip(self.pan_index, 0, pan_lim)  # Limit pan index from growing larger than needed
         p_index = self.pan_index
 
         left = self.jump_step * p_index
         right = self.jump_step * p_index + self.jump_step
-        if (right > len(self.xs)+self.jump_step):
-
+        if (right > len(self.xs) + self.jump_step):
             return
         # limiting left and right range to the size of the data
         if (right > len(self.xs) - 1):
@@ -278,12 +252,13 @@ class PointBrowser:
         return self.deleted
 
     def next_pointer(self, data_ar, outl_ar, pointer, inc):
-        if (data_ar[outl_ar[pointer]] != 9999):
+        if data_ar[outl_ar[pointer]] != 9999:
             pointer += inc
 
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
+                self.onDataEnd.fire(
+                    "This was the last outlier. You can click the same channel again to find smaller outliers")
         # skip over deleted values
         while data_ar[outl_ar[pointer]] == 9999:
             # print("skipping data", data_ar[outl_ar[pointer]])
@@ -293,17 +268,18 @@ class PointBrowser:
             pointer += inc
             if pointer > len(outl_ar) - 1:
                 pointer = len(outl_ar) - 1
-                self.onDataEnd.fire("This was the last outlier. You can click the same channel again to find smaller outliers")
+                self.onDataEnd.fire(
+                    "This was the last outlier. You can click the same channel again to find smaller outliers")
                 break
         return pointer
 
     def next_pointer_all(self, data_ar, pointer, inc):
-        if (data_ar[pointer] != 9999 and not self.np.isnan(data_ar[pointer])):
+        if data_ar[pointer] != 9999 and not self.np.isnan(data_ar[pointer]):
             pointer += inc
             if pointer > len(data_ar) - 1:
                 pointer = len(data_ar) - 1
                 self.onDataEnd.fire("This was the last data point")
-        while (data_ar[pointer] == 9999 or self.np.isnan(data_ar[pointer])):
+        while data_ar[pointer] == 9999 or self.np.isnan(data_ar[pointer]):
             pointer += inc
             if pointer > len(data_ar) - 1:
                 pointer = len(data_ar) - 1
@@ -311,11 +287,10 @@ class PointBrowser:
                 break
         return pointer
 
-    # offset all the data starting with from the beginning up to the provided date
     def offset_data(self, time, offset):
-        """
-        time -> ISO date.time string (e.g. '2005-02-25T03:30')
-        offset -> Integer
+        """ Offset all the data starting with from the beginning up to the provided date
+            time -> ISO date.time string (e.g. '2005-02-25T03:30')
+            offset -> Integer
         """
         indices = self.np.where(self.xs <= self.np.datetime64(time))
         # Do not add offset if the data point is 9999
