@@ -141,12 +141,12 @@ class Start(QMainWindow):
         return self.ui.switchwidget.button.isChecked()
 
     def make_sensor_buttons(self, sensors):
-        if self.station.is_sampling_inconsistent():
-            self.show_custom_message("Error", "It appears that the sampling rate for one of the sensors differs "
-                                              "between two different months. This is not allowed. Please process "
-                                              "each of the months individually")
-            self.station = None
-            return
+        # if self.station.is_sampling_inconsistent():
+            # self.show_custom_message("Error", "It appears that the sampling rate for one of the sensors differs "
+            #                                   "between two different months. This is not allowed. Please process "
+            #                                   "each of the months individually")
+            # self.station = None
+            # return
         # Remove all sensor checkbox widgets from the layout
         # every time new data is loaded
         for i in range(self.ui.verticalLayout_left_top.count()):

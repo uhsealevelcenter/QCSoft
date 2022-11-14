@@ -146,13 +146,13 @@ class PointBrowser:
         dataind = self.lastind
 
         # index of an outlier needs to be updated
-        if (dataind in self.outl):
+        if dataind in self.outl:
             self.outl_ind = self.np.argwhere(self.outl == dataind)[0][0]
 
         # print("UPDATED OUTLIER INDEX", self.outl_ind)
         # pan the view to the highlighted point
         if event:
-            if (event.key != '0' and event.key != 'left' and event.key != 'right'):
+            if event.key != '0' and event.key != 'left' and event.key != 'right':
                 self.pan_index = self.lastind // self.jump_step
                 self.onpan(self.pan_index)
         # print("outlier index", self.outl_ind)
@@ -199,23 +199,23 @@ class PointBrowser:
         pan_lim = len(self.xs) // self.jump_step
         # check for the edge case when the remainder of the division is 0
         # i.e. the number of data points divided by the jump step is a whole number
-        if (len(self.xs) % self.jump_step == 0):
+        if len(self.xs) % self.jump_step == 0:
             pan_lim = pan_lim - 1
-        if (self.pan_index > pan_lim):
+        if self.pan_index > pan_lim:
             self.onDataEnd.fire("You've panned through all of the data")
         self.pan_index = self.np.clip(self.pan_index, 0, pan_lim)  # Limit pan index from growing larger than needed
         p_index = self.pan_index
 
         left = self.jump_step * p_index
         right = self.jump_step * p_index + self.jump_step
-        if (right > len(self.xs) + self.jump_step):
+        if right > len(self.xs) + self.jump_step:
             return
         # limiting left and right range to the size of the data
-        if (right > len(self.xs) - 1):
+        if right > len(self.xs) - 1:
             right = len(self.xs) - 1
             left = right - self.jump_step
 
-        if (left < 0):
+        if left < 0:
             left = 0
             right = left + self.jump_step
             self.pan_index = 0

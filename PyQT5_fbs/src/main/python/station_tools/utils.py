@@ -137,7 +137,7 @@ def is_valid_files(files: List[str], callback: Callable = None):
     for val in pairwise_diff(dates):
         # if we want the adjacent month from the adjacent year then need to add
         # check for -89 as well (and val != -89)
-        if val != -1:
+        if val != -1 and val != -89:
             result.append(val)
             failure.append({'title': "Error",
                             'message': "The months loaded are not adjacent or they are not properly sorted."})
