@@ -144,6 +144,7 @@ class Station:
         self.month_collection = month
         self.aggregate_months = self.combine_months()
         self.top_level_folder = None
+        self.year_range = sorted(set([m.year for m in month]))
 
     def month_length(self):
         return len(self.month_collection)
@@ -155,26 +156,36 @@ class Station:
 
         combined_sealevel_data = {}
         comb_time_vector = {}
+        sensor_outliers = {}
+        offsets = {}  # keeps track of cumulative data length per sensor
 
-        for _month in self.month_collection:
-
+        for i, _month in enumerate(self.month_collection):
             for key, value in _month.sensor_collection.sensors.items():
                 if 'ALL' not in key:
+                    ind_offset = 0
+                    flat_data = _month.sensor_collection.sensors[key].get_flat_data()
+                    time = _month.sensor_collection.sensors[key].get_time_vector()
+                    rate = _month.sensor_collection.sensors[key].rate # sampling freq str
+                    # accumulate all the data for each sensor for all months
+                    # by creating extending/concatenating the arrays
                     if key in combined_sealevel_data:
                         combined_sealevel_data[key] = np.concatenate(
-                            (combined_sealevel_data[key], _month.sensor_collection.sensors[
-                                key].get_flat_data()), axis=0)
+                            (combined_sealevel_data[key], flat_data), axis=0)
+                        offsets[key] += len(self.month_collection[i-1].sensor_collection.sensors[key].get_flat_data())
+                        # indices of all outliers
+                        outliers_tuple = (np.sort(np.concatenate((sensor_outliers[key],
+                                     station_tools.utils.find_outliers(time, flat_data, rate, offsets[key])[0]), axis=0)))
+                        sensor_outliers[key] = outliers_tuple
                     else:
-                        combined_sealevel_data[key] = _month.sensor_collection.sensors[key].get_flat_data()
-
+                        combined_sealevel_data[key] = flat_data
+                        sensor_outliers[key] = station_tools.utils.find_outliers(time, flat_data, rate)[0]
+                        offsets[key] = 0
                 if 'ALL' not in key:
                     if key in comb_time_vector:
-                        comb_time_vector[key] = np.concatenate(
-                            (comb_time_vector[key], _month.sensor_collection.sensors[
-                                key].get_time_vector()), axis=0)
+                        comb_time_vector[key] = np.concatenate((comb_time_vector[key], time), axis=0)
                     else:
-                        comb_time_vector[key] = _month.sensor_collection.sensors[key].get_time_vector()
-        combined = {'data': combined_sealevel_data, 'time': comb_time_vector}
+                        comb_time_vector[key] = time
+        combined = {'data': combined_sealevel_data, 'time': comb_time_vector, 'outliers': sensor_outliers}
         return combined
 
     def back_propagate_changes(self, combined_data):
@@ -533,91 +544,94 @@ class Station:
             TODO:
             6. Ensure we cannot do this if have station data loaded for two different years (i.e. month 12 and 1 loaded)
                 OR disable the ability to load two different years of data at the same time. UPDATE 10/6/2022: For now
-                we disabled the ability to load two different years of data at the same time.
+                we disabled the ability to load two different years of data at the same time. See below to do on how to
+                incorporate multi year logic. UPDATE 11/13/2022: We now allow multi year loading. Still need to write
+                tests for this
         """
         import scipy.io as sio
-        # We shouldn't be looking to only the first month to determine stuff
-        month = self.month_collection[0]
-        save_folder = month.get_save_folder()  # t + station_id
-        mat_files_path = utils.get_top_level_directory(parent_dir=path,
-                                                       is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
-                         save_folder / str(
-            month.year)
+        for year in self.year_range:
+            year_str = str(year)
+            month = self.month_collection[0]
+            save_folder = month.get_save_folder()  # t + station_id
+            mat_files_path = utils.get_top_level_directory(parent_dir=path,
+                                                           is_test_mode=is_test_mode) / utils.HIGH_FREQUENCY_FOLDER / \
+                             save_folder / str(
+                year_str)
 
-        # Get all the sensor .mat files and a list of months for each sensor
-        sensor_months = utils.get_hf_mat_files(mat_files_path)
-        # convert to int to simplify the way we check if any months are missing
-        for sensor, str_month in sensor_months.items():
-            sensor_months[sensor] = [int(x) for x in str_month]
-        annual_mat_files_path = utils.get_top_level_directory(parent_dir=path,
-                                                              is_test_mode=is_test_mode) / \
-                                utils.HIGH_FREQUENCY_FOLDER / save_folder
+            # Get all the sensor .mat files and a list of months for each sensor
+            sensor_months = utils.get_hf_mat_files(mat_files_path)
+            # convert to int to simplify the way we check if any months are missing
+            for sensor, str_month in sensor_months.items():
+                sensor_months[sensor] = [int(x) for x in str_month]
+            annual_mat_files_path = utils.get_top_level_directory(parent_dir=path,
+                                                                  is_test_mode=is_test_mode) / \
+                                    utils.HIGH_FREQUENCY_FOLDER / save_folder
 
-        # Figure out if a sensor was added or removed in a month
-        # By detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
-        # Save a .mat file for that sensor and month with a single NaN value
-        success = []
-        failure = []
-        missing = {}
-        for sensor, month_list in sensor_months.items():
-            missing[sensor] = get_missing_months(month_list)
-        # give the missing sensor for the given month only one NaN value for that month and save to .mat file
-        files_created = []
-        for sensor, mon in missing.items():
-            if missing[sensor]:
-                for m in mon:
-                    # Give it two NaN values for that month (two needed because of the transpose)
-                    time = [datenum(datetime(month.year, m, 15))]
-                    sealevel = [np.nan]
-                    data_obj = [time, sealevel]
-                    variable = save_folder + str(month.year) + '{:02d}'.format(m) + sensor
+            # Figure out if a sensor was added or removed in a month
+            # By detect a month that does not have a sensor that is present in the union of all sensors (months_sensor)
+            # Save a .mat file for that sensor and month with a single NaN value
+            success = []
+            failure = []
+            missing = {}
+            for sensor, month_list in sensor_months.items():
+                missing[sensor] = get_missing_months(month_list)
+            # give the missing sensor for the given month only one NaN value for that month and save to .mat file
+            files_created = []
+            for sensor, mon in missing.items():
+                if missing[sensor]:
+                    for m in mon:
+                        # Give it two NaN values for that month (two needed because of the transpose)
+                        time = [datenum(datetime(year, m, 15))]
+                        sealevel = [np.nan]
+                        data_obj = [time, sealevel]
+                        variable = save_folder + year_str + '{:02d}'.format(m) + sensor
 
-                    matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
-                    variable = Path(variable + '.mat')
-                    try:
-                        sio.savemat(Path(mat_files_path / variable), matlab_obj)
-                        files_created.append(Path(mat_files_path / variable))
-                    except IOError as e:
-                        failure.append({'title': "Error",
-                                        'message': "ERROR {}. Cannot save temporary {} files ".format(e, str(variable))})
+                        matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
+                        variable = Path(variable + '.mat')
+                        try:
+                            sio.savemat(Path(mat_files_path / variable), matlab_obj)
+                            files_created.append(Path(mat_files_path / variable))
+                        except IOError as e:
+                            failure.append({'title': "Error",
+                                            'message': "ERROR {}. Cannot save temporary {} files ".format(e, str(variable))})
 
-        # Get all the .mat files, including the ones we just created with NaN values
-        months_sensor = utils.get_hf_mat_files(mat_files_path, full_name=True)
-        # combine all year's HF .mat data to a single .mat file for each sensor
-        all_data = {}
-        for sensor, file_name_list in months_sensor.items():
-            for file in file_name_list:
-                filename = os.path.basename(file).split('/')[-1].split('.mat')[0]
-                data = sio.loadmat(file)
-                time = data[filename][:, 0]
-                sealevel = data[filename][:, 1]
-                # create an object with time and sealevel arrays for each sensor if this sensor is yet added to all
-                # data object, else append the data to the existing object
-                if sensor not in all_data:
-                    all_data[sensor] = {'time': [time], 'sealevel': [sealevel]}
-                else:
-                    all_data[sensor]['sealevel'] = np.append(all_data[sensor]['sealevel'], sealevel)
-                    all_data[sensor]['time'] = np.append(all_data[sensor]['time'], time)
-            data_obj = [all_data[sensor]['time'], all_data[sensor]['sealevel']]
-            variable = save_folder + str(month.year) + sensor
+            # Get all the .mat files, including the ones we just created with NaN values
+            months_sensor = utils.get_hf_mat_files(mat_files_path, full_name=True)
+            # combine all year's HF .mat data to a single .mat file for each sensor
+            all_data = {}
+            for sensor, file_name_list in months_sensor.items():
+                for file in file_name_list:
+                    filename = os.path.basename(file).split('/')[-1].split('.mat')[0]
+                    data = sio.loadmat(file)
+                    time = data[filename][:, 0]
+                    sealevel = data[filename][:, 1]
+                    # create an object with time and sealevel arrays for each sensor if this sensor is yet added to all
+                    # data object, else append the data to the existing object
+                    if sensor not in all_data:
+                        all_data[sensor] = {'time': [time], 'sealevel': [sealevel]}
+                    else:
+                        all_data[sensor]['sealevel'] = np.append(all_data[sensor]['sealevel'], sealevel)
+                        all_data[sensor]['time'] = np.append(all_data[sensor]['time'], time)
+                data_obj = [all_data[sensor]['time'], all_data[sensor]['sealevel']]
+                variable = save_folder + year_str + sensor
 
-            matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
-            variable = Path(variable + '.mat')
-            try:
-                sio.savemat(Path(annual_mat_files_path / variable), matlab_obj)
-            except IOError as e:
-                failure.append({'title': "Error",
-                                'message': "Error {}. Cannot Save Annual Data {} to {}".format(str(e), str(variable),
-                                                                                               str(annual_mat_files_path))})
-        success.append({'title': "Success",
-                        'message': "Success \n Annual .mat Data Saved to " + str(annual_mat_files_path) + "\n"})
+                matlab_obj = {'NNNN': variable, variable: np.transpose(data_obj, (1, 0))}
+                variable = Path(variable + '.mat')
+                try:
+                    sio.savemat(Path(annual_mat_files_path / variable), matlab_obj)
+                except IOError as e:
+                    failure.append({'title': "Error",
+                                    'message': "Error {}. Cannot Save Annual Data {} to {}".format(str(e), str(variable),
+                                                                                                   str(annual_mat_files_path))})
+            success.append({'title': "Success",
+                            'message': "Success \n Annual .mat Data Saved to " + str(annual_mat_files_path) + "\n"})
 
-        for file_name in files_created:
-            try:
-                os.remove(file_name)
-            except OSError as e:
-                failure.append({'title': "Error",
-                                'message': "Error {}. Cannot delete temporary {} files ".format(e, str(file_name))})
+            for file_name in files_created:
+                try:
+                    os.remove(file_name)
+                except OSError as e:
+                    failure.append({'title': "Error",
+                                    'message': "Error {}. Cannot delete temporary {} files ".format(e, str(file_name))})
 
         if callback:
             callback(success, failure)
