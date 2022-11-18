@@ -161,4 +161,4 @@ def get_channel_priority(path, station_code):
             channel_priority = list(filter(None, channel_priority))
             break  # stop reading the file once the station code is found
     din_file.close()
-    return channel_priority
+    return channel_priority[0].upper()

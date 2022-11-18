@@ -383,8 +383,7 @@ class Station:
             data_obj = {}
             _data = month.sensor_collection.sensors
             station_num = month.station_id
-            primary_sensor = station_tools.utils.get_channel_priority(din_path, station_num)[
-                0].upper()  # returns multiple sensor in order of importance
+            primary_sensor = station_tools.utils.get_channel_priority(din_path, station_num)  # returns primary channel
             if primary_sensor not in month.sensor_collection.sensors:
                 failure.append({'title': "Error", 'message': "Your .din file says that {} "
                                                              "is the primary sensor but the file you have loaded does "
