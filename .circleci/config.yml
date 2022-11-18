@@ -136,16 +136,16 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-#      - build-mac:
-#          requires:
-#            - test
-#          filters:
-#            branches:
-#              only:
-#                - master
-#            tags:
-#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
-      - build-win
+      - build-mac:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+#      - build-win
 #          requires:
 #            - test
 #          filters:

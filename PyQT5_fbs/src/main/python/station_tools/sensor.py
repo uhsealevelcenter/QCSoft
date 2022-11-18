@@ -383,14 +383,15 @@ class Station:
             data_obj = {}
             _data = month.sensor_collection.sensors
             station_num = month.station_id
-            primary_sensor = filt.get_channel_priority(din_path, station_num)[
-                0].upper()  # returns multiple sensor in order of importance
-            if primary_sensor not in month.sensor_collection:
+            primary_sensor = station_tools.utils.get_channel_priority(din_path, station_num)  # returns primary channel
+            if primary_sensor not in month.sensor_collection.sensors:
                 failure.append({'title': "Error", 'message': "Your .din file says that {} "
                                                              "is the primary sensor but the file you have loaded does "
                                                              "not contain that sensor. Hourly and daily data will not be saved.".format(
                     primary_sensor)})
-                return
+                if callback:
+                    callback(success, failure)
+                return success, failure
             sl_data = _data[primary_sensor].get_flat_data().copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(_data[primary_sensor].height)
