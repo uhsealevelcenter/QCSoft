@@ -233,3 +233,19 @@ def moving_average(data, window_size):
     window = np.ones(int(window_size)) / float(window_size)
     # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
     return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
+
+def get_channel_priority(path: str, station_code: str):
+    """
+    Returns the primary channel given station three digit code as a string.
+    :param path: Path to the din file containing the channel priority info
+    :param station_code: Station code as a string
+    :return:
+    """
+    din_file = open(path, 'r')
+    for line in din_file:
+        if line[0:3] == station_code:
+            channel_priority = [sensors.lower().strip('') for sensors in line[23:47].split(' ')]
+            channel_priority = list(filter(None, channel_priority))
+            break  # stop reading the file once the station code is found
+    din_file.close()
+    return channel_priority[0].upper()

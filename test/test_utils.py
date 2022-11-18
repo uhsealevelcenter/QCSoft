@@ -1,7 +1,10 @@
 import unittest
 
+import station_tools
 from station_tools import utils
 from station_tools.utils import get_missing_months
+from test.test_dat_file_save import DIN
+
 
 class TestUtils(unittest.TestCase):
     def test_consecutive(self):
@@ -24,6 +27,14 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(utils.is_valid_files(files1))
         self.assertFalse(utils.is_valid_files(files2))
         self.assertFalse(utils.is_valid_files(files3))
+
+    def test_get_primary_channel(self):
+        primary_sensor = station_tools.utils.get_channel_priority(DIN, '737')
+        ps2 = station_tools.utils.get_channel_priority(DIN, '001')
+        ps3= station_tools.utils.get_channel_priority(DIN, '655')
+        self.assertEqual('BUB', primary_sensor)
+        self.assertEqual('HOU', ps2)
+        self.assertEqual('RAD', ps3)
 
 
 if __name__ == '__main__':

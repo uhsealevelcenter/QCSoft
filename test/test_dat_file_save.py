@@ -3,6 +3,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 import scipy.io as sio
@@ -290,6 +291,19 @@ class TestDatFileSave(unittest.TestCase):
             data_prd = sio.loadmat(os.path.join(save_path_annual, 't1232018prd.mat'))
             self.assertEqual(datapoints, len(data_prd['t1232018prd']))
 
+    @patch('station_tools.utils.get_channel_priority')
+    def test_save_fast_delivery_missing_primary(self, mock_get_primary_channel):
+        mock_get_primary_channel.return_value = 'UGH'
+        station = load_station_data([SSABA1809])
 
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t123"
+            save_path = utils.get_top_level_directory(
+                parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2018)
+            succ, fail = station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
+            self.assertEqual(0, len(succ))
+            self.assertEqual(1, len(fail))
+            self.assertEqual(fail[0]['title'], 'Error')
 if __name__ == '__main__':
     unittest.main()
