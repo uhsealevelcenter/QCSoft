@@ -151,3 +151,14 @@ def is_valid_files(files: List[str], callback: Callable = None):
         callback(success, failure)
 
     return len(result) == 0
+
+
+def get_channel_priority(path, station_code):
+    din_file = open(path, 'r')
+    for line in din_file:
+        if line[0:3] == station_code:
+            channel_priority = [sensors.lower().strip('') for sensors in line[23:47].split(' ')]
+            channel_priority = list(filter(None, channel_priority))
+            break  # stop reading the file once the station code is found
+    din_file.close()
+    return channel_priority

@@ -601,16 +601,6 @@ def day_119filt(_data, _lat):
     return data_day
 
 
-def get_channel_priority(path, station_code):
-    din_file = open(path, 'r')
-    for line in din_file:
-        if line[0:3] == station_code:
-            channel_priority = [sensors.lower().strip('') for sensors in line[23:47].split(' ')]
-            channel_priority = list(filter(None, channel_priority))
-    din_file.close()
-    return channel_priority
-
-
 def is_number(s):
     try:
         float(s)
