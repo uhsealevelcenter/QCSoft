@@ -153,7 +153,13 @@ def is_valid_files(files: List[str], callback: Callable = None):
     return len(result) == 0
 
 
-def get_channel_priority(path, station_code):
+def get_channel_priority(path: str, station_code: str):
+    """
+    Returns the primary channel given station three digit code as a string.
+    :param path: Path to the din file containing the channel priority info
+    :param station_code: Station code as a string
+    :return:
+    """
     din_file = open(path, 'r')
     for line in din_file:
         if line[0:3] == station_code:
