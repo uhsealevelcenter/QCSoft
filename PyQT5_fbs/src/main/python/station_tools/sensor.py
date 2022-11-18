@@ -389,7 +389,9 @@ class Station:
                                                              "is the primary sensor but the file you have loaded does "
                                                              "not contain that sensor. Hourly and daily data will not be saved.".format(
                     primary_sensor)})
-                return
+                if callback:
+                    callback(success, failure)
+                return success, failure
             sl_data = _data[primary_sensor].get_flat_data().copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(_data[primary_sensor].height)
