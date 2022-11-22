@@ -42,18 +42,16 @@ jobs:
       - run:
           name: Run tests
           command: python -m unittest
-  build-lin:
-    macos:
-      xcode: 11.7.0
+  build-linux:
+#    macos:
+#      xcode: 11.7.0
     environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
+#      HOMEBREW_NO_AUTO_UPDATE: 1
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
       - checkout
       - add_ssh_keys
-      # Commands will execute in macOS container
-      # with Xcode 12.5.1 installed
       - store_test_results:
           path: output/scan
       - store_artifacts:
@@ -184,7 +182,7 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-      - build-lin:
+      - build-linux:
           requires:
             - test
           filters:
