@@ -42,6 +42,54 @@ jobs:
       - run:
           name: Run tests
           command: python -m unittest
+  build-lin:
+    macos:
+      xcode: 11.7.0
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      FL_OUTPUT_DIR: output
+      PYTHON_CONFIGURE_OPTS: --enable-framework
+    steps:
+      - checkout
+      - add_ssh_keys
+      # Commands will execute in macOS container
+      # with Xcode 12.5.1 installed
+      - store_test_results:
+          path: output/scan
+      - store_artifacts:
+          path: output
+      - run: rsync --version
+      - attach_workspace:
+          at: src
+
+      - run: echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+      - run: echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+      - run: git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+      - run: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
+#      - run: brew install freetype pkg-config libpng pyenv openssl readline sqlite3 xz zlib
+      - run: echo $PYTHON_CONFIGURE_OPTS && cd PyQT5_fbs && pyenv install 3.6.7
+#      - run: cd PyQT5_fbs && pyenv versions
+      - run:
+          name: Activate python 3.6.7 and install requirements
+          command: cd PyQT5_fbs && pyenv local 3.6.7 && pyenv versions && pip3 install -r requirements/linux.txt
+      - run:
+          name: Build uTide hook
+          command: cd PyQT5_fbs && python make_hooks.py
+      - run:
+          name: Freeze the app
+          command: cd PyQT5_fbs && fbs freeze
+      - run:
+          name: Build the dmg file
+          command: cd PyQT5_fbs && fbs installer
+#      - run: cd PyQT5_fbs/target
+      - attach_workspace:
+          at: src
+      - run:
+          name: Copy the dmg file to wyrtki
+          command: |
+           cd PyQT5_fbs/target
+           echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
+           rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/TEST/
   build-mac:
     macos:
       xcode: 11.7.0
@@ -136,7 +184,7 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-      - build-mac:
+      - build-lin:
           requires:
             - test
           filters:
@@ -145,6 +193,15 @@ workflows:
                 - master
             tags:
               only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+#      - build-mac:
+#          requires:
+#            - test
+#          filters:
+#            branches:
+#              only:
+#                - master
+#            tags:
+#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
 #      - build-win
 #          requires:
 #            - test
