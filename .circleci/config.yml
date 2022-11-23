@@ -37,7 +37,7 @@ jobs:
       - python/install-packages:
           pkg-manager: pip
           app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
-          pip-dependency-file: mac.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+          pip-dependency-file: base.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
           pypi-cache: false
       - run:
           name: Run tests
