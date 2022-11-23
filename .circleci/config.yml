@@ -89,9 +89,10 @@ jobs:
       - run:
           name: Copy the deb file to wyrtki
           command: |
+           export VERSION=`grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\"`
            cd PyQT5_fbs/target
            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
-           rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/TEST/
+           rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/TEST/UHSLC-QC_$VERSION.deb
   build-mac:
     macos:
       xcode: 11.7.0
