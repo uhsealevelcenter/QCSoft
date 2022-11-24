@@ -137,9 +137,10 @@ jobs:
       - run:
           name: Copy the dmg file to wyrtki
           command: |
+           export VERSION=`grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\"`
            cd PyQT5_fbs/target
            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
-           rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/
+           rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/UHSLC-QC_$VERSION.dmg
   build-win:
     executor: win/default
     environment:
@@ -191,21 +192,21 @@ workflows:
       - build-linux:
           requires: 
             - test
-#          filters:
+          filters:
 #            branches:
 #              only:
 #                - master
-#            tags:
-#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
-#      - build-mac:
-#          requires:
-#            - test
-#          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+      - build-mac:
+          requires:
+            - test
+          filters:
 #            branches:
 #              only:
 #                - master
-#            tags:
-#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+            tags:
+              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
 #      - build-win
 #          requires:
 #            - test
