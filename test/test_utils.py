@@ -1,8 +1,8 @@
 import unittest
 
-import station_tools
-from station_tools import utils
-from station_tools.utils import get_missing_months
+import uhslc_station_tools
+from uhslc_station_tools import utils
+from uhslc_station_tools.utils import get_missing_months
 from test.test_dat_file_save import DIN
 
 
@@ -25,13 +25,13 @@ class TestUtils(unittest.TestCase):
         files3 = ['t1231904.dat', 't1231906.dat']
 
         self.assertTrue(utils.is_valid_files(files1))
-        self.assertFalse(utils.is_valid_files(files2))
+        self.assertTrue(utils.is_valid_files(files2))
         self.assertFalse(utils.is_valid_files(files3))
 
     def test_get_primary_channel(self):
-        primary_sensor = station_tools.utils.get_channel_priority(DIN, '737')
-        ps2 = station_tools.utils.get_channel_priority(DIN, '001')
-        ps3= station_tools.utils.get_channel_priority(DIN, '655')
+        primary_sensor = utils.get_channel_priority(DIN, '737')
+        ps2 = utils.get_channel_priority(DIN, '001')
+        ps3 = utils.get_channel_priority(DIN, '655')
         self.assertEqual('BUB', primary_sensor)
         self.assertEqual('HOU', ps2)
         self.assertEqual('RAD', ps3)

@@ -1,13 +1,15 @@
+
+from datetime import datetime
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import date_range
 
 import settings as st
-import station_tools.utils
+import uhslc_station_tools.utils
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
-from station_tools.sensor import *
-from station_tools.utils import find_outliers
+from uhslc_station_tools.sensor import *
+from uhslc_station_tools.utils import find_outliers
 
 if is_pyqt5():
     pass
@@ -339,8 +341,8 @@ class Start(QMainWindow):
             if month_end + 1 > 12:
                 month_end = 1
                 year_end = year + 1
-            data_hr = filt.hr_process_2(data_obj, filt.datetime(year, month, 1, 0, 0, 0),
-                                        filt.datetime(year_end, month_end + 1, 1, 0, 0, 0))
+            data_hr = filt.hr_process_2(data_obj, datetime(year, month, 1, 0, 0, 0),
+                                        datetime(year_end, month_end + 1, 1, 0, 0, 0))
 
             hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
             time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
