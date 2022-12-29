@@ -529,6 +529,7 @@ class Station:
                             line_str = line_begin + str(day).rjust(2) + str(counter) + ''.join(
                                 sl_hr_str[i:i + 12]).rjust(5)
                             the_file.write(line_str + "\n")
+                    the_file.write('9'*80 + "\n")
                 success.append({'title': "Success",
                                 'message': "Success \n Hourly Data Saved to " + str(save_path) + "\n"})
             except IOError as e:

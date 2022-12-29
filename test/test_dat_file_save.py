@@ -189,7 +189,7 @@ class TestDatFileSave(unittest.TestCase):
         self.assertEqual(clean_prs_sum, 48519306)
         self.assertEqual(not_clean_prs_sum, 48326678)
 
-    def test_save_fast_delivery(self):
+    def test_save_fast_delivery_mat(self):
         """
         Loads a truth hourly matlab file for th1231809.mat produced by matlab
         and produces python version of the same file and compares the results
@@ -338,8 +338,19 @@ class TestDatFileSave(unittest.TestCase):
             # Todo: make the loaded (extractor2) capable of loading the hourly data
             #  Hourly data will have FSL in the header, some initial work already started
             # load hourly data
-            # station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+            with open(os.path.join(save_path, saved_files_list[0]), 'r') as f:
+                for line in f:
+                    print(line)
+            station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+            self.assertEqual('Rod', station_hr.name)
+            self.assertTrue(station_hr.month_collection[0]._hourly_data)
 
+            for month in station_hr.month_collection:
+                for key, sensor in month.sensor_collection.items():
+                    if key == "ALL":
+                        continue
+                    sea_level = sensor.get_flat_data().copy()
+            self.assertEqual(9999, np.mean(sea_level))
 
 if __name__ == '__main__':
     unittest.main()

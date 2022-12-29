@@ -29,6 +29,7 @@ class DataExtractor(Month):
         self.string_location = None
 
         self.sensors = SensorCollection()
+        self._hourly_data = False
         self.parse_file(filename)
 
         self.month_int = int(filename.split('.dat')[0][-2:])
@@ -91,6 +92,7 @@ class DataExtractor(Month):
                 self.headers.append(line)
                 if self.is_hourly(line):
                     self.frequencies.append(line.split()[-5])
+                    self._hourly_data = True
                 else:
                     self.frequencies.append(line.split()[-4])
                 self.refs.append(re.search('REF=([^ ]+) .*', line).group(1))
@@ -106,7 +108,7 @@ class DataExtractor(Month):
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted
-        if list_of_lists:
+        if not self._hourly_data:
             del list_of_lists[-1]
 
         for sensor in range(len(self.sensor_ids)):
@@ -124,49 +126,53 @@ class DataExtractor(Month):
             m_length = int(list_of_lists[sensor][1][0:][0][77:79])
 
             # print(m_length)
+            if not self._hourly_data:
+                month_ar = [0]  # need to initiate with 0 because we need to check if the first
+                # day in a month is missing
 
-            month_ar = [0]  # need to initiate with 0 because we need to check if the first
-            # day in a month is missing
+                # go through every line of data
+                for l in range(len(list_of_lists[sensor][1][1:])):
+                    # find first row of each month to get all dates in the file
+                    if l % lines_per_day == 0:
+                        month_ar.append(int(list_of_lists[sensor][1][1:][l][15:17]))
+                # add upper month range + 1 to check if there are any consecutive days
+                # including the last date missing
+                if month_ar[-1] != m_length:
+                    month_ar.append(m_length + 1)
+                # Check for missing date and reset the comparison array to default [0]
+                missed_dates_ar = self.missing_dates(month_ar)
+                if missed_dates_ar:
+                    print("Missing dates", missed_dates_ar)
 
-            # go through every line of data
-            for l in range(len(list_of_lists[sensor][1][1:])):
-                # find first row of each month to get all dates in the file
-                if l % lines_per_day == 0:
-                    month_ar.append(int(list_of_lists[sensor][1][1:][l][15:17]))
-            # add upper month range + 1 to check if there are any consecutive days
-            # including the last date missing
-            if month_ar[-1] != m_length:
-                month_ar.append(m_length + 1)
             # Copy the list with all the data so that we can modify it
             lines_copy = list_of_lists[sensor][1][1:]
-            # Check for missing date and reset the comparison array to default [0]
-            missed_dates_ar = self.missing_dates(month_ar)
-            if missed_dates_ar:
-                print("Missing dates", missed_dates_ar)
+            if not self._hourly_data:
+                # There might be multiple days missing so need to loop through all of them
+                for day in missed_dates_ar:
+                    missing_date = day
+                    missing_date_str = '{:>2}'.format(str(missing_date))
 
-            # There might be multiple days missing so need to loop through all of them
-            for day in missed_dates_ar:
-                missing_date = day
-                missing_date_str = '{:>2}'.format(str(missing_date))
+                    # Create and format an array of lines with dates and missing data
+                    bad_data_ar = []
+                    # 2) Add lines_per_day lines with 9999 values and increase the line counter
+                    for l in range(lines_per_day):
+                        if float(self.frequencies[sensor]) >= 5.0:
+                            # print(pre_text+str(missing_date_str)+" "+'{:>2}'.format(str(l))+" 9999"*12)
+                            bad_data_ar.append(
+                                pre_text + str(missing_date_str) + " " + '{:>2}'.format(str(l)) + " 9999" * 12 + "\n")
+                        else:
+                            # print(pre_text+str(missing_date_str)+" "+'{:>2}'.format(str(l))+"9999"*15)
+                            bad_data_ar.append(
+                                pre_text + str(missing_date_str) + " " + '{:>2}'.format(str(l)) + "9999" * 15 + "\n")
+                    # 3) prepend the above print statement to the list_of_lists[sensor][1][1:]
+                    # insert the missing date with missing data
+                    for b in range(len(bad_data_ar)):
+                        lines_copy.insert((missing_date - 1) * lines_per_day + b, bad_data_ar[b])
 
-                # Create and format an array of lines with dates and missing data
-                bad_data_ar = []
-                # 2) Add lines_per_day lines with 9999 values and increase the line counter
-                for l in range(lines_per_day):
-                    if float(self.frequencies[sensor]) >= 5.0:
-                        # print(pre_text+str(missing_date_str)+" "+'{:>2}'.format(str(l))+" 9999"*12)
-                        bad_data_ar.append(
-                            pre_text + str(missing_date_str) + " " + '{:>2}'.format(str(l)) + " 9999" * 12 + "\n")
-                    else:
-                        # print(pre_text+str(missing_date_str)+" "+'{:>2}'.format(str(l))+"9999"*15)
-                        bad_data_ar.append(
-                            pre_text + str(missing_date_str) + " " + '{:>2}'.format(str(l)) + "9999" * 15 + "\n")
-                # 3) prepend the above print statement to the list_of_lists[sensor][1][1:]
-                # insert the missing date with missing data
-                for b in range(len(bad_data_ar)):
-                    lines_copy.insert((missing_date - 1) * lines_per_day + b, bad_data_ar[b])
-
-            init_date_lst = lines_copy[0][8:17].split()
+            if self._hourly_data:
+                init_date_lst = lines_copy[0][11:19].split()
+            else:
+                init_date_lst = lines_copy[0][8:17].split()
             if len(init_date_lst) > 2:
                 year = init_date_lst[0]
                 month = init_date_lst[1]
