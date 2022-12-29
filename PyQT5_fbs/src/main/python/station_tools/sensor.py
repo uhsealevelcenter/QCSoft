@@ -383,18 +383,39 @@ class Station:
             data_obj = {}
             _data = month.sensor_collection.sensors
             station_num = month.station_id
-            primary_sensor = station_tools.utils.get_channel_priority(din_path, station_num)  # returns primary channel
-            if primary_sensor not in month.sensor_collection.sensors:
-                failure.append({'title': "Error", 'message': "Your .din file says that {} "
-                                                             "is the primary sensor but the file you have loaded does "
-                                                             "not contain that sensor. Hourly and daily data will not be saved.".format(
-                    primary_sensor)})
+            primary_sensors = station_tools.utils.get_channel_priority(din_path, station_num)  # returns primary channel
+            # match primary sensor from the din file to the sensor in the data file
+            intersection = [x for x in primary_sensors if x in month.sensor_collection.sensors]
+            no_primary_data = False
+            if not intersection:
+                no_primary_data = True
+                failure.append({'title': "Error", 'message': "Primary sensors listed in din file are {} but station {} "
+                                                             "contains no data for any of the listed sensors. Hourly "
+                                                             "and daily data will not be saved because saving hourly "
+                                                             "data requires at least one primary sensor data to be "
+                                                             "present even if the data is all 9999"
+                               .format(', '.join(primary_sensors), station_num)})
                 if callback:
                     callback(success, failure)
                 return success, failure
-            sl_data = _data[primary_sensor].get_flat_data().copy()
-            sl_data = utils.remove_9s(sl_data)
-            sl_data = sl_data - int(_data[primary_sensor].height)
+            for primary_sensor in intersection:
+                sl_data = _data[primary_sensor].get_flat_data().copy()
+                sl_data = utils.remove_9s(sl_data)
+                if np.isnan(sl_data).all():
+                    # jump to the next sensor if all data is nan
+                    # if this is true for all iterations of the loop, then the daily and hourly data will be all 9999
+                    no_primary_data = True
+                    continue
+                else:
+                    # break out of the loop once we find a primary sensor with the data and that sensor will be the
+                    # primary sensor
+                    no_primary_data = False
+                    break
+            if no_primary_data:
+                primary_sensor = primary_sensors[0]
+                sl_data = np.full(len(_data[primary_sensor].get_flat_data().copy()), 9999)
+            else:
+                sl_data = sl_data - int(_data[primary_sensor].height)
             data_obj[primary_sensor.lower()] = {
                 'time': station_tools.utils.datenum2(_data[primary_sensor].get_time_vector()),
                 'station': station_num, 'sealevel': sl_data}

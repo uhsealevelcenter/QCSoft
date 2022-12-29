@@ -35,6 +35,9 @@ class DataExtractor(Month):
         self.year = int("20"+filename.split('.dat')[0][-4:-2])
         Month.__init__(self, self.month_int, self.year, self.sensors, self.headers[0][:3])
 
+    def is_hourly(self, header):
+        return 'FSL' in header
+
     def is_header(self, arg):
         """
         Check if the line scanned is a header
@@ -86,7 +89,10 @@ class DataExtractor(Month):
 
             if self.is_header(line):
                 self.headers.append(line)
-                self.frequencies.append(line.split()[-4])
+                if self.is_hourly(line):
+                    self.frequencies.append(line.split()[-5])
+                else:
+                    self.frequencies.append(line.split()[-4])
                 self.refs.append(re.search('REF=([^ ]+) .*', line).group(1))
 
         for header in self.headers:
@@ -100,7 +106,8 @@ class DataExtractor(Month):
 
         # because file ends with two lines of 9s there is an empty list that needs to be
         # deleted
-        del list_of_lists[-1]
+        if list_of_lists:
+            del list_of_lists[-1]
 
         for sensor in range(len(self.sensor_ids)):
             data = []  # only sea level measurements (no time)

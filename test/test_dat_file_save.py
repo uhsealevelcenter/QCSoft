@@ -22,6 +22,8 @@ HOURLY_PATH = os.path.join(dirname, 'test_data/hourly_truth/')
 DAILY_PATH = os.path.join(dirname, 'test_data/daily_truth/')
 SSABA1809 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
 DIN = os.path.join(dirname, 'test_data/din/tmp.din')
+# modified version of the original srodr2022.dat file. I manually turned the PRS and ENC data to all 9999
+TEST_9999_PATH = os.path.join(dirname, 'test_data/monp/stest2202.dat')
 
 
 class TestDatFileSave(unittest.TestCase):
@@ -293,7 +295,10 @@ class TestDatFileSave(unittest.TestCase):
 
     @patch('station_tools.utils.get_channel_priority')
     def test_save_fast_delivery_missing_primary(self, mock_get_primary_channel):
-        mock_get_primary_channel.return_value = 'UGH'
+        """Tests a situation where the data file does not contain a matching primary sensor from the list of primary
+            sensors listed in the din file
+        """
+        mock_get_primary_channel.return_value = ['UGH']
         station = load_station_data([SSABA1809])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -305,5 +310,36 @@ class TestDatFileSave(unittest.TestCase):
             self.assertEqual(0, len(succ))
             self.assertEqual(1, len(fail))
             self.assertEqual(fail[0]['title'], 'Error')
+
+    @patch('station_tools.utils.get_channel_priority')
+    def test_save_fast_delivery_missing_all_primary_data(self, mock_get_primary_channel):
+        """Tests a situation where the data file does contain a matching primary sensor from the list of primary
+        sensors but the data in the data file is missing (all 9999s, a station was down or similar)
+        """
+        # Make 'PRS' and 'ENC' the primary sensors (because are the sensors for which the data
+        # in TEST_9999_PATH was set to 9999)
+        mock_get_primary_channel.return_value = ['PRS', 'ENC']
+        station = load_station_data([TEST_9999_PATH])
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t105"
+            save_path = utils.get_top_level_directory(
+                parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2022)
+            succ, fail = station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
+            # Both daily and hourly should be saved so length of succ should be 2
+            self.assertEqual(2, len(succ))
+            self.assertEqual(0, len(fail))
+            saved_files_list = []
+            for file in os.listdir(save_path):
+                if file.endswith(".dat"):
+                    saved_files_list.append(file)
+            self.assertEqual(2, len(saved_files_list))
+            # Todo: make the loaded (extractor2) capable of loading the hourly data
+            #  Hourly data will have FSL in the header, some initial work already started
+            # load hourly data
+            # station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+
+
 if __name__ == '__main__':
     unittest.main()
