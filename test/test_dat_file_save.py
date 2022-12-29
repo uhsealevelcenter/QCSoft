@@ -21,6 +21,7 @@ output_filename = os.path.join(dirname, 'test_data/ts_file_truth/t1231810.dat')
 HOURLY_PATH = os.path.join(dirname, 'test_data/hourly_truth/')
 DAILY_PATH = os.path.join(dirname, 'test_data/daily_truth/')
 SSABA1809 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
+SRODR2202 = os.path.join(dirname, 'test_data/monp/srodr2202.dat')
 DIN = os.path.join(dirname, 'test_data/din/tmp.din')
 # modified version of the original srodr2022.dat file. I manually turned the PRS and ENC data to all 9999
 TEST_9999_PATH = os.path.join(dirname, 'test_data/monp/stest2202.dat')
@@ -239,6 +240,24 @@ class TestDatFileSave(unittest.TestCase):
             # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
 
+    def test_save_hourly_dat(self):
+        """
+        Todo:
+        We don't really have the truth data for hourly .dat file as the passed hourly files are made with a different
+        filter.
+        This test will have to be implemented once we have produced enough hourly data with the new filter and we
+        are confident that the new filter is working as expected.
+        """
+        station = load_station_data([SRODR2202])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t105"
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2022)
+            station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
+            with open(os.path.join(save_path, 'th1052202.dat'), 'r') as f:
+                for line in f:
+                    print(line)
+
     def test_annual_save(self):
         station = self.input_data
         with tempfile.TemporaryDirectory() as tmp:
@@ -338,9 +357,6 @@ class TestDatFileSave(unittest.TestCase):
             # Todo: make the loaded (extractor2) capable of loading the hourly data
             #  Hourly data will have FSL in the header, some initial work already started
             # load hourly data
-            with open(os.path.join(save_path, saved_files_list[0]), 'r') as f:
-                for line in f:
-                    print(line)
             station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
             self.assertEqual('Rod', station_hr.name)
             self.assertTrue(station_hr.month_collection[0]._hourly_data)
