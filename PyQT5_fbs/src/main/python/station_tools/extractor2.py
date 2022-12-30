@@ -102,7 +102,6 @@ class DataExtractor(Month):
             # search for digits in the first element of the header and put the together
             station_num = ''.join(map(str, [int(s) for s in header.split()[0][0:4] if s.isdigit()]))
             self.sensor_ids.append(station_num + header[6:9])
-        print("TEST LOG", self.headers[0])
         self.loc = [self.extract_lat(self.headers[0]), self.extract_long(self.headers[0])]
         self.string_location = self.extract_string_location(self.headers[0])
 
