@@ -6,7 +6,6 @@ from PyQt5.QtCore import QDate as QDate
 import matplotlib.pyplot as plt
 
 from interactive_plot import PointBrowser
-from uhslc_station_tools.utils import find_outliers
 from uhslc_station_tools.extractor import load_station_data
 
 dirname = os.path.dirname(__file__)

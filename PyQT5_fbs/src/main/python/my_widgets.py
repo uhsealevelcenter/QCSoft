@@ -9,7 +9,6 @@ import uhslc_station_tools.utils
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from uhslc_station_tools.sensor import *
-from uhslc_station_tools.utils import find_outliers
 
 if is_pyqt5():
     pass
@@ -330,14 +329,14 @@ class Start(QMainWindow):
             sl_data = self.station.aggregate_months["data"][sens_str1].copy()
             sl_data = utils.remove_9s(sl_data)
             sl_data = sl_data - int(self.station.month_collection[0].sensor_collection.sensors[sens_str1].height)
-            data_obj[sens_str1.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
+            data_obj[sens_str1.lower()] = {'time': utils.datenum2(self.station.aggregate_months['time'][
                                                                                     sens_str1]),
                                            'station': '014', 'sealevel': sl_data}
 
             sl_data2 = self.station.aggregate_months["data"][sens_str2].copy()
             sl_data2 = utils.remove_9s(sl_data2)
             sl_data2 = sl_data2 - int(self.station.month_collection[0].sensor_collection.sensors[sens_str2].height)
-            data_obj[sens_str2.lower()] = {'time': station_tools.utils.datenum2(self.station.aggregate_months['time'][
+            data_obj[sens_str2.lower()] = {'time': utils.datenum2(self.station.aggregate_months['time'][
                                                                                     sens_str2]),
                                            'station': '014', 'sealevel': sl_data2}
 
@@ -348,7 +347,8 @@ class Start(QMainWindow):
             if month_end + 1 > 12:
                 month_end = 1
                 year_end = year + 1
-            data_hr = filt.hr_process_2(data_obj, datetime(year, month, 1, 0, 0, 0),
+
+            data_hr = filt.hr_process(data_obj, datetime(year, month, 1, 0, 0, 0),
                                         datetime(year_end, month_end + 1, 1, 0, 0, 0))
 
             hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]

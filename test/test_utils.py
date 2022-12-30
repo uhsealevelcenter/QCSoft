@@ -1,6 +1,5 @@
 import unittest
 
-import uhslc_station_tools
 from uhslc_station_tools import utils
 from uhslc_station_tools.utils import get_missing_months
 from test.test_dat_file_save import DIN
