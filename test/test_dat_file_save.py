@@ -8,10 +8,8 @@ from unittest.mock import patch
 import numpy as np
 import scipy.io as sio
 
-import uhslc_station_tools.utils
-from uhslc_station_tools.utils import find_outliers
 from uhslc_station_tools import utils
-from uhslc_station_tools.extractor2 import load_station_data
+from uhslc_station_tools.extractor import load_station_data
 
 dirname = os.path.dirname(__file__)
 input_filename = os.path.join(dirname, 'test_data/monp/ssaba1810.dat')
@@ -330,7 +328,7 @@ class TestDatFileSave(unittest.TestCase):
             self.assertEqual(1, len(fail))
             self.assertEqual(fail[0]['title'], 'Error')
 
-    @patch('station_tools.utils.get_channel_priority')
+    @patch('uhslc_station_tools.utils.get_channel_priority')
     def test_save_fast_delivery_missing_all_primary_data(self, mock_get_primary_channel):
         """Tests a situation where the data file does contain a matching primary sensor from the list of primary
         sensors but the data in the data file is missing (all 9999s, a station was down or similar)
