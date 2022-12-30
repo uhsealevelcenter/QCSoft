@@ -21,7 +21,10 @@ output_filename = os.path.join(dirname, 'test_data/ts_file_truth/t1231810.dat')
 HOURLY_PATH = os.path.join(dirname, 'test_data/hourly_truth/')
 DAILY_PATH = os.path.join(dirname, 'test_data/daily_truth/')
 SSABA1809 = os.path.join(dirname, 'test_data/monp/ssaba1809.dat')
+SRODR2202 = os.path.join(dirname, 'test_data/monp/srodr2202.dat')
 DIN = os.path.join(dirname, 'test_data/din/tmp.din')
+# modified version of the original srodr2022.dat file. I manually turned the PRS and ENC data to all 9999
+TEST_9999_PATH = os.path.join(dirname, 'test_data/monp/stest2202.dat')
 
 
 class TestDatFileSave(unittest.TestCase):
@@ -187,7 +190,7 @@ class TestDatFileSave(unittest.TestCase):
         self.assertEqual(clean_prs_sum, 48519306)
         self.assertEqual(not_clean_prs_sum, 48326678)
 
-    def test_save_fast_delivery(self):
+    def test_save_fast_delivery_mat(self):
         """
         Loads a truth hourly matlab file for th1231809.mat produced by matlab
         and produces python version of the same file and compares the results
@@ -236,6 +239,24 @@ class TestDatFileSave(unittest.TestCase):
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
             # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
+
+    def test_save_hourly_dat(self):
+        """
+        Todo:
+        We don't really have the truth data for hourly .dat file as the passed hourly files are made with a different
+        filter.
+        This test will have to be implemented once we have produced enough hourly data with the new filter and we
+        are confident that the new filter is working as expected.
+        """
+        station = load_station_data([SRODR2202])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t105"
+            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2022)
+            station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
+            with open(os.path.join(save_path, 'th1052202.dat'), 'r') as f:
+                for line in f:
+                    print(line)
 
     def test_annual_save(self):
         station = self.input_data
@@ -293,7 +314,10 @@ class TestDatFileSave(unittest.TestCase):
 
     @patch('uhslc_station_tools.utils.get_channel_priority')
     def test_save_fast_delivery_missing_primary(self, mock_get_primary_channel):
-        mock_get_primary_channel.return_value = 'UGH'
+        """Tests a situation where the data file does not contain a matching primary sensor from the list of primary
+            sensors listed in the din file
+        """
+        mock_get_primary_channel.return_value = ['UGH']
         station = load_station_data([SSABA1809])
 
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -305,5 +329,45 @@ class TestDatFileSave(unittest.TestCase):
             self.assertEqual(0, len(succ))
             self.assertEqual(1, len(fail))
             self.assertEqual(fail[0]['title'], 'Error')
+
+    @patch('station_tools.utils.get_channel_priority')
+    def test_save_fast_delivery_missing_all_primary_data(self, mock_get_primary_channel):
+        """Tests a situation where the data file does contain a matching primary sensor from the list of primary
+        sensors but the data in the data file is missing (all 9999s, a station was down or similar)
+        """
+        # Make 'PRS' and 'ENC' the primary sensors (because are the sensors for which the data
+        # in TEST_9999_PATH was set to 9999)
+        mock_get_primary_channel.return_value = ['PRS', 'ENC']
+        station = load_station_data([TEST_9999_PATH])
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            save_folder = "t105"
+            save_path = utils.get_top_level_directory(
+                parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+                2022)
+            succ, fail = station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
+            # Both daily and hourly should be saved so length of succ should be 2
+            self.assertEqual(2, len(succ))
+            self.assertEqual(0, len(fail))
+            saved_files_list = []
+            for file in os.listdir(save_path):
+                if file.endswith(".dat"):
+                    saved_files_list.append(file)
+            self.assertEqual(2, len(saved_files_list))
+            # Todo: make the loaded (extractor2) capable of loading the hourly data
+            #  Hourly data will have FSL in the header, some initial work already started
+            # load hourly data
+            # station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+            station_hr = load_station_data([os.path.join(save_path, 'th1052202.dat')])
+            self.assertEqual('Rod', station_hr.name)
+            self.assertTrue(station_hr.month_collection[0]._hourly_data)
+
+            for month in station_hr.month_collection:
+                for key, sensor in month.sensor_collection.items():
+                    if key == "ALL":
+                        continue
+                    sea_level = sensor.get_flat_data().copy()
+            self.assertEqual(9999, np.mean(sea_level))
+
 if __name__ == '__main__':
     unittest.main()

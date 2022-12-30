@@ -198,9 +198,16 @@ class Start(QMainWindow):
         # Makes sure we default back to default on new file load
         self.ui.radioButton_Minute.setChecked(True)
 
-        self.sensor_dict["PRD"].setChecked(True)
-        self.sens_str = "PRD"
-        self.sensor_dict2["PRD"].setEnabled(False)
+        if 'FSL' in self.sensor_dict.keys():
+            self.sensor_dict['FSL'].setChecked(True)
+            self.sensor_dict['FSL'].setEnabled(False)
+            self.sensor_dict['ALL'].setEnabled(False)
+            self.sens_str = "FSL"
+            self.ui.save_btn.setEnabled(False)
+        else:
+            self.sensor_dict["PRD"].setChecked(True)
+            self.sens_str = "PRD"
+            self.sensor_dict2["PRD"].setEnabled(False)
         self.sensor_dict2["ALL"].setEnabled(False)
         self.plot(all=False)
         self.ui.buttonGroup_data.buttonClicked.connect(self.on_sensor_changed)
