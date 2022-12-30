@@ -357,7 +357,8 @@ class TestDatFileSave(unittest.TestCase):
             # Todo: make the loaded (extractor2) capable of loading the hourly data
             #  Hourly data will have FSL in the header, some initial work already started
             # load hourly data
-            station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+            # station_hr = load_station_data([os.path.join(save_path, saved_files_list[0])])
+            station_hr = load_station_data([os.path.join(save_path, 'th1052202.dat')])
             self.assertEqual('Rod', station_hr.name)
             self.assertTrue(station_hr.month_collection[0]._hourly_data)
 
