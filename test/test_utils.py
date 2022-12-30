@@ -28,13 +28,16 @@ class TestUtils(unittest.TestCase):
         self.assertFalse(utils.is_valid_files(files2))
         self.assertFalse(utils.is_valid_files(files3))
 
-    def test_get_primary_channel(self):
+    def test_get_primary_channels(self):
         primary_sensor = station_tools.utils.get_channel_priority(DIN, '737')
         ps2 = station_tools.utils.get_channel_priority(DIN, '001')
-        ps3= station_tools.utils.get_channel_priority(DIN, '655')
-        self.assertEqual('BUB', primary_sensor)
-        self.assertEqual('HOU', ps2)
-        self.assertEqual('RAD', ps3)
+        ps3 = station_tools.utils.get_channel_priority(DIN, '655')
+        self.assertEqual(3, len(primary_sensor))
+        self.assertEqual('BUB', primary_sensor[0])
+        self.assertEqual('HOU', ps2[0])
+        self.assertEqual(2, len(ps2))
+        self.assertEqual('RAD', ps3[0])
+        self.assertEqual(3, len(ps3))
 
 
 if __name__ == '__main__':
