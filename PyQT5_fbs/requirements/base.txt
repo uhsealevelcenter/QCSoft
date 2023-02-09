@@ -19,5 +19,5 @@ scipy==1.4.1
 setuptools==40.8.0
 sip==4.19.8
 six==1.11.0
-uhslc-station-tools==0.0.12
+uhslc-station-tools==0.0.13
 utide==0.2.5
