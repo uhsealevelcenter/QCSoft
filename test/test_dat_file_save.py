@@ -208,7 +208,8 @@ class TestDatFileSave(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             save_folder = "t123"
-            save_path = utils.get_top_level_directory(parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
+            save_path = utils.get_top_level_directory(
+                parent_dir=tmp_dir) / utils.FAST_DELIVERY_FOLDER / save_folder / str(
                 2018)
             station.save_fast_delivery(path=tmp_dir, din_path=DIN, callback=None)
             # .mat files test
@@ -229,14 +230,15 @@ class TestDatFileSave(unittest.TestCase):
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
 
             # daily test
+            # Truth daily file produced by Matlab, provided by Matthew Widlansky
             data_truth = sio.loadmat(os.path.join(DAILY_PATH, 'da1231809.mat'))
-            sea_level_truth = np.concatenate(data_truth['data_day']['sealevel'][0][0], axis=0)
+            sea_level_truth = np.concatenate(data_truth['data_day_UT']['sealevel'][0][0], axis=0)
             data = sio.loadmat(os.path.join(save_path, 'da1231809.mat'))
             sea_level = data['sealevel'][0]
             # Make sure all 9999s are taken out from the final .mat file
             self.assertNotIn(9999, sea_level)
             # Daily data involves calculation of tidal residuals and the calculation between matlab and python is
-            # slightly different so we don't need the results to be exactly the same but witin 1 millimmiter
+            # should be fairly close
             np.testing.assert_almost_equal(sea_level_truth, sea_level, 6)
 
     def test_save_hourly_dat(self):
