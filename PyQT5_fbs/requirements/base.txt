@@ -16,7 +16,7 @@ PyQt5==5.9.2
 python-dateutil==2.7.3
 pytz==2018.5
 scipy==1.4.1
-setuptools==40.8.0
+setuptools==65.5.1
 sip==4.19.8
 six==1.11.0
 uhslc-station-tools==0.0.155
