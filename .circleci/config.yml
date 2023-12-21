@@ -95,7 +95,7 @@ jobs:
            rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/UHSLC-QC_$VERSION.deb
   build-mac:
     macos:
-      xcode: "11.7.0"
+      xcode: "14.2.0"
     resource_class: macos.x86.medium.gen2
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
