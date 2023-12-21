@@ -19,5 +19,6 @@ scipy==1.4.1
 setuptools==40.8.0
 sip==4.19.8
 six==1.11.0
-uhslc-station-tools==0.0.155
+# We should probably not be specifying version because we usually want the latest version
+uhslc-station-tools==0.0.161
 utide==0.2.5
