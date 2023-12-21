@@ -49,6 +49,17 @@ If you ever decide to add additional dependencies that are platform specific, yo
 appropriate requirements/*.txt file. The platform independent dependencies should be added to base.txt. The base.txt 
 file is referenced in each of the platform specific .txt files and thus pip install does not have to performed on it. 
 
+#### station_tools
+This software is heavily dependen on our [station_tools library](https://github.com/uhsealevelcenter/station_tools). If 
+you need to make changes to the station_tools library and use those changes while developing the QS software, you will 
+have to install it in editable mode. To do so, uninstall the station_tools library if it is already installed and then
+run the following command from the project's root folder (PyQT5_fbs):
+```
+pip install -e path_to_station_tools_folder
+```
+You will of course have to replace path_to_station_tools_folder with the actual path to where you checked out the 
+station_tools repo.
+
 ### Running the software
 
 The python source code is located in [src/main/python/](PyQT5_fbs/src/main/python/)
