@@ -125,7 +125,7 @@ jobs:
             source ~/.bash_profile
       - run: brew install freetype pkg-config libpng pyenv openssl readline sqlite3 xz zlib
       - run: brew reinstall zlib bzip2
-#      - run: xcode-select --install
+      - run: xcode-select --install
       - run:
           name: Install Python 3.6.13 with patch
           command: |
