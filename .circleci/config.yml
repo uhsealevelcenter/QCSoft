@@ -135,16 +135,8 @@ jobs:
       - run: brew reinstall zlib bzip2
       - run: sudo rm -rf /Library/Developer/CommandLineTools
       - run: xcode-select --install
-      - run: conda activate py367
-#      - run:
-#          name: Install Python 3.6.13 with patch
-#          command: |
-#            cd PyQT5_fbs
-#            pyenv install --patch 3.6.13 < <(curl -sSL https://github.com/python/cpython/commit/8ea6353.patch\?full_index\=1)
-#      - run: cd PyQT5_fbs && pyenv versions
       - run:
           name: Install requirements
-#          command: cd PyQT5_fbs && pyenv local 3.6.13 && pyenv versions && pip3 install -r requirements/mac.txt
           command: cd PyQT5_fbs && pip install -r requirements/mac.txt
       - run:
           name: Build uTide hook
