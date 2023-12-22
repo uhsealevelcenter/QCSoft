@@ -133,6 +133,7 @@ jobs:
       - run: brew reinstall zlib bzip2
       - run: sudo rm -rf /Library/Developer/CommandLineTools
       - run: xcode-select --install
+      - run: conda activate py367
 #      - run:
 #          name: Install Python 3.6.13 with patch
 #          command: |
