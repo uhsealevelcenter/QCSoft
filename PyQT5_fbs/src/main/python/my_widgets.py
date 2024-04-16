@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QMainWindow
-# from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
-from matplotlib.backends.qt_compat import QtCore, QtWidgets
+from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
 from pandas import Series, date_range
 
 import settings as st
@@ -9,10 +8,10 @@ from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from uhslc_station_tools.sensor import *
 
-# if is_pyqt5():
-#     pass
-# else:
-#     pass
+if is_pyqt5():
+    pass
+else:
+    pass
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
