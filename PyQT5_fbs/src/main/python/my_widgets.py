@@ -1,18 +1,18 @@
 from PyQt5.QtWidgets import QMainWindow
-from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
+# from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
+from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from pandas import Series, date_range
 
-import math
 import settings as st
 import uhslc_station_tools.utils
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from uhslc_station_tools.sensor import *
 
-if is_pyqt5():
-    pass
-else:
-    pass
+# if is_pyqt5():
+#     pass
+# else:
+#     pass
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -426,8 +426,7 @@ class Start(QMainWindow):
             # Subtract the mean from the sensor data for comparison with new tide prediction.
             if sens_str1 == 'PRD':
                 sensor_data_flat = data_hr[sens_str2.lower()]["sealevel"].flatten()
-                sensor_data_flat_filt = [x for x in sensor_data_flat if not math.isnan(x)]
-                sensor_data_mean = sum(sensor_data_flat_filt) / len(sensor_data_flat_filt)
+                sensor_data_mean = np.nanmean(sensor_data_flat)
                 data_hr[sens_str2.lower()]["sealevel"] = [[element - sensor_data_mean for element in sublist]
                                                           for sublist in data_hr[sens_str2.lower()]["sealevel"]]
 
