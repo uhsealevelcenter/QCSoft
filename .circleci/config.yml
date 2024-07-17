@@ -9,6 +9,7 @@ orbs:
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/python
   python: circleci/python@1.2
   win: circleci/windows@2.2.0
+  macos: circleci/macos@2.4.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -52,6 +53,7 @@ jobs:
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-shared
     steps:
+      - macos/install-rosetta
       - checkout
       - add_ssh_keys
       - store_test_results:
