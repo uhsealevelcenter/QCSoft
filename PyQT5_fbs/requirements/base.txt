@@ -10,7 +10,7 @@ numpy==1.15.0
 pandas==0.24.1
 pefile==2018.8.8
 pip==19.0.3
-PyInstaller==3.4
+PyInstaller==3.6
 pyparsing==2.2.1
 PyQt5==5.9.2
 python-dateutil==2.7.3
