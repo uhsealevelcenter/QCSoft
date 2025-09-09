@@ -1,9 +1,14 @@
 from PyQt5.QtWidgets import QMainWindow
 from matplotlib.backends.qt_compat import QtCore, QtWidgets, is_pyqt5
+import matplotlib.dates as mdates
 from pandas import Series, date_range
 
+import os
+import requests
+import pandas as pd
 import settings as st
 import uhslc_station_tools.utils
+from io import StringIO
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from uhslc_station_tools.sensor import *
@@ -22,26 +27,26 @@ except AttributeError:
 try:
     _encoding = QtWidgets.QApplication.UnicodeUTF8
 
-
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
+
 except AttributeError:
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
 
 class HelpScreen(QMainWindow):
+
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+
         super(HelpScreen, self).__init__()
 
-        # Object for data persistence
-        # self.settings = QtCore.QSettings('UHSLC', 'com.uhslc.qcsoft')
-        # st.SETTINGS.remove("savepath")
+        # Object for data persistence.
         self.ui = parent
 
-        # If a save path hasn't been defined, give it a home directory
+        # If a save path hasn't been defined, give it a home directory.
         if (st.get_path(st.SAVE_KEY)):
             self.ui.lineEditPath.setPlaceholderText(st.get_path(st.SAVE_KEY))
         else:
@@ -50,37 +55,21 @@ class HelpScreen(QMainWindow):
 
         self.ui.lineEditLoadPath.setPlaceholderText(st.get_path(st.LOAD_KEY))
 
-        # # If a fast delivery save path hasn't been defined, give it a home directory
-        # if (st.get_path(st.FD_PATH)):
-        #     self.ui.lineEditFDPath.setPlaceholderText(st.get_path(st.FD_PATH))
-        # else:
-        #     st.SETTINGS.setValue(st.FD_PATH, os.path.expanduser('~'))
-        #     self.ui.lineEditFDPath.setPlaceholderText(os.path.expanduser('~'))
-        #
-        # # If a high frequency data save path hasn't been defined, give it a home directory
-        # if (st.get_path(st.HF_PATH)):
-        #     self.ui.lineEditHFPath.setPlaceholderText(st.get_path(st.HF_PATH))
-        # else:
-        #     st.SETTINGS.setValue(st.HF_PATH, os.path.expanduser('~'))
-        #     self.ui.lineEditHFPath.setPlaceholderText(os.path.expanduser('~'))
-
         if st.get_path(st.DIN_PATH_KEY):
             self.ui.lineEdit_din.setPlaceholderText(st.get_path(st.DIN_PATH_KEY))
 
         saveButton = self.ui.pushButton_save_folder
         loadButton = self.ui.pushButton_load_folder
         dinSave = self.ui.pushButton_din
-        # FDSave = self.ui.pushButton_fd_folder
-        # hf_save = self.ui.pushButton_hf_data
 
         saveButton.clicked.connect(lambda: self.savePath(self.ui.lineEditPath, st.SAVE_KEY))
         loadButton.clicked.connect(lambda: self.savePath(self.ui.lineEditLoadPath, st.LOAD_KEY))
         dinSave.clicked.connect(lambda: self.saveDIN(self.ui.lineEdit_din, st.DIN_PATH_KEY))
-        # FDSave.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.FD_PATH))
-        # hf_save.clicked.connect(lambda: self.savePath(self.ui.lineEditFDPath, st.HF_PATH))
 
     def savePath(self, lineEditObj, setStr):
+
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
+
         if (folder_name):
             st.SETTINGS.setValue(setStr, folder_name)
             st.SETTINGS.sync()
@@ -90,12 +79,15 @@ class HelpScreen(QMainWindow):
             pass
 
     def saveDIN(self, lineEditObj, setStr):
+
         filters = "*.din"
         if st.DIN_PATH_KEY:
             path = st.DIN_PATH_KEY
         else:
             path = os.path.expanduser('~')
+
         file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
+
         if file_name:
             st.SETTINGS.setValue(setStr, file_name[0][0])
             st.SETTINGS.sync()
@@ -106,8 +98,8 @@ class HelpScreen(QMainWindow):
 
 
 def date_time_to_isostring(date, time):
-    return date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
 
+    return date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
 
 def moving_average(data, window_size):
     """ Computes moving average using discrete linear convolution of two one dimensional sequences.
@@ -128,53 +120,49 @@ def moving_average(data, window_size):
     """
     # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
     filtered_data = data.copy()
-    # my_mad=np.nanmedian(np.abs(filtered_data-np.nanmedian(filtered_data)))
-    # my_mean=np.nanmean(filtered_data)
 
     my_mean = np.nanmean(filtered_data)
     my_std = np.nanstd(filtered_data)
 
-    # itemindex = np.where(((filtered_data>my_mean+4*my_mad )  | (filtered_data<my_mean-4*my_mad)))
     itemindex = np.where(((filtered_data > my_mean + 3 * my_std) | (filtered_data < my_mean - 3 * my_std)))
     filtered_data[itemindex] = np.nanmean(filtered_data)
-    # Fix boundary effects by adding prepending and appending values to the data
+
+    # Fix boundary effects by adding prepending and appending values to the data.
     filtered_data = np.insert(filtered_data, 0, np.ones(window_size) * np.nanmean(filtered_data[:window_size // 2]))
     filtered_data = np.insert(filtered_data, filtered_data.size,
                               np.ones(window_size) * np.nanmean(filtered_data[-window_size // 2:]))
     window = np.ones(int(window_size)) / float(window_size)
-    # return (np.convolve(filtered_data, window, 'same')[window_size:-window_size],itemindex)
+
     return np.convolve(filtered_data, window, 'same')[window_size:-window_size]
 
 
 def find_outliers(station, t, data, sens):
+
     channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
     _freq = channel_freq + 'min'
 
     nines_ind = np.where(data == 9999)
     nonines_data = data.copy()
     nonines_data[nines_ind] = float('nan')
-    # Get a date range to create pandas time Series
-    # using the sampling frequency of the sensor
+
+    # Get a date range to create pandas time Series using the sampling frequency of the sensor.
     rng = date_range(t[0], t[-1], freq=_freq)
     ts = Series(nonines_data, rng)
 
-    # resample the data and linearly interpolate the missing values
+    # Resample the data and linearly interpolate the missing values.
     upsampled = ts.resample(_freq)
     interp = upsampled.interpolate()
 
     # calculate a window size for moving average routine so the window
-    # size is always 60 minutes long
+    # size is always 60 minutes long.
     window_size = 60 // int(channel_freq)
 
-    # calculate moving average including the interolated data
-    # moving_average removes big outliers before calculating moving average
+    # Calculate moving average including the interolated data.
+    # moving_average removes big outliers before calculating moving average.
     y_av = moving_average(np.asarray(interp.tolist()), window_size)
-    # y_av = self.moving_average(data, 30)
-    # missing=np.argwhere(np.isnan(y_av))
-    # y_av[missing] = np.nanmean(y_av)
 
-    # calculate the residual between the actual data and the moving average
-    # and then find the data that lies outside of sigma*std
+    # Calculate the residual between the actual data and the moving average
+    # and then find the data that lies outside of sigma*std.
     residual = nonines_data - y_av
     std = np.nanstd(residual)
     sigma = 3.0
@@ -184,67 +172,74 @@ def find_outliers(station, t, data, sens):
 
 
 class Start(QMainWindow):
+
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+
         super(Start, self).__init__()
         self.ui = parent
         self.station = None
         self.home()
 
     def home(self):
-        print("HOME CALLED")
-        # print("static_canvas",self.static_canvas)
+
         self.ui.mplwidget_top.canvas.figure.clf()
         self.ui.mplwidget_bottom.canvas.figure.clf()
         self._static_ax = self.ui.mplwidget_top.canvas.figure.subplots()
         self._static_fig = self.ui.mplwidget_top.canvas.figure
         self.pid = -99
         self.cid = -98
-        self.toolbar1 = self._static_fig.canvas.toolbar  # Get the toolbar handler
+        self.toolbar1 = self._static_fig.canvas.toolbar  # Get the toolbar handler.
         self.toolbar1.update()  # Update the toolbar memory
-        # self._residual_fig = self.ui.mplwidget_bottom.canvas.figure
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
         self.ui.save_btn.clicked.connect(self.save_button)
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
 
     def is_test_mode(self):
-        # If switch button is in far right position (which is checked state, red button), test mode is on.
-        # Vice versa for pruduction
+
+        # If switch button is in far right position (which is checked state, red button)
+        # then test-mode is on and vice-versa for pruduction.
         return self.ui.switchwidget.button.isChecked()
 
+    def _set_resolution_enabled(self, enabled: bool):
+        """Enable/disable the Hourly/Minute radio buttons."""
+
+        if hasattr(self.ui, "buttonGroup_resolution"):
+            for b in self.ui.buttonGroup_resolution.buttons():
+                b.setEnabled(enabled)
+
     def make_sensor_buttons(self, sensors):
+
         if self.station.is_sampling_inconsistent():
             self.show_custom_message("Error", "It appears that the sampling rate for one of the sensors differs "
                                               "between two different months. This is not allowed. Please process "
                                               "each of the months individually")
             self.station = None
             return
-        # Remove all sensor checkbox widgets from the layout
-        # every time new data is loaded
+
+        # Remove all sensor checkbox widgets from the layout every time new data is loaded.
         for i in range(self.ui.verticalLayout_left_top.count()):
             item = self.ui.verticalLayout_left_top.itemAt(i)
-            # self.verticalLayout_left_top.removeWidget(item.widget())
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
         for i in range(self.ui.verticalLayout_bottom.count()):
             item = self.ui.verticalLayout_bottom.itemAt(i)
-            # self.verticalLayout_left_top.removeWidget(item.widget())
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
 
-        # sensors' keys are names of all sensors which carry
-        # all of the data associated with it
-        # Make copy of it so we can use its keys and assign radio buttons to it
-        # If we do not make a copy then the  sensors values would get
-        # overwritten by radio button objects
+        # Sensors' keys are names of all sensors which carry all of the data associated with it.
+        # Make copy of it so we can use its keys and assign radio buttons to it.
+        # If we do not make a copy then the sensors values would get
+        # overwritten by radio button objects.
         self.sensor_dict = dict(sensors)
         self.sensor_dict2 = dict(sensors)
 
-        # Counter added to figure out when the last item was added
-        # Set alignment of the last item to push all the radio buttons up
+        # Counter added to figure out when the last item was added.
+        # Set alignment of the last item to push all the radio buttons up.
+        self.sensor_button_group = []
         counter = len(sensors.items())
         for key, value in sensors.items():
             counter -= 1
@@ -262,11 +257,11 @@ class Start(QMainWindow):
                 self.ui.verticalLayout_bottom.addWidget(self.sensor_dict2[key], 0, QtCore.Qt.AlignTop)
 
             self.sensor_dict[key].setText(key)
+            self.sensor_button_group.append(self.sensor_radio_btns)
 
-        # radio_btn_HF = QtWidgets.QRadioButton("Minute", self)
-        # radio_btn_HF.setChecked(True)
         self.mode = self.ui.radioButton_Minute.text()
-        # Makes sure we default back to default on new file load
+
+        # Make sure we default back to default on new file load.
         self.ui.radioButton_Minute.setChecked(True)
 
         if 'FSL' in self.sensor_dict.keys():
@@ -279,52 +274,96 @@ class Start(QMainWindow):
             self.sensor_dict["PRD"].setChecked(True)
             self.sens_str = "PRD"
             self.sensor_dict2["PRD"].setEnabled(False)
+
         self.sensor_dict2["ALL"].setEnabled(False)
         self.plot(all=False)
         self.ui.buttonGroup_data.buttonClicked.connect(self.on_sensor_changed)
         self.ui.buttonGroup_residual.buttonClicked.connect(self.on_residual_sensor_changed)
         self.ui.buttonGroup_resolution.buttonClicked.connect(self.on_frequency_changed)
+        line_sep = QtWidgets.QFrame()
+        line_sep.setFrameShape(QtWidgets.QFrame.HLine)
+        line_sep.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.ui.verticalLayout_left_top.addSpacing(10)
+        self.ui.verticalLayout_left_top.addWidget(line_sep)
+
+        # Add daily and hourly fast delivery buttons to top-left panel.
+        self.daily_button = QtWidgets.QRadioButton("Daily FD\nWeb v Local", self)
+        self.ui.buttonGroup_data.addButton(self.daily_button)
+        self.daily_button.clicked.connect(lambda: self.plot_fast_delivery("daily"))
+        self.ui.verticalLayout_left_top.addWidget(self.daily_button)
+        self.hourly_button = QtWidgets.QRadioButton("Hourly FD\nWeb v Local", self)
+        self.ui.buttonGroup_data.addButton(self.hourly_button)
+        self.hourly_button.clicked.connect(lambda: self.plot_fast_delivery("hourly"))
+        self.ui.verticalLayout_left_top.addWidget(self.hourly_button)
+        self.daily_web_button = QtWidgets.QRadioButton("Daily FD\nAll Web", self)
+        self.ui.buttonGroup_data.addButton(self.daily_web_button)
+        self.daily_web_button.clicked.connect(lambda: self.plot_fast_delivery_web("daily"))
+        self.ui.verticalLayout_left_top.addWidget(self.daily_web_button)
+        self.hourly_web_button = QtWidgets.QRadioButton("Hourly FD\nAll Web", self)
+        self.ui.buttonGroup_data.addButton(self.hourly_web_button)
+        self.hourly_web_button.clicked.connect(lambda: self.plot_fast_delivery_web("hourly"))
+        self.ui.verticalLayout_left_top.addWidget(self.hourly_web_button)
 
     def on_sensor_changed(self, btn):
 
         if btn.text() == "ALL":
-            # TODO: plot_all and plot should be merged to one function
+            # TODO: plot_all and plot should be merged to one function.
             self.ui.save_btn.setEnabled(False)
             self.ui.ref_level_btn.setEnabled(False)
+            self._set_resolution_enabled(True)
             self.plot(all=True)
+        elif btn.text() in ["Daily FD\nWeb v Local", "Hourly FD\nWeb v Local", 
+                            "Daily FD\nAll Web", "Hourly FD\nAll Web"]:
+            return
         else:
+            # Update the fast delivery flag.
+            self.fd_active = False
+            for button in self.ui.buttonGroup_residual.buttons():
+                if button.text() not in ["PRD", "ALL"]:
+                    button.setEnabled(True)
+                else:
+                    button.setEnabled(False)
             self.ui.save_btn.setEnabled(True)
             self.ui.ref_level_btn.setEnabled(True)
+            self._set_resolution_enabled(True)
             self.sens_str = btn.text()
             self._update_top_canvas(btn.text())
             self.ui.lineEdit.setText(self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
             self.update_graph_values()
 
-        # Update residual buttons and graph when the top sensor is changed
-        # self.on_residual_sensor_changed(None)
-        # Clear residual buttons and graph when the top sensor is changed
+        # Clear residual buttons and graph when the top sensor is changed.
         for button in self.ui.buttonGroup_residual.buttons():
             button.setChecked(False)
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
-        # print("ref height:",self.sens_objects[self.sens_str].height)
 
     def on_frequency_changed(self, btn):
+
         print("Frequency changed", btn.text())
         self.mode = btn.text()
         self.on_residual_sensor_changed()
 
     def update_graph_values(self):
-        # convert 'nans' back to 9999s
+
+        # Convert 'nans' back to 9999s.
         nan_ind = np.argwhere(np.isnan(self.browser.data))
         self.browser.data[nan_ind] = 9999
-        # we want the sensor data object to point to self.browser.data and not self.browser.data.copy()
-        # because when the self.browser.data is modified on the graph
-        # the sensor data object will automatically be modified as well
-        # self.station[self.sens_str].data = self.browser.data
+
+        # We want the sensor data object to point to self.browser.data and not self.browser.data.copy()
+        # because when the self.browser.data is modified on the graph the sensor data object will 
+        # automatically be modified as well.
         self.station.aggregate_months['data'][self.sens_str] = self.browser.data
 
     def on_residual_sensor_changed(self):
+
+        # Safety measure to ensure no residual buttons available when fast delivery is selected.
+        if hasattr(self, "fd_active") and self.fd_active:
+            self._residual_ax.cla()
+            self._residual_ax.figure.canvas.draw()
+            for button in self.ui.buttonGroup_residual.buttons():
+                button.setEnabled(False)
+            return
+
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
 
@@ -337,7 +376,8 @@ class Start(QMainWindow):
             self._residual_ax.figure.canvas.draw()
 
     def plot(self, all=False):
-        # Set the data browser object to NoneType on every file load
+
+        # Set the data browser object to NoneType on every file load.
         self.browser = None
         self._static_ax.cla()
         self._residual_ax.cla()
@@ -351,11 +391,13 @@ class Start(QMainWindow):
             lineEditText = self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header
             sens_objects = [self.sens_str]
             title = 'Tide Prediction'
+
         self.ui.lineEdit.setText(lineEditText)
+
         for sens in sens_objects:
-            ## Set 9999s to NaN so they don't show up on the graph
-            ## when initially plotted
-            ## nans are converted back to 9999s when file is saved
+
+            # Set 9999s to NaN so they don't show up on the graph when initially plotted.
+            # Nans are converted back to 9999s when file is saved.
             if sens == "ALL":
                 pass
             else:
@@ -367,14 +409,10 @@ class Start(QMainWindow):
                     mean = np.nanmean(data_flat)
                 else:
                     mean = 0
-                # t = np.linspace(0, 10, 501)
-                # t = np.arange(data.size)
 
                 t = time
                 y = data_flat - mean
-                # self._static_ax.plot(t, np.tan(t), ".")
-                line, = self._static_ax.plot(t, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance
-                # self._static_fig = self.static_canvas.figure
+                line, = self._static_ax.plot(t, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance.
                 if all:
                     line.set_label(sens)
                     self._static_ax.legend()
@@ -387,14 +425,11 @@ class Start(QMainWindow):
                 self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
                 self.ui.mplwidget_top.canvas.setFocus()
                 self.ui.mplwidget_top.canvas.figure.tight_layout()
-                # self.toolbar1 = self._static_fig.canvas.toolbar #Get the toolbar handler
                 self.toolbar1.update()  # Update the toolbar memory
                 self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
-        # resample the data and linearly interpolate the missing values
-        # upsampled = ts.resample(_freq)
-        # interp = upsampled.interpolate()
+
         if mode == "Hourly":
             data_obj = {}
 
@@ -419,6 +454,7 @@ class Start(QMainWindow):
             if month_end + 1 > 12:
                 month_end = 1
                 year_end = year + 1
+
             data_hr = filt.hr_process(data_obj, datetime(year, month, 1, 0, 0, 0),
                                         datetime(year_end, month_end + 1, 1, 0, 0, 0))
 
@@ -431,10 +467,12 @@ class Start(QMainWindow):
 
             hr_resid = data_hr[sens_str1.lower()]["sealevel"] - data_hr[sens_str2.lower()]["sealevel"]
             time = [filt.matlab2datetime(tval[0]) for tval in data_hr[list(data_hr.keys())[0]]['time']]
+
             self.generic_plot(self.ui.mplwidget_bottom.canvas, time, hr_resid, sens_str1, sens_str2,
                               "Hourly Residual", is_interactive=False)
 
         else:
+
             newd1 = self.resample2(sens_str1)
             newd2 = self.resample2(sens_str2)
             if newd1.size > newd2.size:
@@ -444,14 +482,13 @@ class Start(QMainWindow):
 
             time = date_range(self.station.month_collection[0].sensor_collection.sensors[sens_str1].date,
                               periods=resid.size, freq='1min')
+
             self.generic_plot(self.ui.mplwidget_bottom.canvas, time, resid, sens_str1, sens_str2, "Residual",
                               is_interactive=False)
 
     def generic_plot(self, canvas, x, y, sens1, sens2, title, is_interactive):
-        print("GENERIC PLOT CALLED")
-        # self._residual_ax = canvas.figure.subplots()
 
-        line, = self._residual_ax.plot(x, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance
+        line, = self._residual_ax.plot(x, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance.
         line.set_gid(sens2)
         self._residual_fig = canvas.figure
         self._residual_ax.set_title(title)
@@ -474,49 +511,51 @@ class Start(QMainWindow):
         self._residual_ax.figure.tight_layout()
         self.toolbar2 = self._residual_fig.canvas.toolbar  # Get the toolbar handler
         self.toolbar2.update()  # Update the toolbar memory
-
         self._residual_ax.figure.canvas.draw()
 
     def _update_top_canvas(self, sens):
+
         data_flat = self.station.aggregate_months['data'][sens]
         nines_ind = np.where(data_flat == 9999)
-        # nonines_data = data_flat.copy()
-        # nonines_data[nines_ind] = float('nan')
-        # data_flat = nonines_data
-        # data_flat =data_flat - np.nanmean(data_flat)
+
         if (len(nines_ind[0]) < data_flat.size):
-            # data_flat[nines_ind] = float('nan')
-            pass
+            if np.all(np.isnan(data_flat)):
+                self.show_custom_message("Warning", f"The {sens} sensor has no data")
         else:
-            self.show_custom_message("Warning", "The following sensor has no data")
+            self.show_custom_message("Warning", f"The {sens} sensor has no data")
+
         self._static_ax.clear()
-        # disconnect canvas pick and press events when a new sensor is selected
-        # to eliminate multiple callbacks on sensor change
-        # self.static_canvas.mpl_disconnect(self.pidP)
-        # self.static_canvas.mpl_disconnect(self.cidP)
+
+        # Disconnect canvas pick and press events when a new sensor is selected
+        # to eliminate multiple callbacks on sensor change.
         self.ui.mplwidget_top.canvas.mpl_disconnect(self.pid)
         self.ui.mplwidget_top.canvas.mpl_disconnect(self.cid)
+
         if self.browser:
             self.browser.onDataEnd -= self.show_message
             self.browser.disconnect()
-        # time = np.arange(data_flat.size)
+
         time = self.station.aggregate_months['time'][sens]
         self.line, = self._static_ax.plot(time, data_flat, '-', picker=5, lw=0.5, markersize=3)
 
         self._static_ax.set_title('select a point you would like to remove and press "D"')
         self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig,
                                     find_outliers(self.station, time, data_flat, sens))
+
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
-        # update event ids so that they can be disconnect on next sensor change
+
+        # Update event ids so that they can be disconnect on next sensor change.
         self.pid = self.ui.mplwidget_top.canvas.mpl_connect('pick_event', self.browser.onpick)
         self.cid = self.ui.mplwidget_top.canvas.mpl_connect('key_press_event', self.browser.onpress)
-        ## need to activate focus onto the mpl canvas so that the keyboard can be used
+
+        # Need to activate focus onto the mpl canvas so that the keyboard can be used.
         self.toolbar1.update()
         self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.ui.mplwidget_top.canvas.setFocus()
 
     def resample2(self, sens_str):
+
         data = self.station.aggregate_months['data'][sens_str].copy()
         nines_ind = np.where(data == 9999)
         data[nines_ind] = float('nan')
@@ -529,16 +568,55 @@ class Start(QMainWindow):
         for j in range(0, len(datas)):
             for i in range(0, int(self.station.month_collection[0].sensor_collection.sensors[sens_str].rate)):
                 min_data.append(float(datas[j] + yc[j]))
-        # nan_ind = np.argwhere(np.isnan(min_data))
-        # min_data[nan_ind] = 9999
+
         return np.asarray(min_data)
 
+    def _plot_on_top_canvas(self, time_series_dict, title=""):
+
+        """
+        Plot multiple sensors on the top canvas.
+        `time_series_dict` is a dict like:
+        {
+            "PRD": (time_array, sealevel_array),
+            "RAD": (time_array, sealevel_array),
+            ...
+        }
+        """
+
+        self._static_ax.clear()
+        self.ui.mplwidget_top.canvas.mpl_disconnect(self.pid)
+        self.ui.mplwidget_top.canvas.mpl_disconnect(self.cid)
+
+        for label, (t, y) in time_series_dict.items():
+            if t.size == 0 or y.size == 0:
+                continue
+            t_dt = [datetime.fromordinal(int(val)) + timedelta(days=val % 1) - timedelta(days=366) for val in t]
+            self._static_ax.plot(t_dt, y, '-', lw=0.5, markersize=3, label=label)
+
+        self._static_ax.set_title(title or "Hourly Averages")
+        self._static_ax.autoscale(enable=True, axis='both', tight=True)
+
+        # Set global x limits based on first series.
+        first_key = next(iter(time_series_dict))
+        t_dt_first = [datetime.fromordinal(int(val)) + timedelta(days=val % 1) - timedelta(days=366) for val in time_series_dict[first_key][0]]
+        self._static_ax.set_xlim([t_dt_first[0], t_dt_first[-1]])
+        self._static_ax.margins(0.05, 0.05)
+        self._static_ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        self._static_ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        self._static_ax.legend(loc='upper left')
+        self.toolbar1.update()
+        self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.ui.mplwidget_top.canvas.setFocus()
+        self.ui.mplwidget_top.canvas.draw()
+
     def show_message(self, *args):
+
         print("SHOW MESSAGE", *args)
-        # choice = QtWidgets.QMessageBox.information(self, 'The end of data has been reached',  'The end of data has been reached', QtWidgets.QMessageBox.Ok)
+
         self.show_custom_message(*args, *args)
 
     def show_ref_dialog(self):
+
         if len(self.station.month_collection) > 1:
             self.show_custom_message("Warning", "Adjusting reference level for multiple months is not tested "
                                                 "and could produce unwanted behaviour. Please load one month only "
@@ -550,30 +628,37 @@ class Start(QMainWindow):
         except AttributeError:
             self.show_custom_message("Error!", "Data needs to be loaded first.")
             return
+
         else:
+
             if self.is_digit(str(self.ui.refLevelEdit.text())):
-                # text, result = QtWidgets.QInputDialog.getText(self, 'My Input Dialog', 'Enter start date and time:')
+
                 date, time, result = DateDialog.getDateTime(self)
                 ISOstring = date_time_to_isostring(date, time)
+
                 if result:
+
                     new_REF = int(str(self.ui.refLevelEdit.text()))
                     months_updated, ref_diff, new_header = self.station.update_header_reference_level(date, new_REF,
                                                                                                       self.sens_str)
                     self.ui.lineEdit.setText(new_header)
-                    # offset the data
+
+                    # Offset the data.
                     if months_updated == 0:
                         self.show_custom_message("Warning!", "The date picked is not within the available range")
                     else:
                         # TODO: We could now maybe offset the data directly on sensor object as opposed ot offsetting
-                        #  it through the matplotlib widget by writing a new method on sensor similar to the two new
-                        #  methods added. This method would just take the new_ref (from which it calculates ref_diff)
-                        #  and ISOstring
+                        # it through the matplotlib widget by writing a new method on sensor similar to the two new
+                        # methods added. This method would just take the new_ref (from which it calculates ref_diff)
+                        # and ISOstring.
                         self.browser.offset_data(ISOstring, ref_diff)
+
             else:
                 self.show_custom_message("Error!", "The value entered is not a number.")
                 return
 
     def is_digit(self, n):
+
         try:
             int(n)
             return True
@@ -581,27 +666,31 @@ class Start(QMainWindow):
             return False
 
     def show_custom_message(self, title, descrip):
+
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
     def save_button(self):
+
         if self.station:
-            # updates all the user made changes (data cleaning) for all the data loaded
+
+            # Updates all the user made changes (data cleaning) for all the data loaded.
             self.station.back_propagate_changes(self.station.aggregate_months['data'])
             text_data = self.station.assemble_ts_text()
             save_path = st.get_path(st.SAVE_KEY)
             self.station.top_level_folder = save_path
-            # high frequency data saved only if we are not dealing with someone else's hourly data
+
+            # High frequency data saved only if we are not dealing with someone else's hourly data.
             if not self.station.month_collection[0]._hourly_data:
                 self.station.save_ts_files(text_data, path=save_path, is_test_mode=self.is_test_mode(),
                                            callback=self.file_saving_notifications)
                 self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
                                               callback=self.file_saving_notifications)
 
-            # 1. Check if the .din file was added and that it still exist at that path
-            #       b) also check that a save folder is set up
-            # 2. If it does. load in the primary channel for our station
-            # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved
-            # 4. Perform filtering and save
+            # 1. Check if the .din file was added and that it still exist at that path.
+            #    Also check that a save folder is set up.
+            # 2. If it does exist, load in the primary channel for our station.
+            # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved.
+            # 4. Perform filtering and save.
             if st.get_path(st.DIN_PATH_KEY):
                 din_path = st.get_path(st.DIN_PATH_KEY)
             else:
@@ -611,16 +700,292 @@ class Start(QMainWindow):
                                          "then click the save button again.")
                 return
 
+            # Get the list of files loaded to auto-define the target start and end months.
+            files_loaded = [extractor.in_file.name for extractor in self.station.month_collection]
+
+            # Get the target start and end times in yyyymm format for passing to the fast delivery function.
+            # target_start_month, target_end_month = utils.extract_yyyymm_range(files_loaded)
+            target_start_month, target_end_month = utils.extract_yyyymm_range_from_months(self.station.month_collection)
+
+            # Get the target start and end months based on the files loaded.
             self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
+                                            target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
                                             callback=self.file_saving_notifications)
+
             # annual data saved only if we are not dealing with someone else's hourly data
             if not self.station.month_collection[0]._hourly_data:
                 self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
                                              callback=self.file_saving_notifications)
         else:
+
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
+    def fetch_uh_web_fd_data(self, station_num, mode):
+        """Fetch and parse UH Fast Delivery CSV for a given station and mode."""
+
+        # Url to fast delivery data on the web.
+        url = f"https://uhslc.soest.hawaii.edu/data/csv/fast/{mode}/{mode[0]}{station_num}.csv"
+
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+        except Exception as e:
+            print(f"WARNING: Failed to fetch UH FD {mode} data for station {station_num}: {e}")
+            return None, None
+
+        try:
+
+            # Read raw CSV without header.
+            df = pd.read_csv(StringIO(response.text), header=None)
+
+            if mode == "hourly":
+                # Format: year, month, day, hour, value.
+                df.columns = ["year", "month", "day", "hour", "value"]
+                df["datetime"] = pd.to_datetime(
+                    dict(year=df.year, month=df.month, day=df.day, hour=df.hour), errors="coerce"
+                )
+            else:
+                # Format: year, month, day, value.
+                df.columns = ["year", "month", "day", "value"]
+                df["datetime"] = pd.to_datetime(
+                    dict(year=df.year, month=df.month, day=df.day), errors="coerce"
+                )
+
+            df = df.dropna(subset=["datetime"]) 
+            datetime64_array = np.array([np.datetime64(d) for d in df["datetime"]])
+            fd_time = np.array(utils.datenum2(datetime64_array))
+            fd_sealevel = df["value"].astype(float).to_numpy()
+            return fd_time, fd_sealevel
+
+        except Exception as e:
+            print(f"WARNING: Failed to parse UH FD {mode} CSV for station {station_num}: {e}")
+            return None, None
+
+    def plot_fast_delivery(self, mode):
+
+        # If no station data, do nothing.
+        if not self.station:
+            return
+
+        # Disable residual buttons when plotting fast delivery.
+        for button in self.ui.buttonGroup_residual.buttons():
+            button.setChecked(False)
+            button.setEnabled(False)
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+
+        # Flags used to track plotting.
+        self.fd_active = True
+        self.sens_str = None
+        self._set_resolution_enabled(False)
+
+        # Path to relevant fast delivery data files for plotting.
+        root_path = st.get_path(st.SAVE_KEY)
+        station_num = self.station.month_collection[0].station_id
+        fd_station_dir = 't' + str(station_num)
+        fd_path = os.path.join(root_path, 'production_data', 'fast_delivery', fd_station_dir)
+        all_fd_files = utils.list_station_mat_files(fd_path, str(station_num), mode)
+
+        # Trap and warn if there are no fast delivery files for the station in the production_data directory.
+        if not all_fd_files:
+            self._static_ax.cla()
+            self._static_ax.figure.canvas.draw()
+            QtWidgets.QMessageBox.warning(self, "No Data", f"No {mode} FD files exist in the production_data directory for station {station_num}.")
+            return
+
+        # Trap and warn if an issue occurs loading the fast delivery files for the station in the production_data directory.
+        try:
+            fd_time, fd_sealevel = utils.load_and_concatenate_mat_files(all_fd_files)
+        except Exception as e:
+            print(f"ERROR loading {mode} FD files for station {station_num}: {e}")
+            self._static_ax.cla()
+            self._static_ax.figure.canvas.draw()
+            QtWidgets.QMessageBox.warning(self, "No Data", f"Issue loading {mode} FD files in the production_data directory for station {station_num}.")
+            return
+
+        # Fetch UH web FD data.
+        fd_time_web, fd_sealevel_web = self.fetch_uh_web_fd_data(station_num, mode)
+
+        # Clean -32767 placeholders.
+        if fd_time_web is not None and fd_sealevel_web is not None:
+            fd_sealevel_web = np.where(fd_sealevel_web == -32767, np.nan, fd_sealevel_web)
+            mask = ~np.isnan(fd_sealevel_web)
+            fd_time_web = fd_time_web[mask]
+            fd_sealevel_web = fd_sealevel_web[mask]
+
+        # Ensure local and web daily data represents noon for apples to apples comparison.
+        if mode.lower() == "daily":
+            if fd_time is not None:
+                fd_time = np.floor(np.asarray(fd_time, float)) + 0.5
+            if fd_time_web is not None:
+                fd_time_web = np.floor(np.asarray(fd_time_web, float)) + 0.5
+
+        # If no web series, fall back to local-only behavior.
+        if fd_time_web is None or fd_sealevel_web is None:
+
+            # Plot local-only on top.
+            fd_dict = {"FD_local": (fd_time, fd_sealevel)}
+            t_min = fd_time.min()
+            t_max = fd_time.max()
+            x_min_dt = datetime.fromordinal(int(t_min)) + timedelta(days=t_min % 1) - timedelta(days=366)
+            x_max_dt = datetime.fromordinal(int(t_max)) + timedelta(days=t_max % 1) - timedelta(days=366)
+            self._plot_on_top_canvas(fd_dict, title=f"All {mode.capitalize()} Fast Delivery Sea Level Data ({station_num})")
+            self._static_ax.set_xlim([x_min_dt, x_max_dt])
+            self.ui.mplwidget_top.canvas.draw()
+            # Bottom plot: keep empty.
+            self._residual_ax.cla()
+            self._residual_ax.figure.canvas.draw()
+            self.ui.mplwidget_bottom.canvas.draw()
+            return
+
+        # Convert MATLAB datenums to Python datetimes.
+        local_dt = [datetime.fromordinal(int(v)) + timedelta(days=v % 1) - timedelta(days=366) for v in fd_time]
+        web_dt = [datetime.fromordinal(int(v)) + timedelta(days=v % 1) - timedelta(days=366) for v in fd_time_web]
+
+        # If daily, force both series to noon so days align cleanly.
+        if mode.lower() == "daily":
+            local_dt = [d.replace(hour=12, minute=0, second=0, microsecond=0) for d in local_dt]
+            web_dt = [d.replace(hour=12, minute=0, second=0, microsecond=0) for d in web_dt]
+
+        # Index and clean to NaN. 
+        idx_local = pd.to_datetime(local_dt).round("s")
+        idx_web = pd.to_datetime(web_dt).round("s")
+        s_local = pd.Series(fd_sealevel, index=idx_local).replace({-32767: np.nan, 9999: np.nan})
+        s_web = pd.Series(fd_sealevel_web, index=idx_web).replace({-32767: np.nan, 9999: np.nan})
+
+        # If daily: after noon normalization, drop any duplicates per day.
+        if mode.lower() == "daily":
+            s_local = s_local[~s_local.index.duplicated(keep="last")]
+            s_web = s_web[~s_web.index.duplicated(keep="last")]
+
+        # Align on common times only (inner join) and drop NaNs.
+        aligned = pd.concat(
+            [s_local.rename("local"), s_web.rename("web")],
+            axis=1, join="inner"
+        ).dropna()
+
+        # No overlap; warn and keep plots empty to avoid misleading visuals.
+        if aligned.empty:
+            self._static_ax.cla()
+            self._static_ax.figure.canvas.draw()
+            QtWidgets.QMessageBox.warning(
+                self, "No Overlap",
+                f"No overlapping timestamps between local and web {mode} FD data for station {station_num}."
+            )
+            self._residual_ax.cla()
+            self._residual_ax.figure.canvas.draw()
+            return
+
+        # Prepare aligned series.
+        local_mm = aligned["local"].round().to_numpy()
+        web_vals = aligned["web"].to_numpy()
+        common_dt = aligned.index.to_pydatetime()
+        common_matlab = np.array([utils.datenum(d) for d in common_dt], dtype=float)
+
+        # Top plot - web v local comparison.
+        fd_dict = {
+            "FD_web": (common_matlab, web_vals),
+            "FD_local": (common_matlab, local_mm),
+        }
+        t_min = common_matlab.min()
+        t_max = common_matlab.max()
+        x_min_dt = datetime.fromordinal(int(t_min)) + timedelta(days=t_min % 1) - timedelta(days=366)
+        x_max_dt = datetime.fromordinal(int(t_max)) + timedelta(days=t_max % 1) - timedelta(days=366)
+
+        self._plot_on_top_canvas(
+            fd_dict,
+            title=f"Web v Local (Common Times) {mode.capitalize()} Fast Delivery Sea Level Data ({station_num})"
+        )
+        self._static_ax.set_xlim([x_min_dt, x_max_dt])
+        self.ui.mplwidget_top.canvas.draw()
+
+        # Bottom plot - residuals on common times.
+        resid = local_mm - web_vals
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+        self.generic_plot(
+            self.ui.mplwidget_bottom.canvas,
+            aligned.index.to_pydatetime(),  # x-axis is real datetimes here
+            resid,
+            "FD_local",
+            "FD_web",
+            f"{mode.capitalize()} FD Residuals (Local - Web, Common Times)",
+            is_interactive=False
+        )
+        self.ui.mplwidget_bottom.canvas.draw()
+
+    def plot_fast_delivery_web(self, mode):
+        """
+        Plot UH Fast Delivery web data only (no local comparison, no residuals).
+        mode: "daily" or "hourly"
+        """
+
+        # If no station data, do nothing.
+        if not self.station:
+            return
+
+        # Disable residual buttons; clear bottom plot.
+        for button in self.ui.buttonGroup_residual.buttons():
+            button.setChecked(False)
+            button.setEnabled(False)
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+
+        # Flags used to track plotting.
+        self.fd_active = True
+        self.sens_str = None
+        self._set_resolution_enabled(False)
+
+        # Fetch UH web FD data only.
+        station_num = self.station.month_collection[0].station_id
+        fd_time_web, fd_sealevel_web = self.fetch_uh_web_fd_data(station_num, mode)
+
+        # Trap and warn on fetch/parse failure.
+        if fd_time_web is None or fd_sealevel_web is None:
+            self._static_ax.cla()
+            self._static_ax.figure.canvas.draw()
+            QtWidgets.QMessageBox.warning(
+                self,
+                "No Data",
+                f"No {mode} UH web FD data available for station {station_num}."
+            )
+            return
+
+        # Clean placeholders.
+        fd_sealevel_web = np.where(fd_sealevel_web == -32767, np.nan, fd_sealevel_web)
+        mask = ~np.isnan(fd_sealevel_web)
+        fd_time_web = fd_time_web[mask]
+        fd_sealevel_web = fd_sealevel_web[mask]
+
+        # If daily, normalize to noon for a stable daily timestamp.
+        if mode.lower() == "daily":
+            fd_time_web = np.floor(np.asarray(fd_time_web, float)) + 0.5
+
+        # Build dict for the top canvas and compute x-lims.
+        fd_dict = {"FD_web": (fd_time_web, fd_sealevel_web)}
+
+        t_min = fd_time_web.min()
+        t_max = fd_time_web.max()
+        x_min_dt = datetime.fromordinal(int(t_min)) + timedelta(days=t_min % 1) - timedelta(days=366)
+        x_max_dt = datetime.fromordinal(int(t_max)) + timedelta(days=t_max % 1) - timedelta(days=366)
+
+        # Plot web-only data on the top canvas.
+        self._plot_on_top_canvas(
+            fd_dict,
+            title=f"All Web-Only {mode.capitalize()} Fast Delivery Sea Level Data ({station_num})"
+        )
+
+        # Override x-axis accounting for entire web dataset.
+        self._static_ax.set_xlim([x_min_dt, x_max_dt])
+        self.ui.mplwidget_top.canvas.draw()
+
+        # Bottom plot stays empty for web-only view.
+        self._residual_ax.cla()
+        self._residual_ax.figure.canvas.draw()
+        self.ui.mplwidget_bottom.canvas.draw()
+
     def file_saving_notifications(self, success, failure):
+
         if success:
             for m in success:
                 self.show_custom_message(m['title'], m['message'])
