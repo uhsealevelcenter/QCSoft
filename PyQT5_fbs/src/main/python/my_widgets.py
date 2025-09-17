@@ -25,17 +25,23 @@ except AttributeError:
         return s
 
 try:
+
     _encoding = QtWidgets.QApplication.UnicodeUTF8
 
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig, _encoding)
 
 except AttributeError:
+
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
 
 
 class HelpScreen(QMainWindow):
+    """
+    GUI window to manage save/load paths and .din file selection.
+    Provides user interaction for setting application directories.
+    """
 
     clicked = QtCore.pyqtSignal()
 
@@ -67,6 +73,13 @@ class HelpScreen(QMainWindow):
         dinSave.clicked.connect(lambda: self.saveDIN(self.ui.lineEdit_din, st.DIN_PATH_KEY))
 
     def savePath(self, lineEditObj, setStr):
+        """
+        Open folder picker dialog and save selected path to settings.
+
+        Args:
+            lineEditObj: QLineEdit widget to update placeholder text.
+            setStr: Key string for storing the path in settings.
+        """
 
         folder_name = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select a Folder')
 
@@ -79,6 +92,13 @@ class HelpScreen(QMainWindow):
             pass
 
     def saveDIN(self, lineEditObj, setStr):
+        """
+        Open file picker dialog to select a `.din` file and save its path.
+
+        Args:
+            lineEditObj: QLineEdit widget to update placeholder text.
+            setStr: Key string for storing the .din file path in settings.
+        """
 
         filters = "*.din"
         if st.DIN_PATH_KEY:
@@ -98,19 +118,29 @@ class HelpScreen(QMainWindow):
 
 
 def date_time_to_isostring(date, time):
+    """
+    Convert date and time Qt objects to ISO 8601 string.
+
+    Args:
+        date: QDate object.
+        time: QTime object.
+
+    Returns:
+        str: ISO 8601 formatted datetime string.
+    """
 
     return date.toString('yyyy-MM-dd') + 'T' + time.toString("HH:mm")
 
 def moving_average(data, window_size):
-    """ Computes moving average using discrete linear convolution of two one dimensional sequences.
+    """
+    Computes moving average using discrete linear convolution of two one dimensional sequences.
+
     Args:
-    -----
-            data (pandas.Series): independent variable
-            window_size (int): rolling window size
+        data (pandas.Series): independent variable
+        window_size (int): rolling window size
 
     Returns:
-    --------
-            ndarray of linear convolution
+        ndarray of linear convolution
 
     References:
     ------------
@@ -118,6 +148,7 @@ def moving_average(data, window_size):
     [2] API Reference: https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
 
     """
+
     # REMOVE GLOBAL OUTLIERS FROM MOVING AVERAGE CALCULATION nk
     filtered_data = data.copy()
 
@@ -137,6 +168,18 @@ def moving_average(data, window_size):
 
 
 def find_outliers(station, t, data, sens):
+    """
+    Identify outlier indices in sensor data relative to moving average.
+
+    Args:
+        station: Station object containing sensor metadata.
+        t (array-like): Time array.
+        data (array-like): Sensor data array.
+        sens (str): Sensor key string.
+
+    Returns:
+        numpy.ndarray: Indices of detected outliers.
+    """
 
     channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
     _freq = channel_freq + 'min'
@@ -172,6 +215,10 @@ def find_outliers(station, t, data, sens):
 
 
 class Start(QMainWindow):
+    """
+    Main GUI for visualizing and interacting with sensor data.
+    Handles plotting, residuals, reference adjustments, and saving.
+    """
 
     clicked = QtCore.pyqtSignal()
 
@@ -197,19 +244,36 @@ class Start(QMainWindow):
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
 
     def is_test_mode(self):
+        """
+        Check if application is in test mode.
+
+        Returns:
+            bool: True if test mode is enabled, False otherwise.
+        """
 
         # If switch button is in far right position (which is checked state, red button)
         # then test-mode is on and vice-versa for pruduction.
         return self.ui.switchwidget.button.isChecked()
 
     def _set_resolution_enabled(self, enabled: bool):
-        """Enable/disable the Hourly/Minute radio buttons."""
+        """
+        Enable or disable hourly/minute resolution radio buttons.
+
+        Args:
+            enabled (bool): Whether buttons should be enabled.
+        """
 
         if hasattr(self.ui, "buttonGroup_resolution"):
             for b in self.ui.buttonGroup_resolution.buttons():
                 b.setEnabled(enabled)
 
     def make_sensor_buttons(self, sensors):
+        """
+        Create sensor radio and checkbox buttons dynamically.
+
+        Args:
+            sensors (dict): Mapping of sensor names to sensor objects.
+        """
 
         if self.station.is_sampling_inconsistent():
             self.show_custom_message("Error", "It appears that the sampling rate for one of the sensors differs "
@@ -305,6 +369,12 @@ class Start(QMainWindow):
         self.ui.verticalLayout_left_top.addWidget(self.hourly_web_button)
 
     def on_sensor_changed(self, btn):
+        """
+        Handle sensor selection changes and update plots.
+
+        Args:
+            btn: QRadioButton clicked.
+        """
 
         if btn.text() == "ALL":
             # TODO: plot_all and plot should be merged to one function.
@@ -338,12 +408,21 @@ class Start(QMainWindow):
         self._residual_ax.figure.canvas.draw()
 
     def on_frequency_changed(self, btn):
+        """
+        Handle frequency radio button changes.
+
+        Args:
+            btn: QRadioButton clicked.
+        """
 
         print("Frequency changed", btn.text())
         self.mode = btn.text()
         self.on_residual_sensor_changed()
 
     def update_graph_values(self):
+        """
+        Synchronize modified data on plot with station object.
+        """
 
         # Convert 'nans' back to 9999s.
         nan_ind = np.argwhere(np.isnan(self.browser.data))
@@ -355,6 +434,9 @@ class Start(QMainWindow):
         self.station.aggregate_months['data'][self.sens_str] = self.browser.data
 
     def on_residual_sensor_changed(self):
+        """
+        Update residual plot based on selected residual sensor(s).
+        """
 
         # Safety measure to ensure no residual buttons available when fast delivery is selected.
         if hasattr(self, "fd_active") and self.fd_active:
@@ -376,6 +458,12 @@ class Start(QMainWindow):
             self._residual_ax.figure.canvas.draw()
 
     def plot(self, all=False):
+        """
+        Plot selected sensor data or all sensors on top canvas.
+
+        Args:
+            all (bool): If True, plot all sensors; otherwise selected.
+        """
 
         # Set the data browser object to NoneType on every file load.
         self.browser = None
@@ -429,6 +517,14 @@ class Start(QMainWindow):
                 self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
+        """
+        Compute residuals between two sensors and plot them.
+
+        Args:
+            sens_str1 (str): First sensor key.
+            sens_str2 (str): Second sensor key.
+            mode (str): Plotting mode ("Hourly" or "Minute").
+        """
 
         if mode == "Hourly":
             data_obj = {}
@@ -487,6 +583,18 @@ class Start(QMainWindow):
                               is_interactive=False)
 
     def generic_plot(self, canvas, x, y, sens1, sens2, title, is_interactive):
+        """
+        Generic plotting function for residual or comparison plots.
+
+        Args:
+            canvas: Matplotlib canvas.
+            x (array-like): Time values.
+            y (array-like): Data values.
+            sens1 (str): Label for first sensor.
+            sens2 (str): Label for second sensor.
+            title (str): Plot title.
+            is_interactive (bool): Whether to enable point browser.
+        """
 
         line, = self._residual_ax.plot(x, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance.
         line.set_gid(sens2)
@@ -514,6 +622,12 @@ class Start(QMainWindow):
         self._residual_ax.figure.canvas.draw()
 
     def _update_top_canvas(self, sens):
+        """
+        Refresh the top canvas with data for a specific sensor.
+
+        Args:
+            sens (str): Sensor key string.
+        """
 
         data_flat = self.station.aggregate_months['data'][sens]
         nines_ind = np.where(data_flat == 9999)
@@ -555,6 +669,15 @@ class Start(QMainWindow):
         self.ui.mplwidget_top.canvas.setFocus()
 
     def resample2(self, sens_str):
+        """
+        Resample sensor data to minute resolution.
+
+        Args:
+            sens_str (str): Sensor key string.
+
+        Returns:
+            numpy.ndarray: Resampled data array.
+        """
 
         data = self.station.aggregate_months['data'][sens_str].copy()
         nines_ind = np.where(data == 9999)
@@ -572,15 +695,17 @@ class Start(QMainWindow):
         return np.asarray(min_data)
 
     def _plot_on_top_canvas(self, time_series_dict, title=""):
-
         """
-        Plot multiple sensors on the top canvas.
-        `time_series_dict` is a dict like:
-        {
-            "PRD": (time_array, sealevel_array),
-            "RAD": (time_array, sealevel_array),
-            ...
-        }
+        Plot multiple sensor time series on the top canvas.
+
+        Args:
+            time_series_dict (dict): Mapping of sensor names to (time, data) like
+                {
+                    "PRD": (time_array, sealevel_array),
+                    "RAD": (time_array, sealevel_array),
+                    ...
+                }
+            title (str, optional): Title for plot.
         """
 
         self._static_ax.clear()
@@ -610,12 +735,18 @@ class Start(QMainWindow):
         self.ui.mplwidget_top.canvas.draw()
 
     def show_message(self, *args):
+        """
+        Wrapper to display a custom message box.
+        """
 
         print("SHOW MESSAGE", *args)
 
         self.show_custom_message(*args, *args)
 
     def show_ref_dialog(self):
+        """
+        Open dialog for adjusting sensor reference level.
+        """
 
         if len(self.station.month_collection) > 1:
             self.show_custom_message("Warning", "Adjusting reference level for multiple months is not tested "
@@ -658,6 +789,15 @@ class Start(QMainWindow):
                 return
 
     def is_digit(self, n):
+        """
+        Check if string can be parsed as integer.
+
+        Args:
+            n (str): Input string.
+
+        Returns:
+            bool: True if integer, False otherwise.
+        """
 
         try:
             int(n)
@@ -666,10 +806,21 @@ class Start(QMainWindow):
             return False
 
     def show_custom_message(self, title, descrip):
+        """
+        Display a custom QMessageBox.
+
+        Args:
+            title (str): Message box title.
+            descrip (str): Message description.
+        """
 
         choice = QtWidgets.QMessageBox.information(self, title, descrip, QtWidgets.QMessageBox.Ok)
 
     def save_button(self):
+        """
+        Save modified sensor data and export to files.
+        Handles test/production modes and fast delivery.
+        """
 
         if self.station:
 
@@ -721,7 +872,17 @@ class Start(QMainWindow):
             self.show_custom_message("Warning", "You haven't loaded any data.")
 
     def fetch_uh_web_fd_data(self, station_num, mode):
-        """Fetch and parse UH Fast Delivery CSV for a given station and mode."""
+        """
+        Fetch and parse UH Fast Delivery CSV data.
+
+        Args:
+            station_num (int): Station identifier.
+            mode (str): "daily" or "hourly".
+
+        Returns:
+            tuple: (numpy.ndarray of times, numpy.ndarray of values),
+                   or (None, None) on failure.
+        """
 
         # Url to fast delivery data on the web.
         url = f"https://uhslc.soest.hawaii.edu/data/csv/fast/{mode}/{mode[0]}{station_num}.csv"
@@ -762,6 +923,12 @@ class Start(QMainWindow):
             return None, None
 
     def plot_fast_delivery(self, mode):
+        """
+        Plot local vs UH web Fast Delivery data with residuals.
+
+        Args:
+            mode (str): "daily" or "hourly".
+        """
 
         # If no station data, do nothing.
         if not self.station:
@@ -916,8 +1083,10 @@ class Start(QMainWindow):
 
     def plot_fast_delivery_web(self, mode):
         """
-        Plot UH Fast Delivery web data only (no local comparison, no residuals).
-        mode: "daily" or "hourly"
+        Plot UH web Fast Delivery data only (no residuals).
+
+        Args:
+            mode (str): "daily" or "hourly".
         """
 
         # If no station data, do nothing.
@@ -985,6 +1154,13 @@ class Start(QMainWindow):
         self.ui.mplwidget_bottom.canvas.draw()
 
     def file_saving_notifications(self, success, failure):
+        """
+        Show notifications for file saving results.
+
+        Args:
+            success (list): List of successful save messages.
+            failure (list): List of failure save messages.
+        """
 
         if success:
             for m in success:
