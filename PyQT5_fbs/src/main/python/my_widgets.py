@@ -46,6 +46,12 @@ class HelpScreen(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+        """
+        Initialize the Help/Settings window and wire up folder pickers.
+
+        Args:
+            parent: Parent UI object containing the relevant Qt widgets.
+        """
 
         super(HelpScreen, self).__init__()
 
@@ -223,6 +229,12 @@ class Start(QMainWindow):
     clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+        """
+        Initialize the main plotting window and UI state.
+
+        Args:
+            parent: Parent UI object with Matplotlib widgets and controls.
+        """
 
         super(Start, self).__init__()
         self.ui = parent
@@ -230,6 +242,9 @@ class Start(QMainWindow):
         self.home()
 
     def home(self):
+        """
+        Set up/refresh plotting canvases, toolbars, and button connections.
+        """
 
         self.ui.mplwidget_top.canvas.figure.clf()
         self.ui.mplwidget_bottom.canvas.figure.clf()
