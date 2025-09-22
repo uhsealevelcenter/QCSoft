@@ -80,6 +80,7 @@ class PointBrowser:
             self.onpan(self.pan_index)
 
         if event.key == 'd':
+            # print('Delete')
             self.ondelete(self.lastind)
             self.ys[self.lastind] = 9999
             if (self.lastind in self.outl):
@@ -207,16 +208,8 @@ class PointBrowser:
     def show_home_view(self):
         self.ax.autoscale(enable=True, axis='x', tight=True)
         self.ax.set_xlim([self.xs[0], self.xs[-1]])
-        ys_masked = self.np.ma.masked_invalid(self.ys)
-        ys_masked = self.np.ma.masked_equal(ys_masked, 9999, copy=False)
-        if ys_masked.count() == 0:
-            self.ax.cla()
-            self.ax.text(0.5, 0.5, "No valid data", ha="center", va="center", transform=self.ax.transAxes)
-            self.ax.figure.canvas.draw()
-            return
-        y_min = ys_masked.min() - 50
-        y_max = ys_masked.max() + 50
-        self.ax.set_ylim(y_min, y_max)
+        self.ax.set_ylim(self.np.nanmin(self.ys) - 50,
+                         self.np.nanmax(self.np.ma.masked_equal(self.ys, 9999, copy=False)) + 50)
         self.ax.margins(0.05, 0.05)
         self.pan_index = -1
 

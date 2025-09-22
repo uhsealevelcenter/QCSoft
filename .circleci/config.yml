@@ -34,7 +34,6 @@ jobs:
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
     steps:
-      - add_ssh_keys
       - checkout
       - python/install-packages:
           pkg-manager: pip
@@ -54,8 +53,8 @@ jobs:
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-shared
     steps:
-      - add_ssh_keys
       - checkout
+      - add_ssh_keys
       - store_test_results:
           path: output/scan
       - store_artifacts:
@@ -95,7 +94,7 @@ jobs:
            export VERSION=`grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\"`
            cd PyQT5_fbs/target
            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
-           rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/tech/fd_tool/UHSLC-QC_$VERSION.deb
+           rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/UHSLC-QC_$VERSION.deb
   build-mac:
     macos:
       xcode: "14.2.0"
@@ -106,8 +105,8 @@ jobs:
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
       - macos/install-rosetta
-      - add_ssh_keys
       - checkout
+      - add_ssh_keys
       # Commands will execute in macOS container
       # with Xcode 12.5.1 installed
       - store_test_results:
@@ -160,7 +159,7 @@ jobs:
            export VERSION=`grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\"`
            cd PyQT5_fbs/target
            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
-           rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/tech/fd_tool/UHSLC-QC_$VERSION.dmg
+           rsync -va ./UHSLC-QC.dmg komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/komar/myrsync/UHSLC-QC_$VERSION.dmg
   build-win:
     executor: win/default
     environment:
