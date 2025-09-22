@@ -90,7 +90,7 @@ jobs:
           command: |
             set -euxo pipefail
             cd PyQT5_fbs
-            pip install -r requirements/linux.txt
+            python -m pip install -r requirements/linux.txt
       - run:
           name: Build uTide hook
           shell: /bin/bash -l -eo pipefail
@@ -150,6 +150,7 @@ jobs:
           command: |
             set -euxo pipefail
             export HOMEBREW_NO_INSTALL_CLEANUP=1
+            export HOMEBREW_NO_INSTALL_FROM_API=1
             # Clean caches
             rm -rf ~/Library/Caches/Homebrew || true
             brew cleanup -s || true
@@ -194,6 +195,10 @@ jobs:
           command: |
             set -euxo pipefail
             export HOMEBREW_NO_INSTALL_CLEANUP=1
+            export HOMEBREW_NO_INSTALL_FROM_API=1
+            cd ~
+            brew update-reset || true
+            brew update
             brew install freetype pkgconf pkg-config libpng pyenv openssl readline sqlite3 xz zlib
             brew reinstall zlib bzip2 || true
       - run:
