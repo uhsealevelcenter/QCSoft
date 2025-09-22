@@ -81,8 +81,8 @@ jobs:
             pyenv local 3.6.7
             pyenv versions
             python -V
-            # Last versions that support Python 3.6
-            python -m pip install --upgrade "pip<22" "setuptools==59.8.0" wheel
+            python -m pip install --upgrade "pip<22"
+            python -m pip install --upgrade "setuptools<60" wheel
             python -m pip --version
       - run:
           name: Install requirements (Linux)
@@ -134,44 +134,47 @@ jobs:
       - attach_workspace:
           at: src
       - run:
-          name: install conda (detect arch)
+          name: install conda (x86_64 for Py3.6 on Apple Silicon)
           command: |
             set -euxo pipefail
-            ARCH="$(uname -m)"
-            MINIFILE="Miniconda3-latest-MacOSX-x86_64.sh"
-            if [ "$ARCH" = "arm64" ]; then
-              MINIFILE="Miniconda3-latest-MacOSX-arm64.sh"
-            fi
+            # Always install Intel (x86_64) Miniconda; we run under Rosetta on M1/M2.
             mkdir -p ~/miniconda3
-            curl -fsSL "https://repo.anaconda.com/miniconda/${MINIFILE}" -o ~/miniconda3/miniconda.sh
+            curl -fsSL "https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o ~/miniconda3/miniconda.sh
             bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
             rm -f ~/miniconda3/miniconda.sh
             ~/miniconda3/bin/conda init bash
+            # Ensure conda resolves x86_64 packages even on arm64 hosts
+            ~/miniconda3/bin/conda config --system --set subdir osx-64
       - run:
           name: reset homebrew taps (fix 404s / bad taps)
           command: |
             set -euxo pipefail
             export HOMEBREW_NO_INSTALL_CLEANUP=1
-
             # Clean caches
             rm -rf ~/Library/Caches/Homebrew || true
             brew cleanup -s || true
-
-            # Force HTTPS remotes (CI often lacks SSH keys)
+            # Force HTTPS remotes (avoid SSH auth)
             git -C "$(brew --repo)" remote set-url origin https://github.com/Homebrew/brew || true
             for tap in core cask cask-versions; do
               if brew tap | grep -qx "homebrew/${tap}"; then
                 git -C "$(brew --repo homebrew/${tap})" remote set-url origin "https://github.com/Homebrew/homebrew-${tap}" || true
               fi
             done
-            # Remove broken/renamed taps first (prevents fetch 128)
-            brew untap homebrew/cask-versions || true
-            # Hard reset brew and repair taps
+            # If cask-versions is present, uninstall its blocking cask(s) so we can untap
+            if brew tap | grep -qx "homebrew/cask-versions"; then
+              brew list --cask | grep -E '^temurin(8|11|17|21)?$' || true
+              # Temurin JDKs commonly come from cask-versions; uninstall any found
+              for jdk in $(brew list --cask | grep -E '^temurin(8|11|17|21)?$' || true); do
+                brew uninstall --cask --force "$jdk" || true
+              done
+              brew untap homebrew/cask-versions || true
+            fi
+            # Hard reset brew, repair taps
             brew update-reset
             brew tap --repair || true
-            # Re-tap essentials over HTTPS
-            brew tap homebrew/core --force-auto-update
-            brew tap homebrew/cask --force-auto-update
+            # Ensure core/cask are present (no deprecated flags)
+            brew tap homebrew/core || true
+            brew tap homebrew/cask || true
             # Final update & sanity check
             brew update
             brew doctor || true
