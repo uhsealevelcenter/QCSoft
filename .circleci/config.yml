@@ -67,9 +67,11 @@ jobs:
       - run: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
       # system deps
       - run: sudo apt update
-      - run: sudo apt -y install ruby
-      - run: gem install dotenv -v 2.8.1
-      - run: gem install fpm
+      - run: sudo apt -y install ruby ruby-dev build-essential
+      - run: sudo gem install --no-document dotenv -v 2.8.1
+      - run: sudo gem install --no-document fpm
+      # sanity check
+      - run: fpm --version
       # Install & select Python 3.6.7 via pyenv, then upgrade pip/setuptools/wheel (Py3.6-safe)
       - run:
           name: Install Python 3.6.7 and prep toolchain
@@ -289,7 +291,6 @@ workflows:
     # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
     jobs:
       - test
-#      - build-linux
       - build-linux:
           requires: 
             - test
