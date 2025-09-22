@@ -45,12 +45,9 @@ jobs:
           name: Run tests
           command: python -m unittest
   build-linux:
-    machine: # executor type
-      image: ubuntu-2004:current  # recommended linux image - includes Ubuntu 20.04, docker 19.03.13, docker-compose 1.27.4
-#    macos:
-#      xcode: 11.7.0
+    machine:
+      image: ubuntu-2004:current
     environment:
-#      HOMEBREW_NO_AUTO_UPDATE: 1
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-shared
     steps:
@@ -63,39 +60,58 @@ jobs:
       - run: rsync --version
       - attach_workspace:
           at: src
-
+      # pyenv setup
       - run: echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
       - run: echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
       - run: git clone https://github.com/pyenv/pyenv.git ~/.pyenv
       - run: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
+      # system deps
       - run: sudo apt update
-      - run: sudo apt install ruby
+      - run: sudo apt -y install ruby
       - run: gem install dotenv -v 2.8.1
       - run: gem install fpm
-      - run: echo $PYTHON_CONFIGURE_OPTS && cd PyQT5_fbs && pyenv install 3.6.7
-#      - run: cd PyQT5_fbs && pyenv versions
+      # Install & select Python 3.6.7 via pyenv, then upgrade pip/setuptools/wheel (Py3.6-safe)
       - run:
-          name: Activate python 3.6.7 and install requirements
-          command: cd PyQT5_fbs && pyenv local 3.6.7 && pyenv versions && pip3 install -r requirements/linux.txt
+          name: Install Python 3.6.7 and prep toolchain
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            set -euxo pipefail
+            cd PyQT5_fbs
+            pyenv install -s 3.6.7
+            pyenv local 3.6.7
+            pyenv versions
+            python -V
+            # Last versions that support Python 3.6
+            python -m pip install --upgrade "pip<22" "setuptools==59.8.0" wheel
+            python -m pip --version
+      - run:
+          name: Install requirements (Linux)
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            set -euxo pipefail
+            cd PyQT5_fbs
+            pip install -r requirements/linux.txt
       - run:
           name: Build uTide hook
+          shell: /bin/bash -l -eo pipefail
           command: cd PyQT5_fbs && python make_hooks.py
       - run:
           name: Freeze the app
+          shell: /bin/bash -l -eo pipefail
           command: cd PyQT5_fbs && fbs freeze
       - run:
           name: Build the deb file
+          shell: /bin/bash -l -eo pipefail
           command: cd PyQT5_fbs && fbs installer
-#      - run: cd PyQT5_fbs/target
       - attach_workspace:
           at: src
       - run:
           name: Copy the deb file to wyrtki
           command: |
-           export VERSION=`grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\"`
-           cd PyQT5_fbs/target
-           echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
-           rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/tech/fd_tool/UHSLC-QC_$VERSION.deb
+            export VERSION=$(grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\")
+            cd PyQT5_fbs/target
+            echo 'wyrtki.soest.hawaii.edu ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAJJyf1/zR4Lt5IA/+dY1VIqBHi5ZUx9/PYIYiHEW6b8rZBnR7gu7U7iqJiBn3Ob9m3YpQgqZD47zaaaHQ/Ykkc=' >> ~/.ssh/known_hosts
+            rsync -va ./UHSLC-QC.deb komar@wyrtki.soest.hawaii.edu:/srv/htdocs/uhslc.soest.hawaii.edu/tech/fd_tool/UHSLC-QC_$VERSION.deb
   build-mac:
     macos:
       xcode: "14.2.0"
@@ -117,39 +133,57 @@ jobs:
       - run: rsync --version
       - attach_workspace:
           at: src
-
       - run:
-          name: install conda bits
-          command: |
-            mkdir -p ~/miniconda3
-            curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o ~/miniconda3/miniconda.sh
-            bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
-            rm -rf ~/miniconda3/miniconda.sh
-            ~/miniconda3/bin/conda init bash
-      - run:
-          name: reset homebrew taps (fix 404s)
+          name: install conda (detect arch)
           command: |
             set -euxo pipefail
-            # Avoid auto-cleanup churn on CI (optional)
+            ARCH="$(uname -m)"
+            MINIFILE="Miniconda3-latest-MacOSX-x86_64.sh"
+            if [ "$ARCH" = "arm64" ]; then
+              MINIFILE="Miniconda3-latest-MacOSX-arm64.sh"
+            fi
+            mkdir -p ~/miniconda3
+            curl -fsSL "https://repo.anaconda.com/miniconda/${MINIFILE}" -o ~/miniconda3/miniconda.sh
+            bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+            rm -f ~/miniconda3/miniconda.sh
+            ~/miniconda3/bin/conda init bash
+      - run:
+          name: reset homebrew taps (fix 404s / bad taps)
+          command: |
+            set -euxo pipefail
             export HOMEBREW_NO_INSTALL_CLEANUP=1
-            # Nuke stale caches that can lock you to old core SHAs
+
+            # Clean caches
             rm -rf ~/Library/Caches/Homebrew || true
             brew cleanup -s || true
-            # Hard reset all taps to remote HEAD (fixes the libpng.rb 404)
+
+            # Force HTTPS remotes (CI often lacks SSH keys)
+            git -C "$(brew --repo)" remote set-url origin https://github.com/Homebrew/brew || true
+            for tap in core cask cask-versions; do
+              if brew tap | grep -qx "homebrew/${tap}"; then
+                git -C "$(brew --repo homebrew/${tap})" remote set-url origin "https://github.com/Homebrew/homebrew-${tap}" || true
+              fi
+            done
+            # Remove broken/renamed taps first (prevents fetch 128)
+            brew untap homebrew/cask-versions || true
+            # Hard reset brew and repair taps
             brew update-reset
             brew tap --repair || true
-            git -C "$(brew --repo homebrew/core)" reset --hard origin/HEAD || true
+            # Re-tap essentials over HTTPS
+            brew tap homebrew/core --force-auto-update
+            brew tap homebrew/cask --force-auto-update
+            # Final update & sanity check
             brew update
             brew doctor || true
       - run:
           name: create python 3.6.7 environment
           shell: /bin/bash -l -eo pipefail
           command: |
-            # Ensure conda is available in non-interactive shells
             source ~/.bash_profile || true
             conda create -y -q -n py367 python==3.6.7
             conda activate py367
-            python -m pip install --upgrade pip
+            # Pin to the last versions that support Python 3.6
+            python -m pip install --upgrade "pip<22" "setuptools<60" wheel
             python -V
             echo 'conda activate py367' >> ~/.bash_profile
       - run:
@@ -158,20 +192,36 @@ jobs:
             set -euxo pipefail
             export HOMEBREW_NO_INSTALL_CLEANUP=1
             brew install freetype pkgconf pkg-config libpng pyenv openssl readline sqlite3 xz zlib
-            # Only needed if you truly require the bottled copies:
             brew reinstall zlib bzip2 || true
       - run:
           name: Install requirements
-          command: cd PyQT5_fbs && pip install -r requirements/mac.txt
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            source ~/.bash_profile || true
+            conda activate py367
+            cd PyQT5_fbs
+            pip install -r requirements/mac.txt
       - run:
           name: Build uTide hook
-          command: cd PyQT5_fbs && python make_hooks.py
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            source ~/.bash_profile || true
+            conda activate py367
+            cd PyQT5_fbs && python make_hooks.py
       - run:
           name: Freeze the app
-          command: cd PyQT5_fbs && fbs freeze
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            source ~/.bash_profile || true
+            conda activate py367
+            cd PyQT5_fbs && fbs freeze
       - run:
           name: Build the dmg file
-          command: cd PyQT5_fbs && fbs installer
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            source ~/.bash_profile || true
+            conda activate py367
+            cd PyQT5_fbs && fbs installer
 #      - run: cd PyQT5_fbs/target
       - attach_workspace:
           at: src
