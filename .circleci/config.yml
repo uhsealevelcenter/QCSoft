@@ -46,7 +46,7 @@ jobs:
           command: python -m unittest
   build-linux:
     machine: # executor type
-      image: ubuntu-2004:202010-01 # # recommended linux image - includes Ubuntu 20.04, docker 19.03.13, docker-compose 1.27.4
+      image: ubuntu-2004:current # # recommended linux image - includes Ubuntu 20.04, docker 19.03.13, docker-compose 1.27.4
 #    macos:
 #      xcode: 11.7.0
     environment:
@@ -127,18 +127,39 @@ jobs:
             rm -rf ~/miniconda3/miniconda.sh
             ~/miniconda3/bin/conda init bash
       - run:
-          name: create python 3.6.7 environment
+          name: reset homebrew taps (fix 404s)
           command: |
-            source ~/.bash_profile
+            set -euxo pipefail
+            # Avoid auto-cleanup churn on CI (optional)
+            export HOMEBREW_NO_INSTALL_CLEANUP=1
+            # Nuke stale caches that can lock you to old core SHAs
+            rm -rf ~/Library/Caches/Homebrew || true
+            brew cleanup -s || true
+            # Hard reset all taps to remote HEAD (fixes the libpng.rb 404)
+            brew update-reset
+            brew tap --repair || true
+            git -C "$(brew --repo homebrew/core)" reset --hard origin/HEAD || true
+            brew update
+            brew doctor || true
+      - run:
+          name: create python 3.6.7 environment
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            # Ensure conda is available in non-interactive shells
+            source ~/.bash_profile || true
             conda create -y -q -n py367 python==3.6.7
             conda activate py367
             python -m pip install --upgrade pip
             python -V
             echo 'conda activate py367' >> ~/.bash_profile
-      - run: brew install freetype pkg-config libpng pyenv openssl readline sqlite3 xz zlib
-      - run: brew reinstall zlib bzip2
-      - run: sudo rm -rf /Library/Developer/CommandLineTools
-      - run: xcode-select --install
+      - run:
+          name: install brew deps
+          command: |
+            set -euxo pipefail
+            export HOMEBREW_NO_INSTALL_CLEANUP=1
+            brew install freetype pkgconf pkg-config libpng pyenv openssl readline sqlite3 xz zlib
+            # Only needed if you truly require the bottled copies:
+            brew reinstall zlib bzip2 || true
       - run:
           name: Install requirements
           command: cd PyQT5_fbs && pip install -r requirements/mac.txt
