@@ -81,17 +81,16 @@ class ApplicationWindow(QMainWindow):
                     # path = "C:\\Users\\komar\\OneDrive\\Desktop\\monp"
                     path = os.path.expanduser('~')
             self.file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', path, filters)
-        # file_name = QtWidgets.QFileDialog.getOpenFileNames(self, 'Open File', filter)
 
-        # Validating files selected
+        # Validating files selected.
         if is_valid_files(self.file_name[0]):
             pass
         else:
             self.critical_dialog(title="ERROR",
                                  text="Warning, wrong files selected",
-                                 info_text="The files need to belong to the adjacent months and the same station and "
-                                           "they all need to be contained within a single year. Please select valid "
-                                           "files to continue",
+                                 info_text=("Files must be from the same station and be consecutive months "
+                                            "in chronological order (e.g., Dec → Jan is allowed). "
+                                            "Please select valid files to continue."),
                                  details=''''MAC:
             The files are loaded in order in which they were selected. Select files from the oldest to the youngest.\nWINDOWS:
             The order is determined by the file order in the File Explorer. The files should be sorted by name before selecting them.
@@ -99,8 +98,7 @@ class ApplicationWindow(QMainWindow):
             return
 
         try:
-            # in_file = open(name[0],'r')
-            # self.file_name[0] is an array of filenames loaded
+            # self.file_name[0] is an array of filenames loaded.
             month_count = len(self.file_name[0])
             self.ui.lineEdit_2.setText("Loaded: " + str(month_count) + " months")
 
