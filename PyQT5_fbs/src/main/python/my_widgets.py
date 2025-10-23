@@ -834,57 +834,75 @@ class Start(QMainWindow):
     def save_button(self):
         """
         Save modified sensor data and export to files.
-        Handles test/production modes and fast delivery.
+
+        This method performs full data export for the currently loaded station.
+        It now ensures that all output products — time-series text files, MATLAB
+        high-frequency files, and fast delivery datasets — are saved over a
+        **consistent (start_yyyymm, end_yyyymm)** range derived from the loaded
+        months.
+
+        Behavior:
+            1. Applies all user edits (data cleaning) to loaded data.
+            2. Determines a common date range using
+                :func:`utils.extract_yyyymm_range_from_months`.
+            3. Exports:
+                - `.dat` time-series files
+                - `.mat` high-frequency files
+                - fast-delivery merged files
+            4. If available, also exports annual summaries.
+            5. Displays a warning if no data or missing `.din` path.
+
+        Raises:
+            Warning dialog if no data is loaded or `.din` file path is missing.
         """
 
-        if self.station:
-
-            # Updates all the user made changes (data cleaning) for all the data loaded.
-            self.station.back_propagate_changes(self.station.aggregate_months['data'])
-            text_data = self.station.assemble_ts_text()
-            save_path = st.get_path(st.SAVE_KEY)
-            self.station.top_level_folder = save_path
-
-            # High frequency data saved only if we are not dealing with someone else's hourly data.
-            if not self.station.month_collection[0]._hourly_data:
-                self.station.save_ts_files(text_data, path=save_path, is_test_mode=self.is_test_mode(),
-                                           callback=self.file_saving_notifications)
-                self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
-                                              callback=self.file_saving_notifications)
-
-            # 1. Check if the .din file was added and that it still exist at that path.
-            #    Also check that a save folder is set up.
-            # 2. If it does exist, load in the primary channel for our station.
-            # 3. If it does not exist, display a warning message on how to add it and that the FD data won't be saved.
-            # 4. Perform filtering and save.
-            if st.get_path(st.DIN_PATH_KEY):
-                din_path = st.get_path(st.DIN_PATH_KEY)
-            else:
-                self.show_custom_message("Warning",
-                                         "The fast delivery data cannot be processed because you haven't selected"
-                                         "the .din file location. Press F1 to access the menu to select it. And "
-                                         "then click the save button again.")
-                return
-
-            # Get the list of files loaded to auto-define the target start and end months.
-            files_loaded = [extractor.in_file.name for extractor in self.station.month_collection]
-
-            # Get the target start and end times in yyyymm format for passing to the fast delivery function.
-            # target_start_month, target_end_month = utils.extract_yyyymm_range(files_loaded)
-            target_start_month, target_end_month = utils.extract_yyyymm_range_from_months(self.station.month_collection)
-
-            # Get the target start and end months based on the files loaded.
-            self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
-                                            target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
-                                            callback=self.file_saving_notifications)
-
-            # annual data saved only if we are not dealing with someone else's hourly data
-            if not self.station.month_collection[0]._hourly_data:
-                self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
-                                             callback=self.file_saving_notifications)
-        else:
-
+        if not self.station:
             self.show_custom_message("Warning", "You haven't loaded any data.")
+            return
+
+        if not self.station.month_collection:
+            self.show_custom_message("Warning", "No monthly data available to save.")
+            return
+
+        # Updates all the user made changes (data cleaning) for all the data loaded.
+        self.station.back_propagate_changes(self.station.aggregate_months['data'])
+        text_data = self.station.assemble_ts_text()
+        save_path = st.get_path(st.SAVE_KEY)
+        self.station.top_level_folder = save_path
+
+        # Get the target start and end times in yyyymm format for output valid over a
+        # consistent date range.
+        target_start_month, target_end_month = utils.extract_yyyymm_range_from_months(self.station.month_collection)
+
+        # High frequency data saved only if we are not dealing with someone else's hourly data.
+        if not self.station.month_collection[0]._hourly_data:
+            self.station.save_ts_files(text_data, path=save_path, is_test_mode=self.is_test_mode(),
+                                       target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
+                                       callback=self.file_saving_notifications)
+            self.station.save_mat_high_fq(path=save_path, is_test_mode=self.is_test_mode(),
+                                          target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
+                                          callback=self.file_saving_notifications)
+
+        # Fast delivery export (requires .din path)
+        din_path = st.get_path(st.DIN_PATH_KEY)
+        if not din_path:
+            self.show_custom_message(
+                "Warning",
+                "The fast delivery data cannot be processed because you haven't selected "
+                "the .din file location. Press F1 to open the menu and select it, then "
+                "click Save again.",
+            )
+            return
+
+        # Save fast delivery
+        self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
+                                        target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
+                                        callback=self.file_saving_notifications)
+
+        # annual data saved only if we are not dealing with someone else's hourly data
+        if not self.station.month_collection[0]._hourly_data:
+            self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
+                                         callback=self.file_saving_notifications)
 
     def fetch_uh_web_fd_data(self, station_num, mode):
         """
