@@ -4,5 +4,27 @@
     "author": "Nemo K.",
     "public_settings":["app_name","version"],
     "version": "2.6.0",
-    "hidden_imports": ["utide","darkdetect","pandas._libs.tslibs.timedeltas", "pandas._libs.tslibs.np_datetime", "pandas._libs.tslibs.nattype", "pandas._libs.skiplist"]
+    "hidden_imports": [
+        "utide",
+        "darkdetect",
+        "pandas._libs.tslibs.timedeltas",
+        "pandas._libs.tslibs.np_datetime",
+        "pandas._libs.tslibs.nattype",
+        "pandas._libs.skiplist",
+        "psycopg2",
+        "psycopg2.extras",
+        "psycopg2.extensions",
+        "psycopg2._psycopg",
+        "dotenv",
+        "uhslc_station_tools.db",
+        "uhslc_station_tools.db.config",
+        "uhslc_station_tools.db.connection",
+        "uhslc_station_tools.db.envfile",
+        "uhslc_station_tools.datasource",
+        "uhslc_station_tools.datasource.queries",
+        "uhslc_station_tools.datasource.timescale_source",
+        "db_overlay",
+        "db_overlay.extract",
+        "db_overlay.spec"
+    ]
 }

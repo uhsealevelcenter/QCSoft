@@ -4,7 +4,9 @@ import matplotlib.dates as mdates
 from pandas import Series, date_range
 
 import os
+import logging
 import requests
+import numpy as np
 import pandas as pd
 import settings as st
 import uhslc_station_tools.utils
@@ -12,6 +14,7 @@ from io import StringIO
 from dialogs import DateDialog
 from interactive_plot import PointBrowser
 from uhslc_station_tools.sensor import *
+from pandas import Series
 
 if is_pyqt5():
     pass
@@ -35,6 +38,54 @@ except AttributeError:
 
     def _translate(context, text, disambig):
         return QtWidgets.QApplication.translate(context, text, disambig)
+
+def _db_debug_enabled():
+
+    return str(os.getenv("TSDB_LOG_DEBUG", "0")).strip().lower() in ("1", "true", "on")
+
+def debug_print_db_series(sensor_name, t_db, y_db):
+    """
+    Print DB overlay data as a dataframe with useful diagnostics.
+    Safe for debugging and will not modify the data.
+    """
+
+    try:
+        df = pd.DataFrame({
+            "time": t_db,
+            "value_mm": y_db
+        })
+
+        if _db_debug_enabled():
+            print("\n================ DB OVERLAY DEBUG ================")
+            print("Sensor:", sensor_name)
+            print("Rows:", len(df))
+
+            print("\nHead:")
+            print(df.head(10))
+
+            print("\nTail:")
+            print(df.tail(10))
+
+            print("\nSummary statistics:")
+            print(df["value_mm"].describe())
+
+            print("\nSpecial values:")
+            print("NaN count:", df["value_mm"].isna().sum())
+            print("9999 count:", np.sum(df["value_mm"] == 9999))
+            print("9.999 count:", np.sum(df["value_mm"] == 9.999))
+            print("-131072 count:", np.sum(df["value_mm"] == -131072))
+
+            print("\nExtremes:")
+            print("Min:", np.nanmin(df["value_mm"]))
+            print("Max:", np.nanmax(df["value_mm"]))
+
+            print("==================================================\n")
+
+            # optional: dump to CSV for inspection
+            # df.to_csv(f"db_overlay_debug_{sensor_name}.csv", index=False)
+
+    except Exception as e:
+        print("DB DEBUG ERROR:", e)
 
 
 class HelpScreen(QMainWindow):
@@ -179,7 +230,7 @@ def find_outliers(station, t, data, sens):
 
     Args:
         station: Station object containing sensor metadata.
-        t (array-like): Time array.
+        t (array-like): Time array (datetime-like objects preferred).
         data (array-like): Sensor data array.
         sens (str): Sensor key string.
 
@@ -188,35 +239,42 @@ def find_outliers(station, t, data, sens):
     """
 
     channel_freq = station.month_collection[0].sensor_collection.sensors[sens].rate
-    _freq = channel_freq + 'min'
+    try:
+        channel_freq = int(channel_freq)
+    except Exception:
+        channel_freq = 60
 
-    nines_ind = np.where(data == 9999)
-    nonines_data = data.copy()
-    nonines_data[nines_ind] = float('nan')
+    _freq = str(channel_freq) + 'min'
 
-    # Get a date range to create pandas time Series using the sampling frequency of the sensor.
-    rng = date_range(t[0], t[-1], freq=_freq)
-    ts = Series(nonines_data, rng)
+    # Ensure missing sentinel handled even if caller didn't mask.
+    nonines_data = np.array(data, dtype=float, copy=True)
+    nonines_data[nonines_data == 9999] = np.nan
 
-    # Resample the data and linearly interpolate the missing values.
+    # Use actual timestamps to avoid date_range length mismatch.
+    idx = pd.to_datetime(t)
+
+    ts = Series(nonines_data, index=idx)
+
+    # Resample and linearly interpolate missing values.
+    # Resample returns a Resampler; interpolate fills the NaNs.
     upsampled = ts.resample(_freq)
     interp = upsampled.interpolate()
 
-    # calculate a window size for moving average routine so the window
-    # size is always 60 minutes long.
-    window_size = 60 // int(channel_freq)
+    # window_size so the window is ~60 minutes long; must be >= 1.
+    window_size = 60 // channel_freq if channel_freq > 0 else 1
+    if window_size < 1:
+        window_size = 1
 
-    # Calculate moving average including the interolated data.
     # moving_average removes big outliers before calculating moving average.
     y_av = moving_average(np.asarray(interp.tolist()), window_size)
 
-    # Calculate the residual between the actual data and the moving average
-    # and then find the data that lies outside of sigma*std.
+    # Residual and sigma thresholding.
     residual = nonines_data - y_av
     std = np.nanstd(residual)
     sigma = 3.0
 
-    itemindex = np.where((nonines_data > y_av + (sigma * std)) | (nonines_data < y_av - (sigma * std)))
+    itemindex = np.where((nonines_data > y_av + (sigma * std)) |
+                         (nonines_data < y_av - (sigma * std)))
     return itemindex
 
 
@@ -240,6 +298,18 @@ class Start(QMainWindow):
         self.ui = parent
         self.station = None
         self.home()
+        
+        # DB overlay state.
+        self._db_overlay_station = None  # Station object loaded from DB
+        self._db_overlay_artists = []  # matplotlib artists for DB overlay
+        self._db_overlay_enabled = False  # whether overlay should be shown
+
+        # Track the spacer widget used to push the DB overlay checkbox down.
+        self._db_overlay_spacer = None
+
+        # While True, Save is temporarily disabled until required background DB
+        # prefetch queries finish or fail.
+        self._db_save_gate_pending = False
 
     def home(self):
         """
@@ -253,7 +323,7 @@ class Start(QMainWindow):
         self.pid = -99
         self.cid = -98
         self.toolbar1 = self._static_fig.canvas.toolbar  # Get the toolbar handler.
-        self.toolbar1.update()  # Update the toolbar memory
+        self.toolbar1.update()  # Update the toolbar memory.
         self._residual_ax = self.ui.mplwidget_bottom.canvas.figure.subplots()
         self.ui.save_btn.clicked.connect(self.save_button)
         self.ui.ref_level_btn.clicked.connect(self.show_ref_dialog)
@@ -269,6 +339,52 @@ class Start(QMainWindow):
         # If switch button is in far right position (which is checked state, red button)
         # then test-mode is on and vice-versa for pruduction.
         return self.ui.switchwidget.button.isChecked()
+
+    def _should_enable_save_button(self):
+        """
+        Determine whether Save should be enabled based on current UI state.
+
+        Save should remain disabled when:
+          - background DB prefetch is still pending
+          - no station is loaded
+          - current selection is ALL
+          - current selected sensor is FSL
+        """
+        if self._db_save_gate_pending:
+            return False
+
+        if not self.station:
+            return False
+
+        # If plotting ALL, Save should stay disabled.
+        if getattr(self, "_plotting_all", False):
+            return False
+
+        # Existing behavior: do not allow save when default FSL path is active.
+        if getattr(self, "sens_str", None) == "FSL":
+            return False
+
+        return True
+
+    def _refresh_save_button_enabled(self):
+        """
+        Apply the correct enabled/disabled state to the Save button based on
+        current station / sensor / DB-gate state.
+        """
+
+        try:
+            self.ui.save_btn.setEnabled(self._should_enable_save_button())
+        except Exception:
+            pass
+
+    def set_db_save_gate_pending(self, pending: bool):
+        """
+        Temporarily disable Save while background DB prefetch is still running.
+        Save is always re-evaluated when pending becomes False.
+        """
+
+        self._db_save_gate_pending = bool(pending)
+        self._refresh_save_button_enabled()
 
     def _set_resolution_enabled(self, enabled: bool):
         """
@@ -297,13 +413,33 @@ class Start(QMainWindow):
             self.station = None
             return
 
+        # Clear old DB overlay immediately when a new station is being loaded.
+        self.reset_db_overlay_for_new_station()
+
+        # If the checkbox/spacer are currently in the layout, remove them so they don't get deleteLater()'d.
+        if hasattr(self, "db_overlay_checkbox") and self.db_overlay_checkbox is not None:
+            try:
+                self.ui.verticalLayout_left_top.removeWidget(self.db_overlay_checkbox)
+                self.db_overlay_checkbox.setParent(None)
+            except Exception:
+                pass
+
+        if hasattr(self, "_db_overlay_spacer") and self._db_overlay_spacer is not None:
+            try:
+                self.ui.verticalLayout_left_top.removeWidget(self._db_overlay_spacer)
+                self._db_overlay_spacer.setParent(None)
+            except Exception:
+                pass
+            self._db_overlay_spacer = None
+
         # Remove all sensor checkbox widgets from the layout every time new data is loaded.
-        for i in range(self.ui.verticalLayout_left_top.count()):
+        for i in reversed(range(self.ui.verticalLayout_left_top.count())):
             item = self.ui.verticalLayout_left_top.itemAt(i)
             widget = item.widget()
             if widget is not None:
                 widget.deleteLater()
-        for i in range(self.ui.verticalLayout_bottom.count()):
+
+        for i in reversed(range(self.ui.verticalLayout_bottom.count())):
             item = self.ui.verticalLayout_bottom.itemAt(i)
             widget = item.widget()
             if widget is not None:
@@ -348,7 +484,6 @@ class Start(QMainWindow):
             self.sensor_dict['FSL'].setEnabled(False)
             self.sensor_dict['ALL'].setEnabled(False)
             self.sens_str = "FSL"
-            self.ui.save_btn.setEnabled(False)
         else:
             self.sensor_dict["PRD"].setChecked(True)
             self.sens_str = "PRD"
@@ -356,6 +491,7 @@ class Start(QMainWindow):
 
         self.sensor_dict2["ALL"].setEnabled(False)
         self.plot(all=False)
+        self._refresh_save_button_enabled()
         self.ui.buttonGroup_data.buttonClicked.connect(self.on_sensor_changed)
         self.ui.buttonGroup_residual.buttonClicked.connect(self.on_residual_sensor_changed)
         self.ui.buttonGroup_resolution.buttonClicked.connect(self.on_frequency_changed)
@@ -382,6 +518,42 @@ class Start(QMainWindow):
         self.ui.buttonGroup_data.addButton(self.hourly_web_button)
         self.hourly_web_button.clicked.connect(lambda: self.plot_fast_delivery_web("hourly"))
         self.ui.verticalLayout_left_top.addWidget(self.hourly_web_button)
+        
+        # Add DB overlay checkbox under the FD buttons, pushed down near the 
+        # bottom of the top-left panel.
+        if hasattr(self, "db_overlay_checkbox") and self.db_overlay_checkbox is not None:
+            try:
+                # Detach from any previous parent/layout
+                self.db_overlay_checkbox.setParent(None)
+            except Exception:
+                pass
+
+            # Add DB overlay checkbox under the FD buttons, pushed down near the
+            # bottom of the top-left panel.
+            if hasattr(self, "db_overlay_checkbox") and self.db_overlay_checkbox is not None:
+                try:
+                    # Ensure it's detached from any previous parent/layout
+                    self.db_overlay_checkbox.setParent(None)
+                except Exception:
+                    pass
+
+                # Create exactly one expanding spacer that we track, so we don't leak spacers across reloads.
+                if getattr(self, "_db_overlay_spacer", None) is not None:
+                    try:
+                        self._db_overlay_spacer.deleteLater()
+                    except Exception:
+                        pass
+                    self._db_overlay_spacer = None
+
+                self._db_overlay_spacer = QtWidgets.QWidget()
+                self._db_overlay_spacer.setSizePolicy(
+                    QtWidgets.QSizePolicy.Preferred,
+                    QtWidgets.QSizePolicy.Expanding
+                )
+
+                self.ui.verticalLayout_left_top.addWidget(self._db_overlay_spacer)
+                self.ui.verticalLayout_left_top.addWidget(self.db_overlay_checkbox)
+
 
     def on_sensor_changed(self, btn):
         """
@@ -393,9 +565,15 @@ class Start(QMainWindow):
 
         if btn.text() == "ALL":
             # TODO: plot_all and plot should be merged to one function.
-            self.ui.save_btn.setEnabled(False)
             self.ui.ref_level_btn.setEnabled(False)
             self._set_resolution_enabled(True)
+            # Force overlay to use PRD (when available) so DB PRD is always de-meaned consistently.
+            try:
+                if hasattr(self, "station") and self.station and "PRD" in self.station.aggregate_months.get("data", {}):
+                    self.sens_str = "PRD"
+            except Exception:
+                pass
+
             self.plot(all=True)
         elif btn.text() in ["Daily FD\nWeb v Local", "Hourly FD\nWeb v Local", 
                             "Daily FD\nAll Web", "Hourly FD\nAll Web"]:
@@ -408,13 +586,14 @@ class Start(QMainWindow):
                     button.setEnabled(True)
                 else:
                     button.setEnabled(False)
-            self.ui.save_btn.setEnabled(True)
             self.ui.ref_level_btn.setEnabled(True)
             self._set_resolution_enabled(True)
             self.sens_str = btn.text()
             self._update_top_canvas(btn.text())
             self.ui.lineEdit.setText(self.station.month_collection[0].sensor_collection.sensors[self.sens_str].header)
             self.update_graph_values()
+
+        self._refresh_save_button_enabled()
 
         # Clear residual buttons and graph when the top sensor is changed.
         for button in self.ui.buttonGroup_residual.buttons():
@@ -482,6 +661,7 @@ class Start(QMainWindow):
 
         # Set the data browser object to NoneType on every file load.
         self.browser = None
+        self._plotting_all = bool(all)
         self._static_ax.cla()
         self._residual_ax.cla()
         self._residual_ax.figure.canvas.draw()
@@ -518,7 +698,6 @@ class Start(QMainWindow):
                 line, = self._static_ax.plot(t, y, '-', picker=5, lw=0.5, markersize=3)  # 5 points tolerance.
                 if all:
                     line.set_label(sens)
-                    self._static_ax.legend()
                 self._static_ax.set_title(title)
 
                 self._static_ax.autoscale(enable=True, axis='both', tight=True)
@@ -528,8 +707,22 @@ class Start(QMainWindow):
                 self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
                 self.ui.mplwidget_top.canvas.setFocus()
                 self.ui.mplwidget_top.canvas.figure.tight_layout()
-                self.toolbar1.update()  # Update the toolbar memory
-                self.ui.mplwidget_top.canvas.draw()
+                self.toolbar1.update()  # Update the toolbar memory.
+
+        # Freeze y-limits based ONLY on file data (non-DB).
+        ymin, ymax = self._static_ax.get_ylim()
+
+        # Draw DB overlay (should not affect final y-lims).
+        self._render_db_overlay_if_possible()
+
+        # Restore file-driven y-limits.
+        self._static_ax.set_ylim(ymin, ymax)
+
+        # If overlay is disabled / not ready, we still need a legend for ALL mode.
+        if all and (not getattr(self, "_db_overlay_enabled", False) or not getattr(self, "_db_overlay_station", None)):
+            self._static_ax.legend(loc="best")
+
+        self.ui.mplwidget_top.canvas.draw()
 
     def calculate_and_plot_residuals(self, sens_str1, sens_str2, mode):
         """
@@ -644,19 +837,20 @@ class Start(QMainWindow):
             sens (str): Sensor key string.
         """
 
-        data_flat = self.station.aggregate_months['data'][sens]
-        nines_ind = np.where(data_flat == 9999)
+        self._plotting_all = False
 
-        if (len(nines_ind[0]) < data_flat.size):
-            if np.all(np.isnan(data_flat)):
-                self.show_custom_message("Warning", f"The {sens} sensor has no data")
-        else:
-            self.show_custom_message("Warning", f"The {sens} sensor has no data")
+        data_flat = self.station.aggregate_months['data'][sens]
+
+        # Copy for plotting/outlier detection only (do not mutate underlying stored data).
+        plot_data = np.array(data_flat, dtype=float, copy=True)
+        plot_data[plot_data == 9999] = np.nan
+
+        if not np.any(np.isfinite(plot_data)):
+            self.show_custom_message("Warning", "The {0} sensor has no data".format(sens))
 
         self._static_ax.clear()
 
-        # Disconnect canvas pick and press events when a new sensor is selected
-        # to eliminate multiple callbacks on sensor change.
+        # Disconnect old callbacks.
         self.ui.mplwidget_top.canvas.mpl_disconnect(self.pid)
         self.ui.mplwidget_top.canvas.mpl_disconnect(self.cid)
 
@@ -665,23 +859,283 @@ class Start(QMainWindow):
             self.browser.disconnect()
 
         time = self.station.aggregate_months['time'][sens]
-        self.line, = self._static_ax.plot(time, data_flat, '-', picker=5, lw=0.5, markersize=3)
 
+        # Plot.
+        self.line, = self._static_ax.plot(time, plot_data, '-', picker=5, lw=0.5, markersize=3)
         self._static_ax.set_title('select a point you would like to remove and press "D"')
-        self.browser = PointBrowser(time, data_flat, self._static_ax, self.line, self._static_fig,
-                                    find_outliers(self.station, time, data_flat, sens))
 
+        # Create browser + run its update (this is likely where your ylim gets overwritten).
+        self.browser = PointBrowser(
+            time, plot_data, self._static_ax, self.line, self._static_fig,
+            find_outliers(self.station, time, plot_data, sens)
+        )
         self.browser.onDataEnd += self.show_message
         self.browser.on_sensor_change_update()
 
-        # Update event ids so that they can be disconnect on next sensor change.
+        # Match original behavior: data-driven autoscale with a small margin.
+        self._static_ax.autoscale(enable=True, axis='both', tight=True)
+        self._static_ax.margins(0.05, 0.05)
+
+        # Also pin x-lims like your plot() method does, so it behaves consistently.
+        try:
+            self._static_ax.set_xlim([time[0], time[-1]])
+        except Exception:
+            pass
+
+        self._static_ax.margins(0.05, 0.05)
+
+        # Reconnect callbacks.
         self.pid = self.ui.mplwidget_top.canvas.mpl_connect('pick_event', self.browser.onpick)
         self.cid = self.ui.mplwidget_top.canvas.mpl_connect('key_press_event', self.browser.onpress)
 
-        # Need to activate focus onto the mpl canvas so that the keyboard can be used.
         self.toolbar1.update()
         self.ui.mplwidget_top.canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.ui.mplwidget_top.canvas.setFocus()
+
+        # Ensure redraw.
+        self.ui.mplwidget_top.canvas.figure.tight_layout()
+
+        # Freeze y-limits based ONLY on file data (non-DB).
+        ymin, ymax = self._static_ax.get_ylim()
+
+        # Draw DB overlay if available (does nothing if not enabled/ready).
+        self._render_db_overlay_if_possible()
+
+        # Restore file-driven y-limits.
+        self._static_ax.set_ylim(ymin, ymax)
+
+        self.ui.mplwidget_top.canvas.draw()
+
+    def set_db_overlay_enabled(self, enabled: bool):
+        """
+        Called by ApplicationWindow when overlay checkbox is toggled.
+        """
+
+        self._db_overlay_enabled = bool(enabled)
+
+        if not self._db_overlay_enabled:
+            # If disabled, remove overlay immediately and keep cached DB station.
+            self._clear_db_overlay_artists()
+        else:
+            # If enabled, draw immediately if we already have DB data.
+            self._render_db_overlay_if_possible()
+
+        try:
+            self.ui.mplwidget_top.canvas.draw_idle()
+        except Exception:
+            pass
+
+    def set_db_overlay_station(self, station_db):
+        """
+        Called by ApplicationWindow when DB overlay data is ready.
+        Stores DB station object and renders overlay if possible.
+        """
+
+        self._db_overlay_station = station_db
+
+        # Only draw if overlay is enabled.
+        self._render_db_overlay_if_possible()
+
+        # Make the overlay appear immediately without requiring a sensor change.
+        try:
+            self.ui.mplwidget_top.canvas.draw_idle()
+        except Exception:
+            pass
+
+    def clear_db_overlay(self):
+        """
+        Called by ApplicationWindow when overlay checkbox is unchecked.
+        Removes overlay lines from the plot (keeps cached DB station object).
+        """
+
+        self._db_overlay_enabled = False
+        self._clear_db_overlay_artists()
+        try:
+            self.ui.mplwidget_top.canvas.draw()
+        except Exception:
+            pass
+
+    def reset_db_overlay_for_new_station(self):
+        """
+        Called when a new station/file is being loaded.
+        Ensures old DB overlay from the previous station does not remain visible.
+        """
+        # Remove any plotted overlay lines immediately.
+        self._clear_db_overlay_artists()
+
+        # Clear the cached DB station so _render_db_overlay_if_possible() becomes a no-op.
+        self._db_overlay_station = None
+
+        # Keep the user's checkbox preference (enabled/disabled) as-is.
+        # If you prefer to force it off while loading, uncomment the next line:
+        # self._db_overlay_enabled = False
+
+        try:
+            self.ui.mplwidget_top.canvas.draw_idle()
+        except Exception:
+            pass
+
+    def _clear_db_overlay_artists(self):
+
+        if not hasattr(self, "_db_overlay_artists") or not self._db_overlay_artists:
+            return
+        for a in list(self._db_overlay_artists):
+            try:
+                a.remove()
+            except Exception:
+                pass
+        self._db_overlay_artists = []
+
+        # Also remove legend if it exists; it will be re-created on next plot.
+        try:
+            leg = self._static_ax.get_legend()
+            if leg is not None:
+                leg.remove()
+        except Exception:
+            pass
+
+    def _render_db_overlay_if_possible(self):
+        """
+        Draw DB overlay on the top plot using the currently selected sensor (self.sens_str).
+
+        Does nothing if:
+        - overlay checkbox is not enabled
+        - no DB station loaded
+        - no current station loaded
+        - fast-delivery mode active
+
+        If plotting 'ALL', overlays all sensors that exist in both the file station and DB station.
+        Otherwise overlays only the currently selected sensor.
+        """
+
+        # If checkbox not enabled, never draw overlay.
+        if not getattr(self, "_db_overlay_enabled", False):
+            return
+
+        # Always clear any existing overlay before re-drawing.
+        self._clear_db_overlay_artists()
+
+        # Must have base station + db station.
+        if not getattr(self, "station", None):
+            return
+        if not getattr(self, "_db_overlay_station", None):
+            return
+
+        # If fast delivery view is active, skip overlay.
+        if hasattr(self, "fd_active") and self.fd_active:
+            return
+
+        # Need an active sensor selection and it must not be ALL.
+        sens = getattr(self, "sens_str", None)
+        # If we're plotting ALL, overlay all sensors that exist in both stations.
+        def _norm(k):
+            return str(k).strip().upper()
+
+        if getattr(self, "_plotting_all", False):
+            base_keys_raw = list(self.station.aggregate_months.get("data", {}).keys())
+            db_keys_raw   = list(self._db_overlay_station.aggregate_months.get("data", {}).keys())
+
+            base_map = {_norm(k): k for k in base_keys_raw}
+            db_map   = {_norm(k): k for k in db_keys_raw}
+
+            common = sorted(set(base_map) & set(db_map))
+            # drop non-sensors
+            common = [k for k in common if k not in ("ALL")]
+
+            # store as pairs so we can index each station correctly even if raw keys differ
+            sens_list = [(base_map[k], db_map[k], k) for k in common]
+        else:
+            if not sens:
+                return
+
+            # Resolve raw keys in each station using normalized mapping (robust to case/whitespace).
+            base_keys_raw = list(self.station.aggregate_months.get("data", {}).keys())
+            db_keys_raw = list(self._db_overlay_station.aggregate_months.get("data", {}).keys())
+
+            base_map = {_norm(k): k for k in base_keys_raw}
+            db_map = {_norm(k): k for k in db_keys_raw}
+
+            k_norm = _norm(sens)
+            base_sens = base_map.get(k_norm)
+            db_sens = db_map.get(k_norm)
+
+            if base_sens is None or db_sens is None:
+                return  # sensor not present in one of the stations
+
+            sens_list = [(base_sens, db_sens, k_norm)]
+
+        # If DB station doesn't have this sensor, skip silently.
+        for base_sens, db_sens, label_sens in sens_list:
+            try:
+                t_db = self._db_overlay_station.aggregate_months["time"][db_sens]
+                y_db = self._db_overlay_station.aggregate_months["data"][db_sens]
+            except Exception:
+                continue
+
+            # Copy database data to np array.
+            y_db = np.array(y_db, dtype=float, copy=True)
+
+            # Mask known missing data sentinels in meters.
+            y_db[np.isclose(y_db, 9.999) | (y_db == 9999.0)] = np.nan
+
+            # Convert meters (DB) -> millimeters (file data units).
+            y_db = y_db * 1000.0
+
+            # Mask other found missing value for de-meaning.
+            y_db[y_db == -131072.0] = np.nan
+
+            # -------- DEBUG PRINT --------
+            debug_print_db_series(label_sens, t_db, y_db)
+            # -----------------------------
+
+            # In ALL mode, match file plotting behavior: demean each series.
+            if getattr(self, "_plotting_all", False):
+                if _db_debug_enabled():
+                    logging.info(
+                        "DB overlay ALL: sens=%s db_sens=%r n=%d finite=%d mean=%.3f",
+                        label_sens, db_sens, len(y_db), int(np.isfinite(y_db).sum()), float(np.nanmean(y_db))
+                    )
+
+                    # --- DEBUG: distribution + extreme negatives ---
+                    finite = y_db[np.isfinite(y_db)]
+                    if finite.size > 0:
+                        p = np.nanpercentile(finite, [0, 0.1, 1, 5, 50, 95, 99, 99.9, 100])
+                        logging.info(
+                            "DB overlay ALL dist %s: n=%d finite=%d "
+                            "p0=%.3f p0.1=%.3f p1=%.3f p5=%.3f p50=%.3f p95=%.3f p99=%.3f p99.9=%.3f p100=%.3f",
+                            label_sens, len(y_db), finite.size,
+                            p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8]
+                        )
+
+                        # Print the 10 most negative finite values with timestamps
+                        idx_finite = np.where(np.isfinite(y_db))[0]
+                        order = np.argsort(y_db[idx_finite])  # ascending
+                        worst = idx_finite[order[:10]]
+                        rows = [(str(t_db[i]), float(y_db[i])) for i in worst]
+                        logging.info("DB overlay ALL worst negatives %s (time, y_mm): %s", label_sens, rows)
+                    # --- end DEBUG ---
+
+                m = np.nanmean(y_db)
+                if np.isnan(m):
+                    m = 0.0
+                y_plot = y_db - m
+                logging.info("DB overlay ALL demean check %s: mean_before=%.3f mean_after=%.3f",
+                            label_sens, float(m), float(np.nanmean(y_plot)))
+            else:
+                y_plot = y_db
+
+            # Plot overlay (use default color cycle; style distinguishes it).
+            try:
+                line_db, = self._static_ax.plot(t_db, y_plot, '--', lw=0.8, alpha=0.3, label=f"{label_sens} (DB)")
+                self._db_overlay_artists.append(line_db)
+            except Exception:
+                continue
+
+        # Rebuild legend once (includes file lines + all DB lines).
+        try:
+            self._static_ax.legend(loc="best")
+        except Exception:
+            pass
 
     def resample2(self, sens_str):
         """
@@ -883,7 +1337,20 @@ class Start(QMainWindow):
                                           target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
                                           callback=self.file_saving_notifications)
 
-        # Fast delivery export (requires .din path)
+            # DB upsert hook; executes only when TSDB_EXECUTE_WRITES=1 and test_mode is off. 
+            try:
+                hook = getattr(self, "db_upsert_hook", None)
+                if callable(hook):
+                    hook(
+                        station=self.station,
+                        target_start_yyyymm=target_start_month,
+                        target_end_yyyymm=target_end_month,
+                        is_test_mode=self.is_test_mode(),
+                    )
+            except Exception:
+                logging.exception("DB upsert hook failed; continuing because file output is primary")
+
+        # Fast delivery export (requires .din path).
         din_path = st.get_path(st.DIN_PATH_KEY)
         if not din_path:
             self.show_custom_message(
@@ -894,12 +1361,24 @@ class Start(QMainWindow):
             )
             return
 
-        # Save fast delivery
+        # Save fast delivery.
         self.station.save_fast_delivery(din_path=din_path, path=save_path, is_test_mode=self.is_test_mode(),
                                         target_start_yyyymm=target_start_month, target_end_yyyymm=target_end_month,
                                         callback=self.file_saving_notifications)
 
-        # annual data saved only if we are not dealing with someone else's hourly data
+        try:
+            fd_hook = getattr(self, "fd_db_upsert_hook", None)
+            if callable(fd_hook):
+                fd_hook(
+                    station=self.station,
+                    target_start_yyyymm=target_start_month,
+                    target_end_yyyymm=target_end_month,
+                    is_test_mode=self.is_test_mode(),
+                )
+        except Exception:
+            logging.exception("FD DB upsert hook failed; continuing because file output is primary")
+
+        # Annual data saved only if we are not dealing with someone else's hourly data.
         if not self.station.month_collection[0]._hourly_data:
             self.station.save_to_annual_file(path=save_path, is_test_mode=self.is_test_mode(),
                                          callback=self.file_saving_notifications)
@@ -918,7 +1397,10 @@ class Start(QMainWindow):
         """
 
         # Url to fast delivery data on the web.
-        url = f"https://uhslc.soest.hawaii.edu/data/csv/fast/{mode}/{mode[0]}{station_num}.csv"
+        station_num_str = str(int(station_num)).zfill(3)
+        url = "https://uhslc.soest.hawaii.edu/data/csv/fast/{0}/{1}{2}.csv".format(
+            mode, mode[0], station_num_str
+        )
 
         try:
             response = requests.get(url, timeout=10)
@@ -1032,6 +1514,7 @@ class Start(QMainWindow):
             self._plot_on_top_canvas(fd_dict, title=f"All {mode.capitalize()} Fast Delivery Sea Level Data ({station_num})")
             self._static_ax.set_xlim([x_min_dt, x_max_dt])
             self.ui.mplwidget_top.canvas.draw()
+            
             # Bottom plot: keep empty.
             self._residual_ax.cla()
             self._residual_ax.figure.canvas.draw()

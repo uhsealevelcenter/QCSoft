@@ -155,5 +155,7 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
-
-
+# Local DB credentials
+.env_db
+*.env_db
+PyQT5_fbs/.env_db

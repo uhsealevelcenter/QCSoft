@@ -60,6 +60,77 @@ pip install -e path_to_station_tools_folder
 You will of course have to replace path_to_station_tools_folder with the actual path to where you checked out the 
 station_tools repo.
 
+#### Optional TimescaleDB / DB-backed workflows
+
+This QCSoft branch can use optional DB-backed functionality from `uhslc_station_tools`, including DB overlay reads and save-time DB reconciliation/write hooks.
+
+The standard file-based QC workflow still depends on `uhslc_station_tools`, but DB-backed functionality additionally requires the station-tools `db` extra:
+
+```bash
+pip install "uhslc-station-tools[db]==0.0.201"
+```
+
+For normal QCSoft setup, this is handled through:
+
+```bash
+pip install -r requirements/mac.txt
+```
+
+or:
+
+```bash
+pip install -r requirements/windows.txt
+```
+
+depending on your platform.
+
+##### Local DB configuration
+
+DB credentials should not be committed.
+
+For local development, copy the example DB environment file:
+
+```bash
+cp PyQT5_fbs/.env_db.example PyQT5_fbs/.env_db
+```
+
+Then edit `PyQT5_fbs/.env_db` with your local credentials.
+
+Before running QCSoft locally, point the station-tools DB loader at that file:
+
+```bash
+export TSDB_ENV_FILE="$PWD/PyQT5_fbs/.env_db"
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:TSDB_ENV_FILE = "$PWD\PyQT5_fbs\.env_db"
+```
+
+Supported DB-related environment variables include:
+
+* `TSDB_HOST`
+* `TSDB_PORT`
+* `TSDB_NAME`
+* `TSDB_USER`
+* `TSDB_PASSWORD`
+* `TSDB_SSLMODE`
+* `TSDB_LOG_SQL`
+* `TSDB_LOG_DEBUG`
+* `TSDB_EXECUTE_WRITES`
+* `TSDB_BACKGROUND_HF_WRITES`
+* `TSDB_OVERLAY_MAX_MONTHS`
+* `TSDB_SAVE_GATE_WATCHDOG_MS`
+
+The committed `.env_db.example` intentionally uses:
+
+```env
+TSDB_EXECUTE_WRITES=0
+```
+
+Set this to `1` only in a private local `.env_db` file when DB writes are intentionally enabled.
+
 ### Running the software
 
 The python source code is located in [src/main/python/](PyQT5_fbs/src/main/python/)

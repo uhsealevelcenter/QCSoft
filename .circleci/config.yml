@@ -23,7 +23,7 @@ jobs:
     # The executor is the environment in which the steps below will be executed - below will use a python 3.9 container
     # Change the version below to your required version of python
     docker:
-      - image: cimg/python:3.7
+      - image: cimg/python:3.6
 #    environment:
 #      DISPLAY: mymachine.com:0.0
     # Add steps to the job
@@ -42,8 +42,12 @@ jobs:
           pip-dependency-file: base.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
           pypi-cache: false
       - run:
+          name: Smoke test DB optional imports
+          command: |
+            PYTHONPATH=PyQT5_fbs/src/main/python python -c "import psycopg2; from uhslc_station_tools.db.config import load_db_params_from_env; from uhslc_station_tools.db.envfile import load_env_db; from uhslc_station_tools.datasource.timescale_source import TimescaleSource; from db_overlay.extract import build_db_request_spec; load_db_params_from_env(); print('DB optional imports OK')"
+      - run:
           name: Run tests
-          command: python -m unittest
+          command: PYTHONPATH=PyQT5_fbs/src/main/python python -m unittest discover
   build-linux:
     machine:
       image: ubuntu-2004:current
@@ -262,6 +266,7 @@ jobs:
             python --version
             cd PyQT5_fbs
             pyenv local 3.6.7
+            c:\users\circleci\.pyenv\pyenv-win\versions\3.6.7\python.exe -m pip install --upgrade "pip<22" "setuptools==59.6.0" "wheel==0.37.1"
             c:\users\circleci\.pyenv\pyenv-win\versions\3.6.7\python.exe -m pip install -r requirements/windows.txt
             pyenv versions
             [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
