@@ -235,9 +235,33 @@ jobs:
           name: Build the dmg file
           shell: /bin/bash -l -eo pipefail
           command: |
+            set -euxo pipefail
             source ~/.bash_profile || true
             conda activate py367
-            cd PyQT5_fbs && fbs installer
+            cd PyQT5_fbs
+
+            # fbs freeze already created target/UHSLC-QC.app.
+            # Avoid fbs installer on Apple Silicon because its bundled create-dmg path
+            # relies on Finder AppleScript / bless behavior that is unreliable in CI.
+            test -d target/UHSLC-QC.app
+
+            rm -rf target/dmg-staging
+            mkdir -p target/dmg-staging
+
+            ditto target/UHSLC-QC.app target/dmg-staging/UHSLC-QC.app
+            ln -s /Applications target/dmg-staging/Applications
+
+            rm -f target/UHSLC-QC.dmg
+
+            hdiutil create \
+              -volname "UHSLC-QC" \
+              -srcfolder target/dmg-staging \
+              -ov \
+              -format UDZO \
+              target/UHSLC-QC.dmg
+
+            hdiutil verify target/UHSLC-QC.dmg
+            ls -lh target/UHSLC-QC.dmg
 #      - run: cd PyQT5_fbs/target
       - attach_workspace:
           at: src
