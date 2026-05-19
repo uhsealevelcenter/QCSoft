@@ -19,5 +19,5 @@ scipy==1.4.1
 sip==4.19.8
 six==1.11.0
 # DB-enabled station_tools release used by QCSoft.
-uhslc-station-tools[db]==0.0.201
+uhslc-station-tools[db]==0.0.208
 utide==0.2.5
