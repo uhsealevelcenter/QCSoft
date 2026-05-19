@@ -4,16 +4,37 @@ import csv
 import time
 import traceback
 import tempfile
-
-try:
-    from uhslc_station_tools.db.envfile import load_env_db
-    load_env_db()
-except Exception:
-    pass
-
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logging.getLogger().setLevel(logging.INFO)
+
+try:
+    from uhslc_station_tools.db.envfile import (
+        find_env_db_path,
+        get_env_db_search_paths,
+        has_db_env,
+        load_env_db,
+    )
+
+    _env_db_path = find_env_db_path()
+    _env_db_loaded = load_env_db()
+
+    if _env_db_loaded and _env_db_path:
+        logging.info("DB env file loaded | path=%s", _env_db_path)
+    elif has_db_env():
+        logging.info("DB env values detected in process environment; no .env_db file was loaded.")
+    else:
+        logging.warning(
+            "No DB env file found; DB-backed overlay/write features may be unavailable. "
+            "Searched: %s",
+            "; ".join(get_env_db_search_paths()),
+        )
+except Exception:
+    logging.exception(
+        "Failed to load DB env configuration; DB-backed overlay/write features may be unavailable."
+    )
+
 logging.info("DB read logging mode | TSDB_LOG_SQL=%s", os.getenv("TSDB_LOG_SQL", "spec"))
 logging.info("DB debug logging mode | TSDB_LOG_DEBUG=%s", os.getenv("TSDB_LOG_DEBUG", "0"))
 

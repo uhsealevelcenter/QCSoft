@@ -1,9 +1,9 @@
 {
     "app_name": "UHSLC-QC",
     "main_module": "src/main/python/main.py",
-    "author": "Nemo K.",
+    "author": "Nemo K.; maintained by Samuel W.",
     "public_settings":["app_name","version"],
-    "version": "2.7.0",
+    "version": "2.7.1",
     "hidden_imports": [
         "utide",
         "darkdetect",
