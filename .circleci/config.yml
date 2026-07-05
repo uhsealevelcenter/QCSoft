@@ -11,35 +11,26 @@ orbs:
   win: circleci/windows@2.2.0
   macos: circleci/macos@2.4.1
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+commands:
+  add_deploy_ssh_key:
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:rOkRMQ7O9mLO3BWX0PD9/zeb11sbL9OqUm50u24FEVw"
+
 jobs:
-  # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-  # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-  test:  # This is the name of the job, feel free to change it to better match what you're trying to do!
-    # These next lines defines a docker executors: https://circleci.com/docs/2.0/executor-types/
-    # You can specify an image from dockerhub or use one of the convenience images from CircleCI's Developer Hub
-    # A list of available CircleCI docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
-    # The executor is the environment in which the steps below will be executed - below will use a python 3.9 container
-    # Change the version below to your required version of python
+  test:
     docker:
       - image: cimg/python:3.6
 #    environment:
 #      DISPLAY: mymachine.com:0.0
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-    # Checkout the code as the first step. This is a dedicated CircleCI step.
-    # The python orb's install-packages step will install the dependencies from a Pipfile via Pipenv by default.
-    # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
-    # Then run your tests!
-    # CircleCI will report the results back to your VCS provider.
     steps:
       - add_ssh_keys
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          app-dir: PyQT5_fbs/requirements  # If you're requirements.txt isn't in the root directory.
-          pip-dependency-file: base.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
+          app-dir: PyQT5_fbs/requirements
+          pip-dependency-file: base.txt
           pypi-cache: false
       - run:
           name: Smoke test DB optional imports
@@ -48,6 +39,7 @@ jobs:
       - run:
           name: Run tests
           command: PYTHONPATH=PyQT5_fbs/src/main/python python -m unittest discover
+
   build-linux:
     machine:
       image: ubuntu-2004:current
@@ -55,29 +47,28 @@ jobs:
       FL_OUTPUT_DIR: output
       PYTHON_CONFIGURE_OPTS: --enable-shared
     steps:
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:rOkRMQ7O9mLO3BWX0PD9/zeb11sbL9OqUm50u24FEVw"
       - checkout
       - store_test_results:
           path: output/scan
       - store_artifacts:
           path: output
       - run: rsync --version
-      - attach_workspace:
-          at: src
+
       # pyenv setup
       - run: echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
       - run: echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
       - run: git clone https://github.com/pyenv/pyenv.git ~/.pyenv
       - run: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
+
       # system deps
       - run: sudo apt update
       - run: sudo apt -y install ruby ruby-dev build-essential
       - run: sudo gem install --no-document dotenv -v 2.8.1
       - run: sudo gem install --no-document fpm
+
       # sanity check
       - run: fpm --version
+
       # Install & select Python 3.6.7 via pyenv, then upgrade pip/setuptools/wheel (Py3.6-safe)
       - run:
           name: Install Python 3.6.7 and prep toolchain
@@ -112,52 +103,20 @@ jobs:
           name: Build the deb file
           shell: /bin/bash -l -eo pipefail
           command: cd PyQT5_fbs && fbs installer
-      - attach_workspace:
-          at: src
       - run:
-          name: Copy the deb file to new wyrtki through kealo
+          name: Stage Linux artifact for deployment
+          shell: /bin/bash -l -eo pipefail
           command: |
             set -euo pipefail
+            test -f PyQT5_fbs/target/UHSLC-QC.deb
+            mkdir -p /tmp/qcsoft-artifacts
+            cp PyQT5_fbs/target/UHSLC-QC.deb /tmp/qcsoft-artifacts/UHSLC-QC.deb
+            ls -lh /tmp/qcsoft-artifacts/UHSLC-QC.deb
+      - persist_to_workspace:
+          root: /tmp/qcsoft-artifacts
+          paths:
+            - UHSLC-QC.deb
 
-            export VERSION=$(grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\")
-            cd PyQT5_fbs/target
-
-            mkdir -p ~/.ssh
-            chmod 700 ~/.ssh
-            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-            chmod 600 ~/.ssh/known_hosts
-
-            {
-              printf '%s\n' 'Host kealo-jump'
-              printf '  HostName %s\n' "$DEPLOY_JUMP_HOST"
-              printf '  User %s\n' "$DEPLOY_JUMP_USER"
-              printf '  HostKeyAlias %s\n' "$DEPLOY_JUMP_HOST"
-              printf '%s\n' '  StrictHostKeyChecking yes'
-              printf '%s\n' '  ForwardAgent no'
-              printf '%s\n' ''
-              printf '%s\n' 'Host new-wyrtki'
-              printf '  HostName %s\n' "$DEPLOY_TARGET_HOST"
-              printf '  User %s\n' "$DEPLOY_TARGET_USER"
-              printf '  HostKeyAlias %s\n' "$DEPLOY_TARGET_HOST"
-              printf '%s\n' '  ProxyJump kealo-jump'
-              printf '%s\n' '  StrictHostKeyChecking yes'
-              printf '%s\n' '  ForwardAgent no'
-            } > ~/.ssh/config
-
-            chmod 600 ~/.ssh/config
-
-            echo "Testing SSH access to kealo..."
-            ssh -o BatchMode=yes kealo-jump 'hostname; whoami'
-
-            echo "Testing SSH access to new wyrtki through kealo..."
-            ssh -o BatchMode=yes new-wyrtki \
-              "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
-
-            echo "Deploying Linux deb..."
-            rsync -va --chmod=F644,D755 \
-              -e "ssh -o BatchMode=yes" \
-              ./UHSLC-QC.deb \
-              "new-wyrtki:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.deb"
   build-mac:
     macos:
       xcode: "14.3.1"
@@ -168,19 +127,15 @@ jobs:
       PYTHON_CONFIGURE_OPTS: --enable-framework
     steps:
       - macos/install-rosetta
-      - add_ssh_keys:
-          fingerprints:
-            - "SHA256:rOkRMQ7O9mLO3BWX0PD9/zeb11sbL9OqUm50u24FEVw"
       - checkout
+
       # Commands will execute in macOS container
-      # with Xcode 12.5.1 installed
+      # with Xcode 14.3.1 installed
       - store_test_results:
           path: output/scan
       - store_artifacts:
           path: output
       - run: rsync --version
-      - attach_workspace:
-          at: src
       - run:
           name: install conda (x86_64 for Py3.6 on Apple Silicon)
           command: |
@@ -303,53 +258,92 @@ jobs:
 
             hdiutil verify target/UHSLC-QC.dmg
             ls -lh target/UHSLC-QC.dmg
-#      - run: cd PyQT5_fbs/target
-      - attach_workspace:
-          at: src
       - run:
-          name: Copy the dmg file to new wyrtki through kealo
+          name: Stage macOS artifact for deployment
+          shell: /bin/bash -l -eo pipefail
+          command: |
+            set -euo pipefail
+            test -f PyQT5_fbs/target/UHSLC-QC.dmg
+            mkdir -p /tmp/qcsoft-artifacts
+            cp PyQT5_fbs/target/UHSLC-QC.dmg /tmp/qcsoft-artifacts/UHSLC-QC.dmg
+            ls -lh /tmp/qcsoft-artifacts/UHSLC-QC.dmg
+      - persist_to_workspace:
+          root: /tmp/qcsoft-artifacts
+          paths:
+            - UHSLC-QC.dmg
+
+  deploy-artifacts:
+    machine: true
+    resource_class: uhsealevelcenter/new-wyrtki-deploy
+    steps:
+      - checkout
+      - add_deploy_ssh_key
+      - attach_workspace:
+          at: /tmp/qcsoft-artifacts
+      - run:
+          name: Show runner context and artifacts
+          command: |
+            set -euo pipefail
+            echo "Running deploy job on:"
+            hostname
+            echo "User:"
+            whoami
+            echo "Working directory:"
+            pwd
+            echo "Artifacts:"
+            ls -lh /tmp/qcsoft-artifacts
+      - run:
+          name: Validate deploy environment
+          command: |
+            set -euo pipefail
+            : "${TARGET_HOST:?TARGET_HOST is not set}"
+            : "${TARGET_USER:?TARGET_USER is not set}"
+            : "${DEPLOY_DIRECTORY:?DEPLOY_DIRECTORY is not set}"
+            echo "TARGET_HOST=${TARGET_HOST}"
+            echo "TARGET_USER=${TARGET_USER}"
+            echo "DEPLOY_DIRECTORY=${DEPLOY_DIRECTORY}"
+      - run:
+          name: Trust target SSH host key
+          command: |
+            set -euo pipefail
+            mkdir -p ~/.ssh
+            chmod 700 ~/.ssh
+            ssh-keyscan -T 10 -H "$TARGET_HOST" >> ~/.ssh/known_hosts
+            chmod 600 ~/.ssh/known_hosts
+      - run:
+          name: Test SSH to new-wyrtki
+          command: |
+            set -euo pipefail
+            ssh -o BatchMode=yes "$TARGET_USER@$TARGET_HOST" "
+              hostname
+              whoami
+              test -d '$DEPLOY_DIRECTORY'
+              test -w '$DEPLOY_DIRECTORY'
+            "
+      - run:
+          name: Deploy QCSoft artifacts to new-wyrtki
           command: |
             set -euo pipefail
 
-            export VERSION=$(grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\")
-            cd PyQT5_fbs/target
+            VERSION=$(grep version PyQT5_fbs/src/build/settings/base.json | grep -v app_name | cut -f4 -d\")
+            echo "Deploying QCSoft version ${VERSION}"
 
-            mkdir -p ~/.ssh
-            chmod 700 ~/.ssh
-            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-            chmod 600 ~/.ssh/known_hosts
+            test -f /tmp/qcsoft-artifacts/UHSLC-QC.deb
+            test -f /tmp/qcsoft-artifacts/UHSLC-QC.dmg
 
-            {
-              printf '%s\n' 'Host kealo-jump'
-              printf '  HostName %s\n' "$DEPLOY_JUMP_HOST"
-              printf '  User %s\n' "$DEPLOY_JUMP_USER"
-              printf '  HostKeyAlias %s\n' "$DEPLOY_JUMP_HOST"
-              printf '%s\n' '  StrictHostKeyChecking yes'
-              printf '%s\n' '  ForwardAgent no'
-              printf '%s\n' ''
-              printf '%s\n' 'Host new-wyrtki'
-              printf '  HostName %s\n' "$DEPLOY_TARGET_HOST"
-              printf '  User %s\n' "$DEPLOY_TARGET_USER"
-              printf '  HostKeyAlias %s\n' "$DEPLOY_TARGET_HOST"
-              printf '%s\n' '  ProxyJump kealo-jump'
-              printf '%s\n' '  StrictHostKeyChecking yes'
-              printf '%s\n' '  ForwardAgent no'
-            } > ~/.ssh/config
-
-            chmod 600 ~/.ssh/config
-
-            echo "Testing SSH access to kealo..."
-            ssh -o BatchMode=yes kealo-jump 'hostname; whoami'
-
-            echo "Testing SSH access to new wyrtki through kealo..."
-            ssh -o BatchMode=yes new-wyrtki \
-              "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
-
-            echo "Deploying macOS dmg..."
             rsync -va --chmod=F644,D755 \
-              -e "ssh -o BatchMode=yes" \
-              ./UHSLC-QC.dmg \
-              "new-wyrtki:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.dmg"
+              /tmp/qcsoft-artifacts/UHSLC-QC.deb \
+              "$TARGET_USER@$TARGET_HOST:$DEPLOY_DIRECTORY/UHSLC-QC_${VERSION}.deb"
+
+            rsync -va --chmod=F644,D755 \
+              /tmp/qcsoft-artifacts/UHSLC-QC.dmg \
+              "$TARGET_USER@$TARGET_HOST:$DEPLOY_DIRECTORY/UHSLC-QC_${VERSION}.dmg"
+
+            ssh -o BatchMode=yes "$TARGET_USER@$TARGET_HOST" "
+              ls -lh '$DEPLOY_DIRECTORY/UHSLC-QC_${VERSION}.deb'
+              ls -lh '$DEPLOY_DIRECTORY/UHSLC-QC_${VERSION}.dmg'
+            "
+
   build-win:
     executor: win/default
     environment:
@@ -390,23 +384,19 @@ jobs:
 #            python --version
 #            fbs freeze
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  test_build:  # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
-    # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
+  test_build:
     jobs:
       - test
       - build-linux:
-          requires: 
+          requires:
             - test
           filters:
             branches:
               only:
                 - master
             tags:
-              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+              only: /^\d+\.\d+\.\d+$/
       - build-mac:
           requires:
             - test
@@ -415,7 +405,17 @@ workflows:
               only:
                 - master
             tags:
-              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+              only: /^\d+\.\d+\.\d+$/
+      - deploy-artifacts:
+          requires:
+            - build-linux
+            - build-mac
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              only: /^\d+\.\d+\.\d+$/
 #      - build-win
 #          requires:
 #            - test
@@ -424,4 +424,4 @@ workflows:
 #              only:
 #                - master
 #            tags:
-#              only: /^\d+\.\d+\.\d+$/  # This will only run on tags that look like a version number, e.g. 1.0.0
+#              only: /^\d+\.\d+\.\d+$/
