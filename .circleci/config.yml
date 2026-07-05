@@ -127,22 +127,23 @@ jobs:
             printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
-            cat > ~/.ssh/config <<EOF
-            Host kealo-jump
-              HostName ${DEPLOY_JUMP_HOST}
-              User ${DEPLOY_JUMP_USER}
-              HostKeyAlias ${DEPLOY_JUMP_HOST}
-              StrictHostKeyChecking yes
-              ForwardAgent no
+            {
+              printf '%s\n' 'Host kealo-jump'
+              printf '  HostName %s\n' "$DEPLOY_JUMP_HOST"
+              printf '  User %s\n' "$DEPLOY_JUMP_USER"
+              printf '  HostKeyAlias %s\n' "$DEPLOY_JUMP_HOST"
+              printf '%s\n' '  StrictHostKeyChecking yes'
+              printf '%s\n' '  ForwardAgent no'
+              printf '%s\n' ''
+              printf '%s\n' 'Host new-wyrtki'
+              printf '  HostName %s\n' "$DEPLOY_TARGET_HOST"
+              printf '  User %s\n' "$DEPLOY_TARGET_USER"
+              printf '  HostKeyAlias %s\n' "$DEPLOY_TARGET_HOST"
+              printf '%s\n' '  ProxyJump kealo-jump'
+              printf '%s\n' '  StrictHostKeyChecking yes'
+              printf '%s\n' '  ForwardAgent no'
+            } > ~/.ssh/config
 
-            Host new-wyrtki
-              HostName ${DEPLOY_TARGET_HOST}
-              User ${DEPLOY_TARGET_USER}
-              HostKeyAlias ${DEPLOY_TARGET_HOST}
-              ProxyJump kealo-jump
-              StrictHostKeyChecking yes
-              ForwardAgent no
-            EOF
             chmod 600 ~/.ssh/config
 
             echo "Testing SSH access to kealo..."
@@ -318,22 +319,23 @@ jobs:
             printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
-            cat > ~/.ssh/config <<EOF
-            Host kealo-jump
-              HostName ${DEPLOY_JUMP_HOST}
-              User ${DEPLOY_JUMP_USER}
-              HostKeyAlias ${DEPLOY_JUMP_HOST}
-              StrictHostKeyChecking yes
-              ForwardAgent no
+            {
+              printf '%s\n' 'Host kealo-jump'
+              printf '  HostName %s\n' "$DEPLOY_JUMP_HOST"
+              printf '  User %s\n' "$DEPLOY_JUMP_USER"
+              printf '  HostKeyAlias %s\n' "$DEPLOY_JUMP_HOST"
+              printf '%s\n' '  StrictHostKeyChecking yes'
+              printf '%s\n' '  ForwardAgent no'
+              printf '%s\n' ''
+              printf '%s\n' 'Host new-wyrtki'
+              printf '  HostName %s\n' "$DEPLOY_TARGET_HOST"
+              printf '  User %s\n' "$DEPLOY_TARGET_USER"
+              printf '  HostKeyAlias %s\n' "$DEPLOY_TARGET_HOST"
+              printf '%s\n' '  ProxyJump kealo-jump'
+              printf '%s\n' '  StrictHostKeyChecking yes'
+              printf '%s\n' '  ForwardAgent no'
+            } > ~/.ssh/config
 
-            Host new-wyrtki
-              HostName ${DEPLOY_TARGET_HOST}
-              User ${DEPLOY_TARGET_USER}
-              HostKeyAlias ${DEPLOY_TARGET_HOST}
-              ProxyJump kealo-jump
-              StrictHostKeyChecking yes
-              ForwardAgent no
-            EOF
             chmod 600 ~/.ssh/config
 
             echo "Testing SSH access to kealo..."
