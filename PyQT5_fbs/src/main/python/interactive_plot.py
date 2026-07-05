@@ -37,10 +37,21 @@ class PointBrowser:
         self.selected, = self.ax.plot([self.xs[self.lastind]], [self.ys[self.lastind]], 'o', ms=12, alpha=0.4,
                                       color='red', visible=True)
 
-        # pts = self.ax.scatter(self.xs, self.ys, s=30, facecolors='none')
-        self.collection = self.ax.scatter(self.xs, self.ys, s=30, facecolors='none')
-        self.xys = self.collection.get_offsets()
+        # Right-click drag lasso bulk deletes points. Do hit-testing against
+        # the current line data, not a hidden scatter snapshot, so the selected
+        # points always match what is currently visible on the axes.
+        self.lasso_selection_radius_pixels = 3.0
+        self.right_click_delete_radius_pixels = 8.0
+        self.right_click_drag_threshold_pixels = 5.0
+        self._right_press_xy = None
+
         self.lasso = LassoSelector(self.ax, onselect=self.onselect, button=3)
+        self._right_press_cid = self.fig.canvas.mpl_connect(
+            'button_press_event', self.on_mouse_press
+        )
+        self._right_release_cid = self.fig.canvas.mpl_connect(
+            'button_release_event', self.on_mouse_release
+        )
 
     def onpress(self, event):
         # print("ON PRESS")
@@ -128,32 +139,134 @@ class PointBrowser:
         # self.lastind = self.np.clip(self.lastind, 0, len(self.xs) - 1)
         self.update(event = event)
 
+    def _valid_indices(self, indices=None):
+        """Return indices that correspond to real, currently undeleted data."""
+        if indices is None:
+            indices = self.np.arange(len(self.ys))
+        indices = self.np.asarray(indices, dtype=int)
+        if indices.size == 0:
+            return indices
+
+        yvals = self.np.asarray(self.ys, dtype=float)[indices]
+        valid = self.np.isfinite(yvals) & (yvals != 9999)
+        return indices[valid]
+
+    def _display_points_for_indices(self, indices):
+        """Return Nx2 display/pixel coordinates for the requested data indices."""
+        indices = self.np.asarray(indices, dtype=int)
+        xvals = self.ax.convert_xunits(self.np.asarray(self.xs)[indices])
+        yvals = self.np.asarray(self.ys, dtype=float)[indices]
+        return self.ax.transData.transform(self.np.column_stack([xvals, yvals]))
+
+    def _draw_current_data(self):
+        """Refresh the visible line, hiding deleted/missing sentinel values."""
+        nonines_data = self.np.asarray(self.ys, dtype=float).copy()
+        nonines_data[nonines_data == 9999] = float('nan')
+        self.line.set_ydata(nonines_data)
+
+    def _clear_lasso_visual(self):
+        """Remove the transient right-drag lasso outline from the canvas.
+
+        LassoSelector owns this artist, and different Matplotlib versions expose
+        it under different attribute names. Clearing it here is visual-only; it
+        does not change which data points were selected or deleted.
+        """
+        for attr_name in ('_selection_artist', 'line'):
+            artist = getattr(self.lasso, attr_name, None)
+            if artist is None:
+                continue
+            try:
+                artist.set_data([], [])
+            except Exception:
+                try:
+                    artist.set_data([[], []])
+                except Exception:
+                    pass
+            artist.set_visible(False)
+
+    def _nearest_visible_index(self, x_display, y_display, max_pixels):
+        """Return the nearest undeleted point to a display-coordinate click."""
+        valid_indices = self._valid_indices()
+        if valid_indices.size == 0:
+            return None
+
+        # Restrict to the current visible plot window so a click cannot delete a
+        # point outside the user's current view.
+        xlim = sorted(self.ax.get_xlim())
+        ylim = sorted(self.ax.get_ylim())
+        xvals = self.ax.convert_xunits(self.np.asarray(self.xs)[valid_indices])
+        yvals = self.np.asarray(self.ys, dtype=float)[valid_indices]
+        visible = (xvals >= xlim[0]) & (xvals <= xlim[1]) & (yvals >= ylim[0]) & (yvals <= ylim[1])
+        visible_indices = valid_indices[visible]
+        if visible_indices.size == 0:
+            return None
+
+        points_display = self._display_points_for_indices(visible_indices)
+        distances = self.np.hypot(
+            points_display[:, 0] - x_display,
+            points_display[:, 1] - y_display
+        )
+        nearest_pos = distances.argmin()
+        if distances[nearest_pos] > max_pixels:
+            return None
+        return visible_indices[nearest_pos]
+
+    def _delete_index(self, ind):
+        """Mark one point deleted using the same sentinel path as keyboard deletion."""
+        if ind is None:
+            return False
+        self.ondelete(ind)
+        self.ys[ind] = 9999
+        self.lastind = ind
+        self.update(event=None)
+        return True
+
+    def on_mouse_press(self, event):
+        if event.button == 3 and event.inaxes == self.ax:
+            self._right_press_xy = (event.x, event.y)
+        else:
+            self._right_press_xy = None
+
+    def on_mouse_release(self, event):
+        if event.button != 3 or event.inaxes != self.ax or self._right_press_xy is None:
+            self._right_press_xy = None
+            return
+
+        press_x, press_y = self._right_press_xy
+        self._right_press_xy = None
+        drag_distance = self.np.hypot(event.x - press_x, event.y - press_y)
+
+        # A drag is handled by LassoSelector. A small/no-motion right click
+        # deletes the nearest point under the cursor.
+        if drag_distance > self.right_click_drag_threshold_pixels:
+            return
+
+        ind = self._nearest_visible_index(
+            event.x, event.y, self.right_click_delete_radius_pixels
+        )
+        self._delete_index(ind)
+
     def onpick(self, event):
-        # print("ON PICK CALLED")
-        # print(event.artist)
+        # Left-click selects a point. Deletion remains bound to pressing "d"
+        # for the selected point, preserving the existing UI behavior.
         if event.artist != self.line or event.mouseevent.button != 1:
             return True
 
-        N = len(event.ind)
-        if not N:
+        if event.mouseevent.x is None or event.mouseevent.y is None:
             return True
 
-        # the click locations
-        x = event.mouseevent.xdata
-        y = event.mouseevent.ydata
-        #
-        #         print("y", y)
-        #         print("event.ind", event.ind)
-        #         print("self.ys[event.ind]", self.ys[event.ind])
-        #         print("x", x)
-        # print("self.xs[event.ind]", self.xs[event.ind])
-        distances = self.np.hypot(x - event.ind, y - self.ys[event.ind])
-        # print("distances", distances)
-        indmin = distances.argmin()
-        dataind = event.ind[indmin]
-        # this_artist = event.artist #the picked object is available as event.artist
-        # print(this_artist) #For debug just to show you which object is picked
-        # plt.gca().picked_object = this_artist
+        candidate_ind = self._valid_indices(event.ind)
+        if candidate_ind.size == 0:
+            return True
+
+        points_display = self._display_points_for_indices(candidate_ind)
+        mouse_display = self.np.array([event.mouseevent.x, event.mouseevent.y])
+
+        distances = self.np.hypot(
+            points_display[:, 0] - mouse_display[0],
+            points_display[:, 1] - mouse_display[1]
+        )
+        dataind = candidate_ind[distances.argmin()]
 
         # On mouse click pan and zoom to the clicked section
         self.pan_index = dataind // self.jump_step
@@ -187,19 +300,13 @@ class PointBrowser:
         self.text.set_text(
             'selected date: %s' % self.np.datetime_as_string(self.xs[dataind], unit='m') + ' Value: %s' % self.ys[
                 dataind])
-        nines_ind = self.np.where(self.ys == 9999)
-        nonines_data = self.ys.copy()
-        nonines_data[nines_ind] = float('nan')
-        self.line.set_ydata(nonines_data)
+        self._draw_current_data()
         self.fig.canvas.draw()
         # print('UPDATE CALLED')
 
     def on_sensor_change_update(self):
         # print("MY_UPDATE IS CALLED")
-        nines_ind = self.np.where(self.ys == 9999)
-        nonines_data = self.ys.copy()
-        nonines_data[nines_ind] = float('nan')
-        self.line.set_ydata(nonines_data)
+        self._draw_current_data()
         self.show_home_view()
         self.ax.figure.canvas.flush_events()
         self.fig.canvas.draw()
@@ -260,26 +367,46 @@ class PointBrowser:
                          self.np.nanmax(self.np.ma.masked_equal(self.ys[left:right], 9999, copy=False)) + 50)
 
     def onselect(self, verts):
-        path = Path(verts)
-        self.ind = self.np.nonzero(path.contains_points(self.xys))[0]
+        if not verts:
+            return
+
+        valid_indices = self._valid_indices()
+        if valid_indices.size == 0:
+            return
+
+        # LassoSelector gives vertices in data coordinates. Convert both the
+        # lasso polygon and candidate points to display coordinates before the
+        # containment test. This makes hit-testing match what the user actually
+        # drew on screen, independent of datetime units, autoscaling, toolbar
+        # state, or overlay artists.
+        verts_display = self.ax.transData.transform(verts)
+        points_display = self._display_points_for_indices(valid_indices)
+        path = Path(verts_display)
+
+        selected_mask = path.contains_points(
+            points_display, radius=self.lasso_selection_radius_pixels
+        )
+        self.ind = valid_indices[selected_mask]
 
         for i in self.ind:
             self.bulk_deleted.append({i: [self.xs[i], self.ys[i]]})
             self.ys[i] = 9999
-            # self.ondelete(i)
+
         self.on_bulk_delete()
 
     def disconnect(self):
         self.lasso.disconnect_events()
+        if hasattr(self, '_right_press_cid'):
+            self.fig.canvas.mpl_disconnect(self._right_press_cid)
+        if hasattr(self, '_right_release_cid'):
+            self.fig.canvas.mpl_disconnect(self._right_release_cid)
 
     def on_bulk_delete(self):
         self.text.set_text(
-            'bulk items deleted')
-        nines_ind = self.np.where(self.ys == 9999)
-        nonines_data = self.ys.copy()
-        nonines_data[nines_ind] = float('nan')
-        self.line.set_ydata(nonines_data)
-        self.fig.canvas.draw()
+            'bulk items deleted: %d' % len(getattr(self, 'ind', [])))
+        self._draw_current_data()
+        self._clear_lasso_visual()
+        self.fig.canvas.draw_idle()
 
     def getDeleted(self):
         return self.deleted
