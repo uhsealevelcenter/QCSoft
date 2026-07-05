@@ -115,7 +115,7 @@ jobs:
       - attach_workspace:
           at: src
       - run:
-          name: Copy the deb file to new wyrtki
+          name: Copy the deb file to new wyrtki through kealo
           command: |
             set -euo pipefail
 
@@ -127,17 +127,36 @@ jobs:
             printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
-            echo "Testing SSH access to ${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}..."
-            ssh -o BatchMode=yes \
-                -o StrictHostKeyChecking=yes \
-                "${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}" \
-                "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
+            cat > ~/.ssh/config <<EOF
+            Host kealo-jump
+              HostName ${DEPLOY_JUMP_HOST}
+              User ${DEPLOY_JUMP_USER}
+              HostKeyAlias ${DEPLOY_JUMP_HOST}
+              StrictHostKeyChecking yes
+              ForwardAgent no
+
+            Host new-wyrtki
+              HostName ${DEPLOY_TARGET_HOST}
+              User ${DEPLOY_TARGET_USER}
+              HostKeyAlias ${DEPLOY_TARGET_HOST}
+              ProxyJump kealo-jump
+              StrictHostKeyChecking yes
+              ForwardAgent no
+            EOF
+            chmod 600 ~/.ssh/config
+
+            echo "Testing SSH access to kealo..."
+            ssh -o BatchMode=yes kealo-jump 'hostname; whoami'
+
+            echo "Testing SSH access to new wyrtki through kealo..."
+            ssh -o BatchMode=yes new-wyrtki \
+              "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
 
             echo "Deploying Linux deb..."
             rsync -va --chmod=F644,D755 \
-              -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+              -e "ssh -o BatchMode=yes" \
               ./UHSLC-QC.deb \
-              "${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.deb"
+              "new-wyrtki:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.deb"
   build-mac:
     macos:
       xcode: "14.3.1"
@@ -287,7 +306,7 @@ jobs:
       - attach_workspace:
           at: src
       - run:
-          name: Copy the dmg file to new wyrtki
+          name: Copy the dmg file to new wyrtki through kealo
           command: |
             set -euo pipefail
 
@@ -299,17 +318,36 @@ jobs:
             printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
             chmod 600 ~/.ssh/known_hosts
 
-            echo "Testing SSH access to ${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}..."
-            ssh -o BatchMode=yes \
-                -o StrictHostKeyChecking=yes \
-                "${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}" \
-                "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
+            cat > ~/.ssh/config <<EOF
+            Host kealo-jump
+              HostName ${DEPLOY_JUMP_HOST}
+              User ${DEPLOY_JUMP_USER}
+              HostKeyAlias ${DEPLOY_JUMP_HOST}
+              StrictHostKeyChecking yes
+              ForwardAgent no
+
+            Host new-wyrtki
+              HostName ${DEPLOY_TARGET_HOST}
+              User ${DEPLOY_TARGET_USER}
+              HostKeyAlias ${DEPLOY_TARGET_HOST}
+              ProxyJump kealo-jump
+              StrictHostKeyChecking yes
+              ForwardAgent no
+            EOF
+            chmod 600 ~/.ssh/config
+
+            echo "Testing SSH access to kealo..."
+            ssh -o BatchMode=yes kealo-jump 'hostname; whoami'
+
+            echo "Testing SSH access to new wyrtki through kealo..."
+            ssh -o BatchMode=yes new-wyrtki \
+              "hostname; whoami; test -d '${DEPLOY_TARGET_DIR}' && test -w '${DEPLOY_TARGET_DIR}'"
 
             echo "Deploying macOS dmg..."
             rsync -va --chmod=F644,D755 \
-              -e "ssh -o BatchMode=yes -o StrictHostKeyChecking=yes" \
+              -e "ssh -o BatchMode=yes" \
               ./UHSLC-QC.dmg \
-              "${DEPLOY_TARGET_USER}@${DEPLOY_TARGET_HOST}:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.dmg"
+              "new-wyrtki:${DEPLOY_TARGET_DIR}/UHSLC-QC_${VERSION}.dmg"
   build-win:
     executor: win/default
     environment:
