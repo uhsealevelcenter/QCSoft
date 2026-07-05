@@ -1318,6 +1318,14 @@ class Start(QMainWindow):
             self.show_custom_message("Warning", "No monthly data available to save.")
             return
 
+        # Commit the current interactive plot edits before saving.
+        # _update_top_canvas() uses a plotting copy so database overlay work cannot
+        # mutate station data accidentally; this explicit commit keeps the final
+        # output consistent with the points the user deleted on screen, even if
+        # they click Save without switching sensors first.
+        if self.browser is not None and not getattr(self, "_plotting_all", False):
+            self.update_graph_values()
+
         # Updates all the user made changes (data cleaning) for all the data loaded.
         self.station.back_propagate_changes(self.station.aggregate_months['data'])
         text_data = self.station.assemble_ts_text()
